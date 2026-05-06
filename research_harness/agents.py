@@ -65,6 +65,7 @@ class BaseAgent:
         errors: list[str] = []
         status = "completed"
         summary = ""
+        store.append_progress(f"Agent start: {self.name} ({self.role}) using {self.llm.model_label}")
         try:
             if self.budget.cancelled:
                 status = "cancelled"
@@ -79,6 +80,7 @@ class BaseAgent:
             errors.append(f"{type(exc).__name__}: {exc}")
             summary = "Agent failed; see errors."
         runtime_ms = int((time.perf_counter() - started) * 1000)
+        store.append_progress(f"Agent {status}: {self.name} in {runtime_ms}ms - {summary}")
         store.add_trace(
             AgentTrace(
                 id=self.budget.trace_id,

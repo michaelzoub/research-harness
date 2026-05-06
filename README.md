@@ -87,36 +87,36 @@ Run against arXiv:
 
 The default `--retriever auto` currently uses arXiv. Use `--retriever local` only when you want the offline demo corpus.
 
+Run the default nested evolutionary agent loop:
+
+```bash
+./autore "Research how multi-agent systems improve automated literature review quality"
+```
+
+The default run path routes the task to `research` or `optimize`, runs an outer evolutionary orchestrator that proposes variants, sends each batch to the selected inner loop for scoring, records ranked variants, and stops on a threshold or plateau signal.
+
+Run the legacy standard fan-out / fan-in flow:
+
+```bash
+./autore "Research how multi-agent systems improve automated literature review quality" --mode standard
+```
+
 Run the deterministic Phase 1 flow:
 
 ```bash
 ./autore "Research critic agents for evidence checking" --mode deterministic
 ```
 
-Run the Phase 2 fan-out / fan-in flow:
-
-```bash
-./autore "Research how multi-agent systems improve automated literature review quality"
-```
-
-Run the nested evolutionary loop:
-
-```bash
-./autore "Research how multi-agent systems improve automated literature review quality" --mode loop --retriever local
-```
-
-Loop mode routes the task to `research` or `optimize`, runs an outer evolutionary orchestrator that proposes variants, sends each batch to the selected inner loop for scoring, records ranked variants, and stops on a threshold or plateau signal.
-
 Force research mode:
 
 ```bash
-./autore "Research agent paradigms and workplace trends" --mode loop --task-mode research
+./autore "Research agent paradigms and workplace trends" --task-mode research
 ```
 
 Run optimize mode with a registered deterministic evaluator:
 
 ```bash
-./autore "Optimize a tiny scoring function" --mode loop --task-mode optimize --evaluator length_score
+./autore "Optimize a tiny scoring function" --task-mode optimize --evaluator length_score
 ```
 
 Each run prints:
@@ -125,12 +125,13 @@ Each run prints:
 Run: run_<id>
 Status: completed
 Artifacts: outputs/run_<id>
+PRD: outputs/run_<id>/prd.json
 Report: outputs/run_<id>/final_report.md
 Run benchmark: outputs/run_<id>/run_benchmark.html
 Decision DAG: outputs/run_<id>/decision_dag.svg
 ```
 
-Open `final_report.md` for the synthesis and `run_benchmark.html` for a run-specific benchmark with a decision DAG, mode routing, variant scores, and stopping signals. Inspect `trace.jsonl` and the JSON artifact files to see how the report was produced.
+Open `prd.json` first when you want the organized task map for that run. It contains the goal, mode, plan, source strategy, ordered tasks, dependencies, acceptance criteria, status, and result summaries. Open `final_report.md` for the synthesis and `run_benchmark.html` for a run-specific benchmark with a decision DAG, mode routing, variant scores, and stopping signals. Inspect `trace.jsonl` and the JSON artifact files to see how the report was produced.
 
 ---
 
@@ -180,7 +181,7 @@ EOF
 After that, run normally:
 
 ```bash
-./autore "Research agent paradigms and trends" --mode loop
+./autore "Research agent paradigms and trends"
 ```
 
 Supported environment variables:
@@ -550,6 +551,7 @@ Generated loop artifacts:
 
 ```text
 tasks.json
+prd.json
 loop_iterations.json
 task_ingestion_decisions.json
 variants.json
@@ -563,7 +565,7 @@ final_report.md
 Use `--max-iterations` to cap loop turns:
 
 ```bash
-./autore "Research critic agents for evidence checking" --mode loop --max-iterations 12
+./autore "Research critic agents for evidence checking" --max-iterations 12
 ```
 
 ---
@@ -1064,6 +1066,7 @@ The MVP writes:
 
 ```text
 outputs/run_<id>/
+  prd.json
   sources.json
   claims.json
   hypotheses.json
@@ -1213,12 +1216,17 @@ Current config shape:
 
 ```python
 HarnessConfig(
-    id="phase2-local-deterministic-v1",
-    mode="fanout",
+    id="phase3-evolutionary-agent-v1",
+    mode="evolutionary",
     retriever="auto",
     search_agent_count=7,
     hypothesis_agent_count=2,
     include_debugger=True,
+    max_loop_iterations=12,
+    task_mode="auto",
+    llm_provider="auto",
+    llm_model="gpt-4.1-mini",
+    echo_progress=True,
 )
 ```
 

@@ -53,8 +53,9 @@ class ArtifactStore:
     intentionally small, deterministic, and easy to inspect.
     """
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, echo_progress: bool = False):
         self.root = root
+        self.echo_progress = echo_progress
         self.root.mkdir(parents=True, exist_ok=True)
         for filename in ENTITY_FILES.values():
             path = self.root / filename
@@ -62,6 +63,7 @@ class ArtifactStore:
                 path.write_text("[]\n", encoding="utf-8")
         self.trace_log_path = self.root / "trace.jsonl"
         self.report_path = self.root / "final_report.md"
+        self.prd_path = self.root / "prd.json"
         self.run_benchmark_path = self.root / "run_benchmark.html"
         self.decision_dag_path = self.root / "decision_dag.svg"
         self.progress_path = self.root / "progress.txt"
@@ -141,6 +143,8 @@ class ArtifactStore:
         return round_record
 
     def append_progress(self, text: str) -> None:
+        if self.echo_progress:
+            print(text, flush=True)
         with self.progress_path.open("a", encoding="utf-8") as handle:
             handle.write(text.rstrip() + "\n")
 
@@ -170,6 +174,10 @@ class ArtifactStore:
     def write_report(self, text: str) -> Path:
         self.report_path.write_text(text, encoding="utf-8")
         return self.report_path
+
+    def write_prd(self, payload: dict[str, Any]) -> Path:
+        self.prd_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return self.prd_path
 
     def find_by(self, entity: str, key: str, value: Any) -> Optional[dict[str, Any]]:
         return next((row for row in self.list(entity) if row.get(key) == value), None)

@@ -31,6 +31,7 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
     variants = store.list("variants")
     evaluations = store.list("variant_evaluations")
     rounds = store.list("evolution_rounds")
+    prd = read_json(store.prd_path, {})
     sources = store.list("sources")
     claims = store.list("claims")
     hypotheses = store.list("hypotheses")
@@ -53,6 +54,7 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
             "failed_agents": sum(1 for trace in traces if trace.get("status") != "completed"),
         },
         "task_ingestion": decisions[0] if decisions else None,
+        "prd": prd,
         "models": dict(models),
         "tasks": tasks,
         "rounds": rounds,
@@ -71,6 +73,12 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
             for trace in traces
         ],
     }
+
+
+def read_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def decision_dag_mermaid(summary: dict[str, Any]) -> str:

@@ -17,7 +17,7 @@ from .agents import (
 from .llm import LLMClient
 from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter
 from .run_benchmarks import write_run_benchmarks
-from .schemas import AgentBudget, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso
+from .schemas import AgentBudget, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
 from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
 from .search import DocsBlogsSearch
 from .search import GitHubSearch
@@ -80,7 +80,7 @@ RUN_SLUG_STOPWORDS = {
 @dataclass
 class HarnessConfig:
     id: str = "phase2-research-harness-v1"
-    mode: str = "fanout"
+    mode: str = "evolutionary"
     retriever: str = "auto"
     search_agent_count: int = 7
     hypothesis_agent_count: int = 2
@@ -92,6 +92,7 @@ class HarnessConfig:
     evolution_population_size: int = 4
     llm_provider: str = "auto"
     llm_model: str = "gpt-4.1-mini"
+    echo_progress: bool = True
     default_budget: AgentBudget = field(default_factory=AgentBudget)
 
 
@@ -116,14 +117,19 @@ class Orchestrator:
             task_type=plan.task_type,
             harness_config_id=f"{self.config.id}:{selected_mode}:{primary_retriever.tool_name}:source_strategy_v1",
         )
-        store = ArtifactStore(self.output_root / run.id)
+        store = ArtifactStore(self.output_root / run.id, echo_progress=self.config.echo_progress)
         store.add_run(run)
+        store.append_progress(f"Starting run {run.id}")
+        store.append_progress(f"Execution mode: {selected_mode}")
+        store.append_progress(f"Goal: {goal}")
+        self._write_prd(store, run, plan, source_strategy, selected_mode, stage="planned")
+        store.append_progress(f"PRD: {store.prd_path}")
         try:
             if selected_mode == "deterministic":
                 await self._run_phase1(run, store, plan, source_strategy)
-            elif selected_mode == "fanout":
+            elif selected_mode in {"standard", "fanout"}:
                 await self._run_phase2(run, store, plan, source_strategy)
-            elif selected_mode == "loop":
+            elif selected_mode in {"evolutionary", "loop"}:
                 await self._run_loop(run, store, plan, source_strategy)
             else:
                 raise ValueError(f"Unknown mode: {selected_mode}")
@@ -136,8 +142,143 @@ class Orchestrator:
             run.total_tokens = sum(int(trace["token_usage"]) for trace in traces)
             run.completed_at = now_iso()
             store.update_run(run)
+            self._write_prd(store, run, plan, source_strategy, selected_mode, stage="completed")
             write_run_benchmarks(store)
         return run, store
+
+    def _write_prd(
+        self,
+        store: ArtifactStore,
+        run: RunRecord,
+        plan: ResearchPlan,
+        source_strategy: list[SourceStrategyItem],
+        selected_mode: str,
+        stage: str,
+    ) -> None:
+        loop_tasks = store.list("loop_tasks")
+        if loop_tasks:
+            tasks = [_prd_task_from_loop_task(task, index) for index, task in enumerate(loop_tasks, start=1)]
+        else:
+            tasks = self._standard_prd_tasks(selected_mode, plan, source_strategy, store.list("agent_traces"))
+        payload = {
+            "schema_version": "research_harness_prd_v1",
+            "stage": stage,
+            "run": to_dict(run),
+            "execution_mode": selected_mode,
+            "task_mode": run.task_mode,
+            "goal": run.user_goal,
+            "plan": to_dict(plan),
+            "source_strategy": [to_dict(item) for item in source_strategy],
+            "organized_tasks": tasks,
+            "artifacts": {
+                "final_report": str(store.report_path),
+                "progress": str(store.progress_path),
+                "run_benchmark": str(store.run_benchmark_path),
+                "decision_dag": str(store.decision_dag_path),
+                "trace": str(store.trace_log_path),
+            },
+            "notes": [
+                "This file is the run-local PRD/task map.",
+                "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria.",
+            ],
+        }
+        store.write_prd(payload)
+
+    def _standard_prd_tasks(
+        self,
+        selected_mode: str,
+        plan: ResearchPlan,
+        source_strategy: list[SourceStrategyItem],
+        traces: list[dict[str, object]],
+    ) -> list[dict[str, object]]:
+        tasks: list[dict[str, object]] = []
+        if selected_mode == "deterministic":
+            first = source_strategy[0]
+            tasks.append(
+                _prd_task(
+                    1,
+                    "Search initial evidence",
+                    "search",
+                    {"retriever": first.retriever, "purpose": first.purpose, "queries": first.queries},
+                    ["Retrieve sources", "Extract traceable claims"],
+                    [],
+                    traces,
+                    "search_literature",
+                )
+            )
+            tasks.append(
+                _prd_task(2, "Critique evidence", "critique", {}, ["Review claims", "Record contradictions or questions"], ["prd_task_001"], traces, "critic_reviewer")
+            )
+            tasks.append(
+                _prd_task(3, "Synthesize report", "synthesize", {}, ["Write final_report.md"], ["prd_task_002"], traces, "synthesis_agent")
+            )
+            return tasks
+
+        for index, item in enumerate(source_strategy[: self.config.search_agent_count], start=1):
+            tasks.append(
+                _prd_task(
+                    index,
+                    f"Search {item.purpose}",
+                    "search",
+                    {"retriever": item.retriever, "purpose": item.purpose, "queries": item.queries},
+                    ["Retrieve sources", "Extract claims", "Record failed paths if evidence is unavailable"],
+                    [],
+                    traces,
+                    "search_literature",
+                )
+            )
+        offset = len(tasks)
+        for index, angle in enumerate(plan.hypothesis_angles[: self.config.hypothesis_agent_count], start=offset + 1):
+            tasks.append(
+                _prd_task(
+                    index,
+                    f"Generate hypotheses for {angle}",
+                    "hypothesize",
+                    {"hypothesis_angle": angle},
+                    ["Inspect claims", "Create hypotheses or open questions"],
+                    [task["id"] for task in tasks if task["kind"] == "search"],
+                    traces,
+                    "hypothesis_generation",
+                )
+            )
+        tasks.append(
+            _prd_task(
+                len(tasks) + 1,
+                "Critique claims and hypotheses",
+                "critique",
+                {},
+                ["Review claims", "Record contradictions and open questions"],
+                [task["id"] for task in tasks],
+                traces,
+                "critic_reviewer",
+            )
+        )
+        tasks.append(
+            _prd_task(
+                len(tasks) + 1,
+                "Synthesize final report",
+                "synthesize",
+                {},
+                ["Write final_report.md", "Summarize sources, claims, hypotheses, and caveats"],
+                [tasks[-1]["id"]],
+                traces,
+                "synthesis_agent",
+            )
+        )
+        if self.config.include_debugger:
+            tasks.append(
+                _prd_task(
+                    len(tasks) + 1,
+                    "Inspect harness behavior",
+                    "debug_harness",
+                    {},
+                    ["Record constrained harness-change proposal"],
+                    [tasks[-1]["id"]],
+                    traces,
+                    "harness_debugger",
+                )
+            )
+        return tasks
 
     def classify_task(self, goal: str) -> TaskType:
         normalized = goal.lower()
@@ -768,3 +909,55 @@ def _single_retriever_strategy(goal: str, plan: ResearchPlan, retriever: str) ->
 def _goal_terms(goal: str) -> list[str]:
     words = re.findall(r"[a-zA-Z0-9]+", goal.lower())
     return [word for word in words if word not in RUN_SLUG_STOPWORDS]
+
+
+def _prd_task_from_loop_task(task: dict[str, object], index: int) -> dict[str, object]:
+    priority = int(task.get("priority", index) or index)
+    dependencies = [] if priority <= 1 else [f"prd_task_{priority - 1:03d}"]
+    return {
+        "id": f"prd_task_{priority:03d}",
+        "source_task_id": task.get("id"),
+        "title": task.get("title"),
+        "kind": task.get("action"),
+        "priority": priority,
+        "status": task.get("status"),
+        "passes": bool(task.get("passes")),
+        "attempts": int(task.get("attempts", 0) or 0),
+        "dependencies": dependencies,
+        "params": task.get("params", {}),
+        "acceptance_criteria": task.get("acceptance_criteria", []),
+        "result_summary": task.get("result_summary"),
+        "last_error": task.get("last_error"),
+    }
+
+
+def _prd_task(
+    index: int,
+    title: str,
+    kind: str,
+    params: dict[str, object],
+    acceptance_criteria: list[str],
+    dependencies: list[str],
+    traces: list[dict[str, object]],
+    role: str,
+) -> dict[str, object]:
+    matching = [trace for trace in traces if trace.get("role") == role]
+    failed = [trace for trace in matching if trace.get("status") != "completed"]
+    status = "pending"
+    if matching:
+        status = "failed" if failed else "passed"
+    return {
+        "id": f"prd_task_{index:03d}",
+        "title": title,
+        "kind": kind,
+        "priority": index,
+        "status": status,
+        "passes": bool(matching and not failed),
+        "attempts": len(matching),
+        "dependencies": dependencies,
+        "params": params,
+        "acceptance_criteria": acceptance_criteria,
+        "result_summary": matching[-1].get("output_summary") if matching else None,
+        "last_error": "; ".join(str(error) for trace in failed for error in trace.get("errors", [])) or None,
+        "trace_ids": [trace.get("id") for trace in matching],
+    }

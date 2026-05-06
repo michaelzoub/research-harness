@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,12 +17,12 @@ class SmokeTest(unittest.TestCase):
             orchestrator = Orchestrator(
                 corpus_path=Path("examples/corpus/research_corpus.json"),
                 output_root=Path(directory),
-                config=HarnessConfig(mode="fanout", retriever="local"),
+                config=HarnessConfig(mode="standard", retriever="local", echo_progress=False),
             )
             run, store = asyncio.run(
                 orchestrator.run(
                     "Research how multi-agent systems improve automated literature review quality",
-                    mode="fanout",
+                    mode="standard",
                 )
             )
 
@@ -33,13 +34,15 @@ class SmokeTest(unittest.TestCase):
             self.assertGreaterEqual(len(store.list("agent_traces")), 6)
             self.assertEqual(len(store.list("harness_changes")), 1)
             self.assertTrue(run.id.startswith("run_multi-agent-systems-improve-automated-literature-review-quality"))
+            self.assertTrue(store.prd_path.exists())
+            self.assertGreaterEqual(len(json.loads(store.prd_path.read_text(encoding="utf-8"))["organized_tasks"]), 1)
 
     def test_duplicate_run_names_are_numbered(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
                 corpus_path=Path("examples/corpus/research_corpus.json"),
                 output_root=Path(directory),
-                config=HarnessConfig(mode="deterministic", retriever="local"),
+                config=HarnessConfig(mode="deterministic", retriever="local", echo_progress=False),
             )
             first_run, _ = asyncio.run(orchestrator.run("Research agent memory systems", mode="deterministic"))
             second_run, _ = asyncio.run(orchestrator.run("Research agent memory systems", mode="deterministic"))
@@ -52,12 +55,11 @@ class SmokeTest(unittest.TestCase):
             orchestrator = Orchestrator(
                 corpus_path=Path("examples/corpus/research_corpus.json"),
                 output_root=Path(directory),
-                config=HarnessConfig(mode="loop", retriever="local", max_loop_iterations=3),
+                config=HarnessConfig(retriever="local", max_loop_iterations=3, echo_progress=False),
             )
             run, store = asyncio.run(
                 orchestrator.run(
                     "Research how multi-agent systems improve automated literature review quality",
-                    mode="loop",
                 )
             )
 
@@ -74,6 +76,8 @@ class SmokeTest(unittest.TestCase):
             self.assertGreaterEqual(len(store.list("variant_evaluations")), 1)
             self.assertGreaterEqual(len(store.list("evolution_rounds")), 1)
             self.assertTrue(store.report_path.exists())
+            self.assertTrue(store.prd_path.exists())
+            self.assertGreaterEqual(len(json.loads(store.prd_path.read_text(encoding="utf-8"))["organized_tasks"]), 5)
             self.assertTrue(store.run_benchmark_path.exists())
             self.assertTrue(store.decision_dag_path.exists())
             self.assertTrue((store.root / "run_benchmark_summary.json").exists())
@@ -85,15 +89,15 @@ class SmokeTest(unittest.TestCase):
                 corpus_path=Path("examples/corpus/research_corpus.json"),
                 output_root=Path(directory),
                 config=HarnessConfig(
-                    mode="loop",
                     retriever="local",
                     max_loop_iterations=2,
                     task_mode="optimize",
                     evaluator_name="length_score",
                     include_debugger=False,
+                    echo_progress=False,
                 ),
             )
-            run, store = asyncio.run(orchestrator.run("Optimize a tiny scoring function", mode="loop"))
+            run, store = asyncio.run(orchestrator.run("Optimize a tiny scoring function"))
 
             self.assertEqual(run.status, "completed")
             self.assertEqual(run.task_mode, "optimize")
@@ -115,12 +119,12 @@ class BenchmarkTest(unittest.TestCase):
             orchestrator = Orchestrator(
                 corpus_path=Path("examples/corpus/research_corpus.json"),
                 output_root=root / "outputs",
-                config=HarnessConfig(mode="fanout", retriever="local"),
+                config=HarnessConfig(mode="standard", retriever="local", echo_progress=False),
             )
             asyncio.run(
                 orchestrator.run(
                     "Research how multi-agent systems improve automated literature review quality",
-                    mode="fanout",
+                    mode="standard",
                 )
             )
 

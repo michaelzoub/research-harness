@@ -306,6 +306,9 @@ class EvolutionaryOuterLoop:
             variants = self._propose_variants(outer_iteration, parents)
             for variant in variants:
                 store.add_variant(variant)
+            store.append_progress(f"Outer {outer_iteration}: proposed {len(variants)} {self.task_mode} variants")
+            for variant in variants:
+                store.append_progress(f"  Variant {variant.id}: {_shorten(variant.payload)}")
             result = await inner_loop.evaluate(variants, store)
             best_eval = result.ranked_evaluations[0] if result.ranked_evaluations else None
             plateau_signal = plateau.update(best_eval.score if best_eval else 0.0)
@@ -328,6 +331,10 @@ class EvolutionaryOuterLoop:
                 f"Outer {outer_iteration}: mode={self.task_mode} best_score="
                 f"{best_eval.score if best_eval else 0.0:.3f} signal={termination_signal}"
             )
+            for evaluation in result.ranked_evaluations[:3]:
+                store.append_progress(
+                    f"  Score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}"
+                )
             winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
             parents = [variant for variant in variants if variant.id in winner_ids]
             if termination_signal in {"score_threshold", "claim_corroboration_threshold", "score_plateau", "coverage_plateau"}:
@@ -512,3 +519,10 @@ def _stable_judge_score(payload: str, metrics: dict[str, float]) -> float:
     jitter = int(digest[:4], 16) / 0xFFFF
     weighted = (metrics["coverage"] * 0.35) + (metrics["corroboration"] * 0.35) + (metrics["credibility"] * 0.25)
     return round(min(1.0, weighted + (jitter * 0.05)), 3)
+
+
+def _shorten(text: str, limit: int = 140) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3] + "..."
