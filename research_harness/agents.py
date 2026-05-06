@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Protocol
 
+from .llm import LLMClient
 from .schemas import (
     AgentBudget,
     AgentTrace,
@@ -46,13 +48,15 @@ class BaseAgent:
         role: str,
         prompt_template: str,
         budget: Optional[AgentBudget] = None,
-        model: str = "deterministic-local-v1",
+        llm: Optional[LLMClient] = None,
+        model: Optional[str] = None,
     ):
         self.name = name
         self.role = role
         self.prompt_template = prompt_template
         self.budget = budget or AgentBudget()
-        self.model = model
+        self.llm = llm or LLMClient()
+        self.model = model or self.llm.model_label
         self.tool_calls: list[dict[str, object]] = []
         self.tools_used: list[str] = []
 
@@ -107,8 +111,9 @@ class LiteratureAgent(BaseAgent):
         prompt_template: str,
         budget: Optional[AgentBudget] = None,
         search_queries: Optional[list[str]] = None,
+        llm: Optional[LLMClient] = None,
     ):
-        super().__init__(name, "search_literature", prompt_template, budget)
+        super().__init__(name, "search_literature", prompt_template, budget, llm=llm)
         self.query_angle = query_angle
         self.corpus = corpus
         self.search_queries = search_queries or []
@@ -175,8 +180,9 @@ class HypothesisAgent(BaseAgent):
         hypothesis_angle: str,
         prompt_template: str,
         budget: Optional[AgentBudget] = None,
+        llm: Optional[LLMClient] = None,
     ):
-        super().__init__(name, "hypothesis_generation", prompt_template, budget)
+        super().__init__(name, "hypothesis_generation", prompt_template, budget, llm=llm)
         self.hypothesis_angle = hypothesis_angle
 
     async def run(self, run: RunRecord, store: ArtifactStore) -> str:
@@ -282,7 +288,7 @@ class SynthesisAgent(BaseAgent):
         hypotheses = sorted(_dedupe_by_id(store.list("hypotheses")), key=lambda row: row["confidence"], reverse=True)
         contradictions = store.list("contradictions")
         questions = sorted(store.list("open_questions"), key=lambda row: row["priority"])
-        report = _build_report(run, sources, claims, hypotheses, contradictions, questions)
+        report = _build_report_with_llm(self.llm, run, sources, claims, hypotheses, contradictions, questions)
         store.write_report(report)
         return f"Synthesized final report with {len(sources)} sources, {len(claims)} claims, and {len(hypotheses)} hypotheses."
 
@@ -428,6 +434,45 @@ def _build_report(
     for source in sources:
         lines.append(f"- [{source['title']}]({source['url']}) by {source['author']} ({source['date']})")
     return "\n".join(lines) + "\n"
+
+
+def _build_report_with_llm(
+    llm: LLMClient,
+    run: RunRecord,
+    sources: list[dict[str, object]],
+    claims: list[dict[str, object]],
+    hypotheses: list[dict[str, object]],
+    contradictions: list[dict[str, object]],
+    questions: list[dict[str, object]],
+) -> str:
+    deterministic_report = _build_report(run, sources, claims, hypotheses, contradictions, questions)
+    if not llm.is_live:
+        return deterministic_report
+    payload = {
+        "goal": run.user_goal,
+        "run_id": run.id,
+        "task_type": run.task_type,
+        "task_mode": run.task_mode,
+        "sources": sources[:12],
+        "claims": sorted(claims, key=lambda row: row["confidence"], reverse=True)[:24],
+        "hypotheses": hypotheses[:12],
+        "contradictions": contradictions[:12],
+        "open_questions": questions[:12],
+    }
+    system = (
+        "You are the synthesis agent in a research harness. Write a concise, evidence-grounded "
+        "Markdown report. Do not invent citations. Use only source IDs and URLs present in the payload. "
+        "Call out uncertainty and contradictions."
+    )
+    user = "Create the final report from this JSON payload:\n" + json.dumps(payload, indent=2, sort_keys=True)
+    try:
+        response = llm.complete(system, user, max_output_tokens=1800)
+    except Exception as exc:
+        fallback_note = f"\n\n## LLM Synthesis Fallback\n- Live synthesis failed: {type(exc).__name__}: {exc}\n"
+        return deterministic_report + fallback_note
+    if not response.text.strip():
+        return deterministic_report + "\n\n## LLM Synthesis Fallback\n- Live synthesis returned no text.\n"
+    return response.text.strip() + "\n"
 
 
 def _executive_summary(

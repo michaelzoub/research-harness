@@ -7,8 +7,12 @@ from uuid import uuid4
 
 
 TaskType = Literal["bounded", "open_ended"]
+TaskMode = Literal["optimize", "research"]
 RunStatus = Literal["running", "completed", "failed", "cancelled"]
 WritePolicy = Literal["append_only", "upsert_by_url", "upsert_by_text"]
+LoopTaskStatus = Literal["pending", "running", "passed", "failed", "skipped"]
+LoopTaskAction = Literal["search", "hypothesize", "critique", "synthesize", "debug_harness"]
+VariantKind = Literal["code", "query"]
 
 
 def now_iso() -> str:
@@ -29,6 +33,85 @@ class AgentBudget:
     reporting_schema: str = "structured_artifact_v1"
     trace_id: str = field(default_factory=lambda: new_id("trace"))
     cancelled: bool = False
+
+
+@dataclass
+class LoopTask:
+    title: str
+    action: LoopTaskAction
+    priority: int
+    params: dict[str, Any]
+    acceptance_criteria: list[str]
+    status: LoopTaskStatus = "pending"
+    passes: bool = False
+    attempts: int = 0
+    last_error: Optional[str] = None
+    result_summary: Optional[str] = None
+    created_at: str = field(default_factory=now_iso)
+    completed_at: Optional[str] = None
+    id: str = field(default_factory=lambda: new_id("task"))
+
+
+@dataclass
+class LoopIteration:
+    run_id: str
+    iteration: int
+    task_id: str
+    task_title: str
+    agent_name: str
+    status: str
+    summary: str
+    errors: list[str]
+    started_at: str = field(default_factory=now_iso)
+    completed_at: Optional[str] = None
+    id: str = field(default_factory=lambda: new_id("iter"))
+
+
+@dataclass
+class TaskIngestionDecision:
+    requested_mode: str
+    selected_mode: TaskMode
+    reason: str
+    evaluator_name: Optional[str] = None
+    id: str = field(default_factory=lambda: new_id("decision"))
+
+
+@dataclass
+class Variant:
+    run_id: str
+    outer_iteration: int
+    kind: VariantKind
+    payload: str
+    parent_ids: list[str]
+    metadata: dict[str, Any]
+    id: str = field(default_factory=lambda: new_id("variant"))
+
+
+@dataclass
+class VariantEvaluation:
+    run_id: str
+    variant_id: str
+    inner_loop: TaskMode
+    score: float
+    metrics: dict[str, float]
+    judge_scores: list[float]
+    summary: str
+    passed: bool
+    id: str = field(default_factory=lambda: new_id("eval"))
+
+
+@dataclass
+class EvolutionRound:
+    run_id: str
+    outer_iteration: int
+    mode: TaskMode
+    variant_ids: list[str]
+    best_variant_id: Optional[str]
+    best_score: float
+    termination_signal: str
+    plateau_count: int
+    completed_at: str = field(default_factory=now_iso)
+    id: str = field(default_factory=lambda: new_id("round"))
 
 
 @dataclass
@@ -125,6 +208,7 @@ class RunRecord:
     user_goal: str
     task_type: TaskType
     harness_config_id: str
+    task_mode: Optional[TaskMode] = None
     status: RunStatus = "running"
     total_cost: float = 0.0
     total_tokens: int = 0

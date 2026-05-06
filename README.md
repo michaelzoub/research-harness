@@ -12,37 +12,48 @@ The current MVP is intentionally simple and reproducible. By default, actual run
 
 ## Quick Start
 
-Run the included example:
+### 1. Get The Project
+
+Clone the repository, or download and unzip it, then enter the project folder:
 
 ```bash
-python3 run_example.py
+git clone <repo-url> research-harness
+cd research-harness
 ```
 
-Run your own research goal:
+If you downloaded a ZIP instead, open the extracted folder in your terminal.
+
+### 2. Run With The Repo-Local Bash Wrapper
+
+The fastest way to start is the included `autore` wrapper script:
 
 ```bash
 ./autore "Research adaptive agent harnesses for automated scientific discovery"
 ```
 
-New run folders are named from the research goal, for example:
-
-```text
-outputs/run_adaptive-agent-harnesses-automated-scientific-discovery/
-outputs/run_adaptive-agent-harnesses-automated-scientific-discovery-02/
-```
-
-Run against arXiv:
+If your shell says the script is not executable, run:
 
 ```bash
-./autore "Please research new agent paradigms on arxiv and determine which ones will be used in 5 years based on current workplace trends" --retriever arxiv
+chmod +x autore
 ```
 
-The default `--retriever auto` currently uses arXiv. Use `--retriever local` only when you want the offline demo corpus.
+Then retry:
 
-If you install the package locally, the same command is available as `autore`:
+```bash
+./autore "Research adaptive agent harnesses for automated scientific discovery"
+```
+
+### 3. Optional: Install `autore` As A Command
+
+If you want to run `autore` without `./`, install the package locally:
 
 ```bash
 python3 -m pip install -e .
+```
+
+Then run:
+
+```bash
 autore "Research adaptive agent harnesses for automated scientific discovery"
 ```
 
@@ -53,11 +64,28 @@ echo 'export PATH="$HOME/Library/Python/3.9/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-You can also always use the repo-local wrapper:
+### 4. Try The Included Example
 
 ```bash
-./autore "Research adaptive agent harnesses for automated scientific discovery"
+python3 run_example.py
 ```
+
+New run folders are named from the research goal:
+
+```text
+outputs/run_adaptive-agent-harnesses-automated-scientific-discovery/
+outputs/run_adaptive-agent-harnesses-automated-scientific-discovery-02/
+```
+
+### Common Runs
+
+Run against arXiv:
+
+```bash
+./autore "Please research new agent paradigms on arxiv and determine which ones will be used in 5 years based on current workplace trends" --retriever arxiv
+```
+
+The default `--retriever auto` currently uses arXiv. Use `--retriever local` only when you want the offline demo corpus.
 
 Run the deterministic Phase 1 flow:
 
@@ -71,6 +99,26 @@ Run the Phase 2 fan-out / fan-in flow:
 ./autore "Research how multi-agent systems improve automated literature review quality"
 ```
 
+Run the nested evolutionary loop:
+
+```bash
+./autore "Research how multi-agent systems improve automated literature review quality" --mode loop --retriever local
+```
+
+Loop mode routes the task to `research` or `optimize`, runs an outer evolutionary orchestrator that proposes variants, sends each batch to the selected inner loop for scoring, records ranked variants, and stops on a threshold or plateau signal.
+
+Force research mode:
+
+```bash
+./autore "Research agent paradigms and workplace trends" --mode loop --task-mode research
+```
+
+Run optimize mode with a registered deterministic evaluator:
+
+```bash
+./autore "Optimize a tiny scoring function" --mode loop --task-mode optimize --evaluator length_score
+```
+
 Each run prints:
 
 ```text
@@ -78,20 +126,61 @@ Run: run_<id>
 Status: completed
 Artifacts: outputs/run_<id>
 Report: outputs/run_<id>/final_report.md
+Run benchmark: outputs/run_<id>/run_benchmark.html
+Decision DAG: outputs/run_<id>/decision_dag.svg
 ```
 
-Open the generated `final_report.md` to read the synthesis. Inspect `trace.jsonl` and the JSON artifact files to see how the report was produced.
+Open `final_report.md` for the synthesis and `run_benchmark.html` for a run-specific benchmark with a decision DAG, mode routing, variant scores, and stopping signals. Inspect `trace.jsonl` and the JSON artifact files to see how the report was produced.
+
+---
+
+## AI Credits And LLM Usage
+
+The harness is now wired as an actual LLM agent architecture: proposal, judge, and synthesis steps use a live LLM when configured.
+
+By default, `RESEARCH_HARNESS_LLM_PROVIDER=auto`:
+
+- If `OPENAI_API_KEY` is present in `.env.local`, the harness calls the OpenAI Responses API.
+- If no valid-looking key is present, it falls back to `local-deterministic-fallback` so tests and offline demos still run.
+- Set `--llm-provider openai` when you want to require live OpenAI calls.
+- Set `--llm-provider local` when you want an offline deterministic run.
+
+Live LLM calls are used for:
+
+- Outer-loop code/query variant proposals.
+- Research-loop judge scoring.
+- Final synthesis report writing.
+
+Search agents still retrieve evidence through the configured retriever. Optimize mode still requires a deterministic evaluator for scoring; the LLM proposes variants, but the inner optimize score comes from the evaluator.
 
 ---
 
 ## Environment Setup
 
+The harness automatically loads `.env`, then `.env.local`. Put secrets such as `OPENAI_API_KEY` in `.env.local`; it overrides `.env` and should stay out of git.
+
 The current MVP works without API keys. It uses public unauthenticated sources by default and can use the deterministic local corpus in `examples/corpus/research_corpus.json` for offline demos.
 
-Copy the example env file if you want to override defaults:
+Copy the example env file if you want shared defaults:
 
 ```bash
 cp .env.example .env
+```
+
+Create `.env.local` for your machine-specific secrets:
+
+```bash
+cat > .env.local <<'EOF'
+OPENAI_API_KEY=sk-...
+RESEARCH_HARNESS_LLM_PROVIDER=auto
+RESEARCH_HARNESS_LLM_MODEL=gpt-4.1-mini
+EOF
+```
+
+After that, run normally:
+
+```bash
+./autore "Research agent paradigms and trends" --mode loop
 ```
 
 Supported environment variables:
@@ -100,6 +189,9 @@ Supported environment variables:
 RESEARCH_HARNESS_CORPUS_PATH=examples/corpus/research_corpus.json
 RESEARCH_HARNESS_OUTPUT_DIR=outputs
 RESEARCH_HARNESS_RETRIEVER=auto
+RESEARCH_HARNESS_LLM_PROVIDER=auto
+RESEARCH_HARNESS_LLM_MODEL=gpt-4.1-mini
+OPENAI_API_KEY=
 ```
 
 Retriever options:
@@ -133,17 +225,19 @@ memory:
   Search prior artifacts from local outputs/run_* folders.
 ```
 
-Reserved for future live model/search integrations:
+Live model and optional search integrations:
 
 ```text
 OPENAI_API_KEY=
+RESEARCH_HARNESS_LLM_PROVIDER=auto
+RESEARCH_HARNESS_LLM_MODEL=gpt-4.1-mini
 SEARCH_API_KEY=
 LITERATURE_API_KEY=
 GITHUB_TOKEN=
 X_API_KEY=
 ```
 
-The CLI automatically loads `.env` if it exists. `.env`, `.env.*`, virtualenvs, logs, and generated run outputs are ignored by git.
+The CLI automatically loads `.env` and then `.env.local` if they exist. `.env`, `.env.*`, virtualenvs, logs, and generated run outputs are ignored by git.
 
 ---
 
@@ -366,7 +460,7 @@ The system should not silently mutate itself. Proposed changes should be logged,
 
 ## Current Scope
 
-This repository currently implements Phase 1 and Phase 2.
+This repository currently implements Phase 1, Phase 2, and a scaffolded Phase 3 nested evolutionary loop.
 
 ### Phase 1: Deterministic Research Agent
 
@@ -398,6 +492,79 @@ A fan-out / fan-in harness that can:
 - Track traces for each agent
 
 Status: implemented as an MVP.
+
+### Phase 3: Nested Evolutionary Loop
+
+The harness now includes a nested evolutionary loop inspired by AlphaEvolve, FunSearch, and parallel Ralph-style evaluation.
+
+The architecture has two levels:
+
+```text
+Outer orchestrator loop
+  Propose code/query variants
+  Select mode at ingestion
+  Send variants to inner loop
+  Tournament-select winners
+  Mutate/refine next batch
+  Stop on threshold or plateau
+
+Inner evaluator loop
+  OptimizeLoop: code variant -> deterministic float score
+  ResearchLoop: query variant -> retrieval + judge ensemble score
+```
+
+Status: scaffolded with live LLM wiring. With `OPENAI_API_KEY`, the outer loop uses an LLM for proposal, the research loop uses an LLM judge score, and synthesis uses an LLM report writer. Without a key, the same harness falls back to local deterministic behavior for tests and offline demos.
+
+Task ingestion chooses one of two modes:
+
+- `optimize`: selected only when a deterministic evaluator is registered or explicitly supplied.
+- `research`: selected when there is no deterministic evaluator, or when the user explicitly requests research.
+
+The fallback rule is intentional: if `register_evaluator(fn)` cannot resolve an evaluator, the harness should not fake optimization. It routes to research mode and records the reason in `task_ingestion_decisions.json`.
+
+Shared inner-loop contract:
+
+- Input: a batch of `Variant` records.
+- Output: ranked `VariantEvaluation` records.
+- Required fields: `variant_id`, scalar `score`, metric breakdown, judge scores, pass/fail flag, summary, and termination signal.
+- The outer orchestrator only sees ranked variants and termination signals, so it stays mode-agnostic.
+
+Research scoring uses a judge ensemble:
+
+- `coverage`: how many useful sources were retrieved.
+- `corroboration`: how many claims were extracted across those sources.
+- `credibility`: average source credibility.
+- `stable_judge_score`: deterministic tie-breaker from the query and metrics.
+- `llm_judge_score`: live model assessment when an LLM is configured.
+- Final score: median of judge scores to reduce variance.
+
+Future judge ensembles can add more independent model calls or specialized rubrics, but should preserve the same output schema.
+
+Plateau detection works across modes with different noise assumptions:
+
+- Optimize mode uses a small improvement epsilon and shorter patience because deterministic scores are low-noise.
+- Research mode uses a larger improvement epsilon and longer patience because retrieval and judge scores are noisier.
+- Termination signals include `score_threshold`, `claim_corroboration_threshold`, `score_plateau`, and `coverage_plateau`.
+
+Generated loop artifacts:
+
+```text
+tasks.json
+loop_iterations.json
+task_ingestion_decisions.json
+variants.json
+variant_evaluations.json
+evolution_rounds.json
+progress.txt
+trace.jsonl
+final_report.md
+```
+
+Use `--max-iterations` to cap loop turns:
+
+```bash
+./autore "Research critic agents for evidence checking" --mode loop --max-iterations 12
+```
 
 ---
 
@@ -907,8 +1074,17 @@ outputs/run_<id>/
   harness_changes.json
   runs.json
   agent_traces.json
+  task_ingestion_decisions.json
+  variants.json
+  variant_evaluations.json
+  evolution_rounds.json
   trace.jsonl
   final_report.md
+  run_benchmark.html
+  run_benchmark.md
+  run_benchmark_summary.json
+  decision_dag.svg
+  decision_dag.mmd
 ```
 
 Benchmark all runs in `outputs/`:
@@ -934,6 +1110,14 @@ The benchmark report includes:
 - Source-type breakdowns
 - Average claim confidence, source relevance, and source credibility
 - `summary.json`, `runs.csv`, SVG charts, and an `index.html` dashboard
+
+Each individual run also writes non-global benchmarks directly into its run folder:
+
+- `run_benchmark.html`: quick visual explanation of the run.
+- `run_benchmark.md`: Markdown version with a Mermaid decision DAG.
+- `run_benchmark_summary.json`: machine-readable local metrics.
+- `decision_dag.svg`: flowchart of prompt routing, outer-loop proposal, inner-loop evaluation, selection, stopping, and synthesis.
+- `decision_dag.mmd`: Mermaid source for the same DAG.
 
 Benchmark dashboards under `benchmarks/` are generated artifacts and are ignored by git. Reusable example goals and commands live in `examples/`.
 

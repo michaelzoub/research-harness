@@ -13,9 +13,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("goal", help="High-level research goal.")
     parser.add_argument(
         "--mode",
-        choices=["deterministic", "fanout"],
+        choices=["deterministic", "fanout", "loop"],
         default="fanout",
-        help="Run Phase 1 deterministic or Phase 2 fan-out/fan-in.",
+        help="Run Phase 1 deterministic, Phase 2 fan-out/fan-in, or the nested evolutionary loop.",
     )
     parser.add_argument(
         "--corpus",
@@ -35,10 +35,38 @@ def build_parser() -> argparse.ArgumentParser:
         default=os.environ.get("RESEARCH_HARNESS_RETRIEVER", "auto"),
         help="Evidence retriever/source mix. Auto uses a mixed strategy. Use local for the offline demo corpus.",
     )
+    parser.add_argument(
+        "--max-iterations",
+        type=int,
+        default=12,
+        help="Maximum task-loop iterations when --mode loop is selected.",
+    )
+    parser.add_argument(
+        "--task-mode",
+        choices=["auto", "optimize", "research"],
+        default=os.environ.get("RESEARCH_HARNESS_TASK_MODE", "auto"),
+        help="Task ingestion mode for --mode loop. Auto uses evaluator availability and prompt heuristics.",
+    )
+    parser.add_argument(
+        "--evaluator",
+        default=os.environ.get("RESEARCH_HARNESS_EVALUATOR"),
+        help="Registered deterministic evaluator name for optimize-mode loop tasks.",
+    )
+    parser.add_argument(
+        "--llm-provider",
+        choices=["auto", "openai", "local"],
+        default=os.environ.get("RESEARCH_HARNESS_LLM_PROVIDER", "auto"),
+        help="LLM provider for agent proposal, judging, and synthesis. Auto uses OpenAI when OPENAI_API_KEY is set.",
+    )
+    parser.add_argument(
+        "--llm-model",
+        default=os.environ.get("RESEARCH_HARNESS_LLM_MODEL", "gpt-4.1-mini"),
+        help="LLM model name used when the selected provider is live.",
+    )
     return parser
 
 
-def load_dotenv(path: Path = Path(".env")) -> None:
+def load_dotenv(path: Path = Path(".env"), *, override: bool = False) -> None:
     if not path.exists():
         return
     for raw_line in path.read_text(encoding="utf-8").splitlines():
@@ -46,19 +74,35 @@ def load_dotenv(path: Path = Path(".env")) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        clean_key = key.strip()
+        clean_value = value.strip().strip('"').strip("'")
+        if override:
+            os.environ[clean_key] = clean_value
+        else:
+            os.environ.setdefault(clean_key, clean_value)
 
 
 def main() -> None:
     load_dotenv()
+    load_dotenv(Path(".env.local"), override=True)
     args = build_parser().parse_args()
-    config = HarnessConfig(mode=args.mode, retriever=args.retriever)
+    config = HarnessConfig(
+        mode=args.mode,
+        retriever=args.retriever,
+        max_loop_iterations=args.max_iterations,
+        task_mode=args.task_mode,
+        evaluator_name=args.evaluator,
+        llm_provider=args.llm_provider,
+        llm_model=args.llm_model,
+    )
     orchestrator = Orchestrator(args.corpus, args.output, config)
     run, store = asyncio.run(orchestrator.run(args.goal, mode=args.mode))
     print(f"Run: {run.id}")
     print(f"Status: {run.status}")
     print(f"Artifacts: {store.root}")
     print(f"Report: {store.report_path}")
+    print(f"Run benchmark: {store.run_benchmark_path}")
+    print(f"Decision DAG: {store.decision_dag_path}")
 
 
 if __name__ == "__main__":

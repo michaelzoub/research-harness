@@ -13,9 +13,15 @@ from .schemas import (
     FailedPath,
     HarnessChange,
     Hypothesis,
+    LoopIteration,
+    LoopTask,
     OpenQuestion,
     RunRecord,
     Source,
+    TaskIngestionDecision,
+    Variant,
+    VariantEvaluation,
+    EvolutionRound,
     to_dict,
 )
 
@@ -31,6 +37,12 @@ ENTITY_FILES = {
     "harness_changes": "harness_changes.json",
     "runs": "runs.json",
     "agent_traces": "agent_traces.json",
+    "loop_tasks": "tasks.json",
+    "loop_iterations": "loop_iterations.json",
+    "task_ingestion_decisions": "task_ingestion_decisions.json",
+    "variants": "variants.json",
+    "variant_evaluations": "variant_evaluations.json",
+    "evolution_rounds": "evolution_rounds.json",
 }
 
 
@@ -50,6 +62,11 @@ class ArtifactStore:
                 path.write_text("[]\n", encoding="utf-8")
         self.trace_log_path = self.root / "trace.jsonl"
         self.report_path = self.root / "final_report.md"
+        self.run_benchmark_path = self.root / "run_benchmark.html"
+        self.decision_dag_path = self.root / "decision_dag.svg"
+        self.progress_path = self.root / "progress.txt"
+        if not self.progress_path.exists():
+            self.progress_path.write_text("", encoding="utf-8")
 
     def add_source(self, source: Source) -> Source:
         existing = self.find_by("sources", "url", source.url)
@@ -89,6 +106,43 @@ class ArtifactStore:
     def add_run(self, run: RunRecord) -> RunRecord:
         self._append("runs", run)
         return run
+
+    def add_loop_task(self, task: LoopTask) -> LoopTask:
+        self._append("loop_tasks", task)
+        return task
+
+    def update_loop_task(self, task: LoopTask) -> None:
+        rows = self.list("loop_tasks")
+        for index, row in enumerate(rows):
+            if row["id"] == task.id:
+                rows[index] = to_dict(task)
+                self._write("loop_tasks", rows)
+                return
+        self.add_loop_task(task)
+
+    def add_loop_iteration(self, iteration: LoopIteration) -> LoopIteration:
+        self._append("loop_iterations", iteration)
+        return iteration
+
+    def add_task_ingestion_decision(self, decision: TaskIngestionDecision) -> TaskIngestionDecision:
+        self._append("task_ingestion_decisions", decision)
+        return decision
+
+    def add_variant(self, variant: Variant) -> Variant:
+        self._append("variants", variant)
+        return variant
+
+    def add_variant_evaluation(self, evaluation: VariantEvaluation) -> VariantEvaluation:
+        self._append("variant_evaluations", evaluation)
+        return evaluation
+
+    def add_evolution_round(self, round_record: EvolutionRound) -> EvolutionRound:
+        self._append("evolution_rounds", round_record)
+        return round_record
+
+    def append_progress(self, text: str) -> None:
+        with self.progress_path.open("a", encoding="utf-8") as handle:
+            handle.write(text.rstrip() + "\n")
 
     def update_run(self, run: RunRecord) -> None:
         rows = self.list("runs")

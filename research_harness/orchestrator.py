@@ -7,13 +7,17 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from .agents import (
+    AgentResult,
     CriticAgent,
     HarnessDebuggerAgent,
     HypothesisAgent,
     LiteratureAgent,
     SynthesisAgent,
 )
-from .schemas import AgentBudget, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso
+from .llm import LLMClient
+from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter
+from .run_benchmarks import write_run_benchmarks
+from .schemas import AgentBudget, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso
 from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
 from .search import DocsBlogsSearch
 from .search import GitHubSearch
@@ -81,6 +85,13 @@ class HarnessConfig:
     search_agent_count: int = 7
     hypothesis_agent_count: int = 2
     include_debugger: bool = True
+    max_loop_iterations: int = 12
+    max_task_attempts: int = 2
+    task_mode: str = "auto"
+    evaluator_name: Optional[str] = None
+    evolution_population_size: int = 4
+    llm_provider: str = "auto"
+    llm_model: str = "gpt-4.1-mini"
     default_budget: AgentBudget = field(default_factory=AgentBudget)
 
 
@@ -89,6 +100,10 @@ class Orchestrator:
         self.corpus_path = corpus_path
         self.output_root = output_root
         self.config = config or HarnessConfig()
+        self.evaluator_registry = EvaluatorRegistry()
+        self.llm = LLMClient(provider=self.config.llm_provider, model=self.config.llm_model)
+        if self.config.llm_provider == "openai" and not self.llm.is_live:
+            raise ValueError("--llm-provider openai requires OPENAI_API_KEY.")
 
     async def run(self, goal: str, mode: Optional[str] = None) -> Tuple[RunRecord, ArtifactStore]:
         selected_mode = mode or self.config.mode
@@ -108,6 +123,8 @@ class Orchestrator:
                 await self._run_phase1(run, store, plan, source_strategy)
             elif selected_mode == "fanout":
                 await self._run_phase2(run, store, plan, source_strategy)
+            elif selected_mode == "loop":
+                await self._run_loop(run, store, plan, source_strategy)
             else:
                 raise ValueError(f"Unknown mode: {selected_mode}")
             run.status = "completed"
@@ -119,6 +136,7 @@ class Orchestrator:
             run.total_tokens = sum(int(trace["token_usage"]) for trace in traces)
             run.completed_at = now_iso()
             store.update_run(run)
+            write_run_benchmarks(store)
         return run, store
 
     def classify_task(self, goal: str) -> TaskType:
@@ -186,18 +204,21 @@ class Orchestrator:
             prompt_template=_prompt("literature_agent"),
             budget=self._budget("append_only"),
             search_queries=item.queries,
+            llm=self.llm,
         )
         critic = CriticAgent(
             name="deterministic_critic",
             role="critic_reviewer",
             prompt_template=_prompt("critic_agent"),
             budget=self._budget("append_only"),
+            llm=self.llm,
         )
         synth = SynthesisAgent(
             name="deterministic_synthesis",
             role="synthesis_agent",
             prompt_template=_prompt("synthesis_agent"),
             budget=self._budget("append_only"),
+            llm=self.llm,
         )
         for agent in [literature, critic, synth]:
             await agent.execute(run, store)
@@ -213,6 +234,7 @@ class Orchestrator:
                 prompt_template=_prompt("literature_agent"),
                 budget=self._budget("upsert_by_url"),
                 search_queries=item.queries,
+                llm=self.llm,
             )
             for index, item in enumerate(source_strategy[: self.config.search_agent_count])
         ]
@@ -224,6 +246,7 @@ class Orchestrator:
                 hypothesis_angle=angle,
                 prompt_template=_prompt("hypothesis_agent"),
                 budget=self._budget("append_only"),
+                llm=self.llm,
             )
             for index, angle in enumerate(plan.hypothesis_angles[: self.config.hypothesis_agent_count])
         ]
@@ -234,12 +257,14 @@ class Orchestrator:
             role="critic_reviewer",
             prompt_template=_prompt("critic_agent"),
             budget=self._budget("append_only"),
+            llm=self.llm,
         )
         synthesis = SynthesisAgent(
             name="synthesis_agent",
             role="synthesis_agent",
             prompt_template=_prompt("synthesis_agent"),
             budget=self._budget("append_only"),
+            llm=self.llm,
         )
         await critic.execute(run, store)
         await synthesis.execute(run, store)
@@ -250,8 +275,351 @@ class Orchestrator:
                 role="harness_debugger",
                 prompt_template=_prompt("harness_debugger"),
                 budget=self._budget("append_only"),
+                llm=self.llm,
             )
             await debugger.execute(run, store)
+
+    async def _run_loop(
+        self, run: RunRecord, store: ArtifactStore, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]
+    ) -> None:
+        router = TaskRouter(self.evaluator_registry)
+        decision = router.decide(run.user_goal, self.config.task_mode, self.config.evaluator_name)
+        store.add_task_ingestion_decision(decision)
+        run.task_mode = decision.selected_mode
+        store.update_run(run)
+
+        tasks = self.create_evolution_tasks(decision.selected_mode)
+        for task in tasks:
+            store.add_loop_task(task)
+        store.append_progress(f"# Progress for {run.id}")
+        store.append_progress(f"Prompt: {run.user_goal}")
+        store.append_progress(f"Task ingestion: {decision.selected_mode} mode. {decision.reason}")
+
+        await self._pass_task(
+            run,
+            store,
+            tasks[0],
+            1,
+            "task_router",
+            f"Selected {decision.selected_mode} mode. {decision.reason}",
+        )
+
+        tasks[1].status = "running"
+        tasks[1].attempts += 1
+        store.update_loop_task(tasks[1])
+        outer_loop = EvolutionaryOuterLoop(
+            run_id=run.id,
+            goal=run.user_goal,
+            task_mode=decision.selected_mode,
+            source_strategy=source_strategy,
+            search_factory=self._retriever_for,
+            evaluator=self.evaluator_registry.get(decision.evaluator_name),
+            max_outer_iterations=self.config.max_loop_iterations,
+            population_size=self.config.evolution_population_size,
+            llm=self.llm,
+        )
+        await outer_loop.run(store)
+        await self._pass_task(
+            run,
+            store,
+            tasks[1],
+            2,
+            "outer_orchestrator",
+            f"Completed {len(store.list('evolution_rounds'))} evolutionary outer rounds.",
+        )
+
+        iteration = 3
+        task_cursor = 2
+        if decision.selected_mode == "research":
+            hypothesis = HypothesisAgent(
+                name="loop_research_hypothesis",
+                hypothesis_angle=plan.hypothesis_angles[0],
+                prompt_template=_prompt("hypothesis_agent"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+            result = await hypothesis.execute(run, store)
+            await self._record_task_result(run, store, tasks[task_cursor], iteration, result)
+            iteration += 1
+            task_cursor += 1
+
+        critic = CriticAgent(
+            name="loop_evolution_critic",
+            role="critic_reviewer",
+            prompt_template=_prompt("critic_agent"),
+            budget=self._budget("append_only"),
+            llm=self.llm,
+        )
+        result = await critic.execute(run, store)
+        await self._record_task_result(run, store, tasks[task_cursor], iteration, result)
+        iteration += 1
+        task_cursor += 1
+
+        synthesis = SynthesisAgent(
+            name="loop_evolution_synthesis",
+            role="synthesis_agent",
+            prompt_template=_prompt("synthesis_agent"),
+            budget=self._budget("append_only"),
+            llm=self.llm,
+        )
+        result = await synthesis.execute(run, store)
+        await self._record_task_result(run, store, tasks[task_cursor], iteration, result)
+        iteration += 1
+        task_cursor += 1
+
+        if self.config.include_debugger:
+            debugger = HarnessDebuggerAgent(
+                name="loop_evolution_debugger",
+                role="harness_debugger",
+                prompt_template=_prompt("harness_debugger"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+            result = await debugger.execute(run, store)
+            await self._record_task_result(run, store, tasks[task_cursor], iteration, result)
+
+        remaining = [row for row in store.list("loop_tasks") if not row.get("passes")]
+        if remaining:
+            store.append_progress(f"Stopped with {len(remaining)} incomplete loop tasks.")
+        else:
+            store.append_progress("<promise>COMPLETE</promise>")
+
+    def create_evolution_tasks(self, selected_mode: str) -> list[LoopTask]:
+        tasks = [
+            LoopTask(
+                title="Ingest prompt and select task mode",
+                action="debug_harness",
+                priority=1,
+                params={"selected_mode": selected_mode},
+                acceptance_criteria=[
+                    "Explicit flags, evaluator availability, and prompt heuristics were checked",
+                    "A task ingestion decision was persisted",
+                ],
+            ),
+            LoopTask(
+                title="Run outer evolutionary orchestrator",
+                action="debug_harness",
+                priority=2,
+                params={"selected_mode": selected_mode},
+                acceptance_criteria=[
+                    "The outer loop proposed code or query variants",
+                    "The selected inner loop returned ranked variants with scalar scores",
+                    "Plateau or threshold stopping signals were evaluated",
+                ],
+            ),
+        ]
+        if selected_mode == "research":
+            tasks.append(
+                LoopTask(
+                    title="Generate hypotheses from winning evidence",
+                    action="hypothesize",
+                    priority=3,
+                    params={},
+                    acceptance_criteria=["Claims from research variants were inspected", "Hypotheses or open questions were created"],
+                )
+            )
+        tasks.extend(
+            [
+                LoopTask(
+                    title="Critique ranked variants and claims",
+                    action="critique",
+                    priority=4,
+                    params={},
+                    acceptance_criteria=["Artifacts were reviewed for contradictions, weak evidence, or missing checks"],
+                ),
+                LoopTask(
+                    title="Synthesize evolutionary run report",
+                    action="synthesize",
+                    priority=5,
+                    params={},
+                    acceptance_criteria=["Final report was written from run artifacts"],
+                ),
+            ]
+        )
+        if self.config.include_debugger:
+            tasks.append(
+                LoopTask(
+                    title="Inspect harness behavior and propose improvements",
+                    action="debug_harness",
+                    priority=6,
+                    params={},
+                    acceptance_criteria=["A constrained harness-change proposal was recorded"],
+                )
+            )
+        return tasks
+
+    async def _record_task_result(
+        self, run: RunRecord, store: ArtifactStore, task: LoopTask, iteration: int, result: AgentResult
+    ) -> None:
+        if result.errors:
+            task.status = "failed"
+            task.passes = False
+            task.last_error = "; ".join(result.errors)
+        else:
+            task.status = "passed"
+            task.passes = True
+            task.completed_at = now_iso()
+        task.attempts += 1
+        task.result_summary = result.summary
+        store.update_loop_task(task)
+        store.add_loop_iteration(
+            LoopIteration(
+                run_id=run.id,
+                iteration=iteration,
+                task_id=task.id,
+                task_title=task.title,
+                agent_name=result.agent_name,
+                status=task.status,
+                summary=result.summary,
+                errors=result.errors,
+                completed_at=now_iso(),
+            )
+        )
+        store.append_progress(f"Task {iteration}: {task.status} - {result.summary}")
+
+    async def _pass_task(
+        self,
+        run: RunRecord,
+        store: ArtifactStore,
+        task: LoopTask,
+        iteration: int,
+        agent_name: str,
+        summary: str,
+    ) -> None:
+        await self._record_task_result(run, store, task, iteration, AgentResult(agent_name, summary, []))
+
+    def create_loop_tasks(self, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]) -> list[LoopTask]:
+        tasks: list[LoopTask] = []
+        for index, item in enumerate(source_strategy[: self.config.search_agent_count], start=1):
+            tasks.append(
+                LoopTask(
+                    title=f"Search {item.purpose}",
+                    action="search",
+                    priority=index,
+                    params={
+                        "query_angle": item.purpose,
+                        "retriever": item.retriever,
+                        "queries": item.queries,
+                    },
+                    acceptance_criteria=[
+                        "Retriever was called for the assigned angle",
+                        "Relevant sources and claims were written when evidence exists",
+                        "Failure paths were recorded when no evidence exists",
+                    ],
+                )
+            )
+        base_priority = len(tasks) + 1
+        for index, angle in enumerate(plan.hypothesis_angles[: self.config.hypothesis_agent_count], start=base_priority):
+            tasks.append(
+                LoopTask(
+                    title=f"Generate hypotheses for {angle}",
+                    action="hypothesize",
+                    priority=index,
+                    params={"hypothesis_angle": angle},
+                    acceptance_criteria=[
+                        "Existing claims were inspected",
+                        "Hypotheses or open questions were created",
+                        "Next experiments were captured for testable hypotheses",
+                    ],
+                )
+            )
+        tasks.extend(
+            [
+                LoopTask(
+                    title="Critique claims and hypotheses",
+                    action="critique",
+                    priority=len(tasks) + 1,
+                    params={},
+                    acceptance_criteria=[
+                        "Claims and hypotheses were reviewed",
+                        "Contradictions or open questions were recorded when found",
+                    ],
+                ),
+                LoopTask(
+                    title="Synthesize final report",
+                    action="synthesize",
+                    priority=len(tasks) + 2,
+                    params={},
+                    acceptance_criteria=[
+                        "Final report was written",
+                        "Sources, claims, hypotheses, contradictions, and questions were summarized",
+                    ],
+                ),
+            ]
+        )
+        if self.config.include_debugger:
+            tasks.append(
+                LoopTask(
+                    title="Inspect harness behavior and propose improvements",
+                    action="debug_harness",
+                    priority=len(tasks) + 1,
+                    params={},
+                    acceptance_criteria=[
+                        "Run traces and artifact yield were inspected",
+                        "A constrained harness-change proposal was recorded",
+                    ],
+                )
+            )
+        return tasks
+
+    def _next_loop_task(self, store: ArtifactStore) -> Optional[LoopTask]:
+        candidates = []
+        for row in store.list("loop_tasks"):
+            if row.get("passes"):
+                continue
+            if row.get("status") == "failed" and int(row.get("attempts", 0)) >= self.config.max_task_attempts:
+                continue
+            candidates.append(LoopTask(**row))
+        if not candidates:
+            return None
+        return sorted(candidates, key=lambda task: (task.priority, task.created_at))[0]
+
+    async def _execute_loop_task(self, run: RunRecord, store: ArtifactStore, task: LoopTask):
+        if task.action == "search":
+            agent = LiteratureAgent(
+                name=f"loop_search_{task.id}",
+                query_angle=str(task.params["query_angle"]),
+                corpus=self._retriever_for(str(task.params["retriever"])),
+                prompt_template=_prompt("literature_agent"),
+                budget=self._budget("upsert_by_url"),
+                search_queries=[str(query) for query in task.params.get("queries", [])],
+                llm=self.llm,
+            )
+        elif task.action == "hypothesize":
+            agent = HypothesisAgent(
+                name=f"loop_hypothesis_{task.id}",
+                hypothesis_angle=str(task.params["hypothesis_angle"]),
+                prompt_template=_prompt("hypothesis_agent"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+        elif task.action == "critique":
+            agent = CriticAgent(
+                name=f"loop_critic_{task.id}",
+                role="critic_reviewer",
+                prompt_template=_prompt("critic_agent"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+        elif task.action == "synthesize":
+            agent = SynthesisAgent(
+                name=f"loop_synthesis_{task.id}",
+                role="synthesis_agent",
+                prompt_template=_prompt("synthesis_agent"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+        elif task.action == "debug_harness":
+            agent = HarnessDebuggerAgent(
+                name=f"loop_debugger_{task.id}",
+                role="harness_debugger",
+                prompt_template=_prompt("harness_debugger"),
+                budget=self._budget("append_only"),
+                llm=self.llm,
+            )
+        else:  # pragma: no cover - guarded by LoopTaskAction literal
+            raise ValueError(f"Unknown loop action: {task.action}")
+        return await agent.execute(run, store)
 
     def _budget(self, write_policy: str) -> AgentBudget:
         return AgentBudget(

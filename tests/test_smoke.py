@@ -47,6 +47,60 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(first_run.id, "run_agent-memory-systems")
             self.assertEqual(second_run.id, "run_agent-memory-systems-02")
 
+    def test_loop_mode_runs_nested_research_evolution(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(mode="loop", retriever="local", max_loop_iterations=3),
+            )
+            run, store = asyncio.run(
+                orchestrator.run(
+                    "Research how multi-agent systems improve automated literature review quality",
+                    mode="loop",
+                )
+            )
+
+            tasks = store.list("loop_tasks")
+            iterations = store.list("loop_iterations")
+
+            self.assertEqual(run.status, "completed")
+            self.assertEqual(run.task_mode, "research")
+            self.assertGreaterEqual(len(tasks), 5)
+            self.assertTrue(all(task["passes"] for task in tasks))
+            self.assertEqual(len(iterations), len(tasks))
+            self.assertEqual(store.list("task_ingestion_decisions")[0]["selected_mode"], "research")
+            self.assertGreaterEqual(len(store.list("variants")), 1)
+            self.assertGreaterEqual(len(store.list("variant_evaluations")), 1)
+            self.assertGreaterEqual(len(store.list("evolution_rounds")), 1)
+            self.assertTrue(store.report_path.exists())
+            self.assertTrue(store.run_benchmark_path.exists())
+            self.assertTrue(store.decision_dag_path.exists())
+            self.assertTrue((store.root / "run_benchmark_summary.json").exists())
+            self.assertIn("<promise>COMPLETE</promise>", store.progress_path.read_text(encoding="utf-8"))
+
+    def test_loop_mode_can_route_to_optimize_with_evaluator(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    mode="loop",
+                    retriever="local",
+                    max_loop_iterations=2,
+                    task_mode="optimize",
+                    evaluator_name="length_score",
+                    include_debugger=False,
+                ),
+            )
+            run, store = asyncio.run(orchestrator.run("Optimize a tiny scoring function", mode="loop"))
+
+            self.assertEqual(run.status, "completed")
+            self.assertEqual(run.task_mode, "optimize")
+            self.assertEqual(store.list("task_ingestion_decisions")[0]["selected_mode"], "optimize")
+            self.assertTrue(all(row["inner_loop"] == "optimize" for row in store.list("variant_evaluations")))
+            self.assertTrue(all(task["passes"] for task in store.list("loop_tasks")))
+
     def test_goal_slug(self) -> None:
         self.assertEqual(
             goal_slug("Please research new agent paradigms on arxive and determine workplace trends"),
