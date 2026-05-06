@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://example.org/multi-agent-review-quality-2025",
+    "title": "Parallel Agent Review Improves Evidence Recall In Literature Tasks",
+    "author": "A. Rivera and S. Chen",
+    "date": "2025-02-14",
+    "source_type": "paper",
+    "summary": "A controlled evaluation found that assigning separate search framings to parallel agents increased source diversity and evidence recall compared with a single deterministic agent.",
+    "claims": [
+      "Parallel search agents increase evidence recall when each agent explores a distinct framing.",
+      "Fan-in synthesis improves report coherence when claims are deduplicated before ranking.",
+      "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+    ],
+    "tags": ["multi-agent", "literature", "parallel", "fan-in", "recall", "review"],
+    "credibility_score": 0.82
+  },
+  {
+    "url": "https://example.org/critic-agents-evidence-checking",
+    "title": "Reviewer Agents Reduce Unsupported Claims In Automated Research",
+    "author": "M. Okafor",
+    "date": "2024-11-09",
+    "source_type": "benchmark_report",
+    "summary": "Benchmark runs showed that a critic pass after extraction reduced unsupported claims, but increased runtime and sometimes over-penalized novel hypotheses.",
+    "claims": [
+      "Critic agents reduce unsupported claims by challenging evidence gaps after extraction.",
+      "A critic pass increases runtime and may decrease novelty if applied too early.",
+      "Contradiction checks are most useful before final synthesis."
+    ],
+    "tags": ["critic", "reviewer", "unsupported", "contradiction", "benchmark", "evidence"],
+    "credibility_score": 0.78
+  },
+  {
+    "url": "https://example.org/open-ended-agent-exploration",
+    "title": "Entropy And Framing Diversity In Open-Ended Research Agents",
+    "author": "L. Singh",
+    "date": "2025-05-03",
+    "source_type": "working_paper",
+    "summary": "The paper argues that open-ended research benefits from early framing diversity and later convergence through critique and synthesis.",
+    "claims": [
+      "Open-ended research benefits from broad early exploration before constraints are tightened.",
+      "Entropy injection can reveal overlooked mechanisms and assumptions.",
+      "Too much exploration decreases precision when no critic-driven follow-up is used."
+    ],
+    "tags": ["open-ended", "entropy", "framing", "hypotheses", "exploration", "mechanisms"],
+    "credibility_score": 0.7
+  },
+  {
+    "url": "https://example.org/artifact-stores-for-agent-traces",
+    "title": "Structured Artifact Stores For Reproducible Agent Research",
+    "author": "N. Patel",
+    "date": "2023-08-21",
+    "source_type": "systems_note",
+    "summary": "This systems note describes JSONL traces and typed artifact tables as a practical foundation for reproducible multi-agent runs.",
+    "claims": [
+      "Typed artifact stores make multi-agent research runs easier to audit.",
+      "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured.",
+      "Persistent world models should be introduced after the artifact schema stabilizes."
+    ],
+    "tags": ["artifact", "traces", "jsonl", "reproducible", "schema", "world-model"],
+    "credibility_score": 0.74
+  },
+  {
+    "url": "https://example.org/single-agent-baseline-limitations",
+    "title": "Single-Agent Baselines Remain Competitive For Narrow Research Questions",
+    "author": "D. Morales",
+    "date": "2024-04-18",
+    "source_type": "paper",
+    "summary": "A comparison found that single deterministic agents can match multi-agent systems on narrow questions with clear evaluation criteria.",
+    "claims": [
+      "Single deterministic agents can match multi-agent systems on narrow bounded research questions.",
+      "Multi-agent fan-out has less advantage when the task already has clear success criteria.",
+      "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+    ],
+    "tags": ["single-agent", "bounded", "baseline", "cost", "precision", "evaluation"],
+    "credibility_score": 0.8
+  },
+  {
+    "url": "https://example.org/adaptive-harness-risk-controls",
+    "title": "Risk Controls For Adaptive Agent Harnesses",
+    "author": "E. Novak",
+    "date": "2025-01-30",
+    "source_type": "technical_report",
+    "summary": "Adaptive harness changes should be proposed as constrained config variants and evaluated before being accepted.",
+    "claims": [
+      "Harness changes should be proposed, evaluated, and gated before modifying execution behavior.",
+      "Adaptive evolution without benchmark comparison can worsen reliability.",
+      "Pending change schemas improve reviewability and prevent arbitrary self-modification."
+    ],
+    "tags": ["adaptive", "harness", "gated", "benchmark", "config", "risk"],
+    "credibility_score": 0.76
+  }
+]

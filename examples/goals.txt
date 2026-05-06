@@ -1,0 +1,11 @@
+# Example research goals
+
+Research how multi-agent systems improve automated literature review quality
+
+Please research new agent paradigms on arxiv and determine which ones will be used in 5 years based on current workplace trends
+
+Compare planner-executor agents, reflection agents, and multi-agent debate for workplace automation tasks
+
+Research agent memory systems and identify which memory architectures are most useful for long-running knowledge work
+
+Find contradictions in recent claims about autonomous software engineering agents
