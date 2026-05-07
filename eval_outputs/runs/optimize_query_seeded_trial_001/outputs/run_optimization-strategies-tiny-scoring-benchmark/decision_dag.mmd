@@ -1,0 +1,15 @@
+flowchart TD
+  prompt["Prompt: Research optimization strategies for a tiny scoring benchmark"]
+  route["Route: optimize_query"]
+  outer["Outer orchestrator: propose variants"]
+  inner["Inner loop: evaluate and rank"]
+  select["Tournament selection"]
+  stop{"Threshold or plateau?"}
+  synth["Critic + synthesis + run benchmark"]
+  prompt --> route --> outer --> inner --> select --> stop
+  stop -- continue --> outer
+  stop -- stop --> synth
+  round1["Round 1: best=0.805, claim_corroboration_threshold"]
+  inner --> round1 --> select
+  round2["Round 2: best=0.053, continue"]
+  inner --> round2 --> select

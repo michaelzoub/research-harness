@@ -1,0 +1,9 @@
+[
+  {
+    "evaluator_name": "length_score",
+    "id": "decision_eae9f30b2dc0",
+    "reason": "Optimize mode was explicitly requested with evaluator 'length_score'.",
+    "requested_mode": "optimize",
+    "selected_mode": "optimize"
+  }
+]

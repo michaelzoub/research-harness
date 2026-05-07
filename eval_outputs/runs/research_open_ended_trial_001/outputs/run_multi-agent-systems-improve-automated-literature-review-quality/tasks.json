@@ -1,0 +1,95 @@
+[
+  {
+    "acceptance_criteria": [
+      "Explicit flags, evaluator availability, and prompt heuristics were checked",
+      "A task ingestion decision was persisted"
+    ],
+    "action": "debug_harness",
+    "attempts": 1,
+    "completed_at": "2026-05-06T22:55:41.370168+00:00",
+    "created_at": "2026-05-06T22:55:41.369478+00:00",
+    "id": "task_2a746dda85d1",
+    "last_error": null,
+    "params": {
+      "selected_mode": "research"
+    },
+    "passes": true,
+    "priority": 1,
+    "result_summary": "Selected research mode. Research mode was explicitly requested.",
+    "status": "passed",
+    "title": "Ingest prompt and select task mode"
+  },
+  {
+    "acceptance_criteria": [
+      "The outer loop proposed code or query variants",
+      "The selected inner loop returned ranked variants with scalar scores",
+      "Plateau or threshold stopping signals were evaluated"
+    ],
+    "action": "debug_harness",
+    "attempts": 2,
+    "completed_at": "2026-05-06T22:55:41.387144+00:00",
+    "created_at": "2026-05-06T22:55:41.369488+00:00",
+    "id": "task_00c44fe98bbb",
+    "last_error": null,
+    "params": {
+      "selected_mode": "research"
+    },
+    "passes": true,
+    "priority": 2,
+    "result_summary": "Completed 1 evolutionary outer rounds.",
+    "status": "passed",
+    "title": "Run outer evolutionary orchestrator"
+  },
+  {
+    "acceptance_criteria": [
+      "Claims from research variants were inspected",
+      "Hypotheses or open questions were created"
+    ],
+    "action": "hypothesize",
+    "attempts": 1,
+    "completed_at": "2026-05-06T22:55:41.388232+00:00",
+    "created_at": "2026-05-06T22:55:41.369494+00:00",
+    "id": "task_d46730a1199a",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 3,
+    "result_summary": "Generated 1 hypotheses for angle 'mechanism'.",
+    "status": "passed",
+    "title": "Generate hypotheses from winning evidence"
+  },
+  {
+    "acceptance_criteria": [
+      "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+    ],
+    "action": "critique",
+    "attempts": 1,
+    "completed_at": "2026-05-06T22:55:41.389647+00:00",
+    "created_at": "2026-05-06T22:55:41.369499+00:00",
+    "id": "task_1fd8374318f3",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 4,
+    "result_summary": "Reviewed 21 claims and 1 hypotheses; found 2 contradictions.",
+    "status": "passed",
+    "title": "Critique ranked variants and claims"
+  },
+  {
+    "acceptance_criteria": [
+      "Final report was written from run artifacts"
+    ],
+    "action": "synthesize",
+    "attempts": 1,
+    "completed_at": "2026-05-06T22:55:41.390978+00:00",
+    "created_at": "2026-05-06T22:55:41.369503+00:00",
+    "id": "task_c6f8f509fd99",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 5,
+    "result_summary": "Synthesized final report with 7 sources, 21 claims, and 1 hypotheses.",
+    "status": "passed",
+    "title": "Synthesize evolutionary run report"
+  }
+]

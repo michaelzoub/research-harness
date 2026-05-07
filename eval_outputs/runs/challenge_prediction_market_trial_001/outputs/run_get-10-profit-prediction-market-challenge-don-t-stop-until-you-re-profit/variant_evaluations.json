@@ -1,0 +1,143 @@
+[
+  {
+    "id": "eval_65adc5194199",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.797,
+      0.919,
+      0.67,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.797,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "implementability": 0.35,
+      "novelty": 0.67
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.85,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.960. novelty=0.670; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_640b44099600"
+  },
+  {
+    "id": "eval_c4e28d940da7",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.798,
+      0.901,
+      0.765,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.798,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "implementability": 0.35,
+      "novelty": 0.765
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.85,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.765; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_d41e044d4bed"
+  },
+  {
+    "id": "eval_7a30fc9240e4",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.798,
+      0.916,
+      0.765,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.798,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "implementability": 0.35,
+      "novelty": 0.765
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.85,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.958. novelty=0.765; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_3af102d42f75"
+  },
+  {
+    "id": "eval_03f6351b96dd",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.803
+    ],
+    "metrics": {
+      "deterministic_score": 0.803
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.803,
+    "summary": "Deterministic evaluator returned 0.803.",
+    "variant_id": "variant_beb6968cd66d"
+  },
+  {
+    "id": "eval_db726aa68e45",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.803
+    ],
+    "metrics": {
+      "deterministic_score": 0.803
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.803,
+    "summary": "Deterministic evaluator returned 0.803.",
+    "variant_id": "variant_64115c18adad"
+  },
+  {
+    "id": "eval_d51a6a992944",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.803
+    ],
+    "metrics": {
+      "deterministic_score": 0.803
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.803,
+    "summary": "Deterministic evaluator returned 0.803.",
+    "variant_id": "variant_79ca12c25e54"
+  },
+  {
+    "id": "eval_f3621b2d52a8",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.803
+    ],
+    "metrics": {
+      "deterministic_score": 0.803
+    },
+    "passed": true,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "score": 0.803,
+    "summary": "Deterministic evaluator returned 0.803.",
+    "variant_id": "variant_e90a85b592a3"
+  }
+]

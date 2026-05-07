@@ -6,9 +6,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from challenges.prediction_market import prediction_market_score
 from research_harness.benchmark import collect_runs, write_outputs
+from research_harness.evals import EvaluationHarness, GraderResult, aggregate_results, default_eval_suite, edge_eval_suite
+from research_harness.loops import ResearchLoop
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
-from research_harness.search import OpenAlexSearch, _parse_arxiv_feed
+from research_harness.schemas import Variant
+from research_harness.search import LocalCorpusSearch, OpenAlexSearch, _parse_arxiv_feed
+from research_harness.store import ArtifactStore
 
 
 class SmokeTest(unittest.TestCase):
@@ -68,6 +73,7 @@ class SmokeTest(unittest.TestCase):
 
             self.assertEqual(run.status, "completed")
             self.assertEqual(run.task_mode, "research")
+            self.assertEqual(run.product_agent, "research")
             self.assertGreaterEqual(len(tasks), 5)
             self.assertTrue(all(task["passes"] for task in tasks))
             self.assertEqual(len(iterations), len(tasks))
@@ -101,9 +107,166 @@ class SmokeTest(unittest.TestCase):
 
             self.assertEqual(run.status, "completed")
             self.assertEqual(run.task_mode, "optimize")
+            self.assertEqual(run.product_agent, "optimize")
             self.assertEqual(store.list("task_ingestion_decisions")[0]["selected_mode"], "optimize")
+            self.assertEqual(store.list("task_ingestion_decisions")[0]["product_agent"], "optimize")
             self.assertTrue(all(row["inner_loop"] == "optimize" for row in store.list("variant_evaluations")))
             self.assertTrue(all(task["passes"] for task in store.list("loop_tasks")))
+            self.assertTrue(store.optimal_code_path.exists())
+            optimization_result = json.loads(store.optimization_result_path.read_text(encoding="utf-8"))
+            self.assertEqual(optimization_result["optimal_code_path"], str(store.optimal_code_path))
+
+    def test_optimize_query_mode_feeds_optimizer_with_evaluator(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    retriever="local",
+                    max_loop_iterations=1,
+                    task_mode="optimize_query",
+                    evaluator_name="length_score",
+                    include_debugger=False,
+                    echo_progress=False,
+                ),
+            )
+            run, store = asyncio.run(orchestrator.run("Research optimization strategies for a tiny scoring benchmark"))
+
+            seed_context = json.loads(store.optimizer_seed_context_path.read_text(encoding="utf-8"))
+            inner_loops = {row["inner_loop"] for row in store.list("variant_evaluations")}
+            prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(run.task_mode, "optimize_query")
+            self.assertEqual(run.product_agent, "optimize")
+            self.assertTrue(seed_context["has_evaluator"])
+            self.assertIn("optimize_query", inner_loops)
+            self.assertIn("optimize", inner_loops)
+            query_evaluations = [row for row in store.list("variant_evaluations") if row["inner_loop"] == "optimize_query"]
+            self.assertTrue(all("novelty" in row["metrics"] for row in query_evaluations))
+            self.assertTrue(all("implementability" in row["metrics"] for row in query_evaluations))
+            self.assertTrue(all("evaluator_relevance" in row["metrics"] for row in query_evaluations))
+            query_variants = [row for row in store.list("variants") if row["kind"] == "query"]
+            self.assertTrue(any(row["metadata"].get("evaluator_name") == "length_score" for row in query_variants))
+            self.assertIn("optimizer_seed_context", prd["artifacts"])
+            self.assertTrue(any(task["title"] == "Compile optimizer seed context" for task in prd["organized_tasks"]))
+
+    def test_optimize_query_mode_without_evaluator_skips_optimizer(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    retriever="local",
+                    max_loop_iterations=1,
+                    task_mode="optimize_query",
+                    include_debugger=False,
+                    echo_progress=False,
+                ),
+            )
+            run, store = asyncio.run(orchestrator.run("Research optimization strategies for a tiny scoring benchmark"))
+
+            seed_context = json.loads(store.optimizer_seed_context_path.read_text(encoding="utf-8"))
+            inner_loops = {row["inner_loop"] for row in store.list("variant_evaluations")}
+            tasks = store.list("loop_tasks")
+
+            self.assertEqual(run.task_mode, "optimize_query")
+            self.assertEqual(run.product_agent, "optimize")
+            self.assertFalse(seed_context["has_evaluator"])
+            self.assertIn("optimize_query", inner_loops)
+            self.assertNotIn("optimize", inner_loops)
+            self.assertTrue(any(task["status"] == "skipped" for task in tasks))
+
+    def test_prediction_market_evaluator_rewards_adaptive_strategy(self) -> None:
+        static_ladder = "Static ladder around midpoint with size=12 spread=2 and no inventory controls."
+        adaptive_guarded = (
+            "Adaptive fair value estimate from fills and competitor midpoint, CancelAll after stale adverse "
+            "arbitrageur fills or jump volatility, size=5 spread=4 inventory limit=90 with inventory skew."
+        )
+
+        self.assertGreater(prediction_market_score(adaptive_guarded), prediction_market_score(static_ladder))
+
+    def test_research_loop_falls_back_to_local_when_live_retriever_fails(self) -> None:
+        class FailingSearch:
+            tool_name = "failing_search"
+
+            def search(self, query: str, limit: int = 4):
+                raise RuntimeError("rate limited")
+
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory), echo_progress=False)
+
+            def search_factory(name: str):
+                if name == "local":
+                    return LocalCorpusSearch(Path("examples/corpus/research_corpus.json"))
+                return FailingSearch()
+
+            loop = ResearchLoop("run_test", search_factory)
+            variant = Variant(
+                run_id="run_test",
+                outer_iteration=1,
+                kind="query",
+                payload="prediction market stale arbitrageur retail flow",
+                parent_ids=[],
+                metadata={"retriever": "arxiv", "limit": 8},
+            )
+
+            result = asyncio.run(loop.evaluate([variant], store))
+
+            self.assertEqual(len(result.ranked_evaluations), 1)
+            self.assertGreater(len(store.list("sources")), 0)
+            self.assertGreater(len(store.list("failed_paths")), 0)
+            self.assertEqual(store.list("variant_evaluations")[0]["metrics"]["fallback_used"], 1.0)
+
+    def test_optimize_query_prediction_market_challenge(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    retriever="local",
+                    max_loop_iterations=1,
+                    task_mode="optimize_query",
+                    evaluator_name="prediction_market",
+                    include_debugger=False,
+                    echo_progress=False,
+                ),
+            )
+            run, store = asyncio.run(
+                orchestrator.run(
+                    "Research approaches for the prediction market challenge: adaptive passive market making against stale quote arbitrage and retail flow"
+                )
+            )
+
+            seed_context = json.loads(store.optimizer_seed_context_path.read_text(encoding="utf-8"))
+            progress = store.progress_path.read_text(encoding="utf-8")
+            inner_loops = {row["inner_loop"] for row in store.list("variant_evaluations")}
+
+            self.assertEqual(run.task_mode, "optimize_query")
+            self.assertEqual(run.product_agent, "challenge")
+            self.assertTrue(seed_context["has_evaluator"])
+            self.assertIn("optimize_query", inner_loops)
+            self.assertIn("optimize", inner_loops)
+            self.assertIn("prediction_market", progress)
+            self.assertTrue(store.optimized_candidate_path.exists())
+            self.assertTrue(store.optimal_code_path.exists())
+            self.assertTrue(store.optimization_result_path.exists())
+            self.assertTrue(store.solution_path.exists())
+            self.assertIn("class Strategy", store.solution_path.read_text(encoding="utf-8"))
+            self.assertIn("class Strategy", store.optimal_code_path.read_text(encoding="utf-8"))
+            optimization_result = json.loads(store.optimization_result_path.read_text(encoding="utf-8"))
+            self.assertEqual(optimization_result["objective_direction"], "maximize")
+            self.assertEqual(optimization_result["objective_name"], "prediction_market_mean_edge")
+            self.assertEqual(optimization_result["optimal_code_path"], str(store.optimal_code_path))
+            self.assertFalse(optimization_result["official_result"]["measured"])
+            self.assertIn(
+                optimization_result["official_result"]["score_source"],
+                {"local_official_semantics_fallback", "upstream_orderbook_pm_challenge"},
+            )
+            self.assertTrue(Path(optimization_result["official_result"]["candidate_path"]).exists())
+            self.assertTrue(any("Prediction Market" in source["title"] for source in store.list("sources")))
+            prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
+            self.assertEqual(prd["product_agent"], "challenge")
+            self.assertEqual(prd["agent_harness"]["runtime_mode"], "optimize_query")
 
     def test_goal_slug(self) -> None:
         self.assertEqual(
@@ -135,6 +298,78 @@ class BenchmarkTest(unittest.TestCase):
             self.assertTrue((root / "benchmarks" / "index.html").exists())
             self.assertTrue((root / "benchmarks" / "summary.json").exists())
             self.assertTrue((root / "benchmarks" / "charts" / "artifact_counts.svg").exists())
+
+
+class EvaluationHarnessTest(unittest.TestCase):
+    def test_core_eval_suite_defines_all_run_types(self) -> None:
+        suite = default_eval_suite()
+        task_ids = {task.id for task in suite.tasks}
+
+        self.assertIn("research_open_ended", task_ids)
+        self.assertIn("optimize_direct", task_ids)
+        self.assertIn("optimize_query_seeded", task_ids)
+        self.assertIn("challenge_prediction_market", task_ids)
+        self.assertTrue(all(task.success_criteria for task in suite.tasks))
+        self.assertTrue(all(task.grader_ids for task in suite.tasks))
+
+    def test_edge_eval_suite_defines_failure_prone_cases(self) -> None:
+        suite = edge_eval_suite()
+        task_ids = {task.id for task in suite.tasks}
+
+        self.assertIn("optimize_query_missing_evaluator_skips_optimizer", task_ids)
+        self.assertIn("prediction_market_outputs_are_contained", task_ids)
+        self.assertIn("prediction_market_unmeasured_official_status", task_ids)
+        self.assertIn("challenge_prediction_market_official_unavailable_records_unmeasured", task_ids)
+        self.assertIn("challenge_prediction_market_candidate_files_only_in_outputs", task_ids)
+        self.assertIn("parallel_trials_do_not_share_tmp_or_outputs", task_ids)
+        self.assertIn("challenge_prediction_market_no_repo_root_strategy_files", task_ids)
+        self.assertIn("research_should_not_oversearch", task_ids)
+        self.assertTrue(any("trajectory_modes" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("prediction_market_artifact_containment" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("parallel_trial_isolation" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("research_search_budget" in task.grader_ids for task in suite.tasks))
+
+    def test_eval_harness_runs_prediction_market_task(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            suite = default_eval_suite()
+            suite.tasks = [task for task in suite.tasks if task.id == "challenge_prediction_market"]
+            summary = asyncio.run(
+                EvaluationHarness(
+                    corpus_path=Path("examples/corpus/research_corpus.json"),
+                    output_root=Path(directory),
+                ).run_suite(suite)
+            )
+
+            self.assertEqual(summary.trial_count, 1)
+            self.assertEqual(summary.passed_trials, 1)
+            self.assertGreaterEqual(summary.aggregate_score, 0.8)
+            self.assertTrue((Path(directory) / "core_summary.json").exists())
+            trial = summary.trials[0]
+            isolation = trial["isolation"]
+            self.assertTrue(isolation["clean_start"])
+            self.assertTrue(Path(isolation["trial_root"]).exists())
+            self.assertTrue(Path(isolation["tmpdir"]).exists())
+            self.assertIn("Orchestrator", isolation["production_agent_path"])
+            graders = {result["grader_id"]: result for result in trial["grader_results"]}
+            self.assertIn("optimization_code_artifact", graders)
+            self.assertTrue(graders["optimization_code_artifact"]["passed"])
+            self.assertIn("prediction_market_solution", graders)
+            self.assertTrue(graders["prediction_market_solution"]["passed"])
+            self.assertIn("isolation_clean_trial", graders)
+            self.assertTrue(graders["isolation_clean_trial"]["passed"])
+
+    def test_eval_aggregation_modes(self) -> None:
+        suite = default_eval_suite()
+        task = suite.tasks[0]
+        task.aggregation = "weighted"
+        results = [
+            GraderResult("a", "code", "exact", 1.0, True, 1.0, "pass", []),
+            GraderResult("b", "model", "rubric", 0.5, False, 1.0, "partial", []),
+        ]
+        score, passed = aggregate_results(task, results)
+
+        self.assertEqual(score, 0.75)
+        self.assertFalse(passed)
 
 class ArxivRetrieverTest(unittest.TestCase):
     def test_parse_arxiv_feed(self) -> None:
@@ -178,6 +413,42 @@ class ArxivRetrieverTest(unittest.TestCase):
         self.assertIn("memory", {item.retriever for item in strategy})
         self.assertIn("brain", strategy[0].queries[0])
         self.assertIsInstance(orchestrator._retriever_for(strategy[0].retriever), OpenAlexSearch)
+
+
+class SkillSpecTest(unittest.TestCase):
+    def test_repo_skills_follow_agent_skills_frontmatter_spec(self) -> None:
+        skills_root = Path("skills")
+        skill_dirs = sorted(path for path in skills_root.iterdir() if path.is_dir())
+
+        self.assertGreaterEqual(len(skill_dirs), 1)
+        for skill_dir in skill_dirs:
+            skill_file = skill_dir / "SKILL.md"
+            self.assertTrue(skill_file.exists(), f"{skill_dir} is missing SKILL.md")
+            text = skill_file.read_text(encoding="utf-8")
+            self.assertTrue(text.startswith("---\n"), f"{skill_file} must start with YAML frontmatter")
+            _, frontmatter, body = text.split("---", 2)
+            fields = _simple_frontmatter(frontmatter)
+            name = fields.get("name", "")
+            description = fields.get("description", "")
+
+            self.assertEqual(name, skill_dir.name)
+            self.assertRegex(name, r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+            self.assertLessEqual(len(name), 64)
+            self.assertTrue(description.strip(), f"{skill_file} description is required")
+            self.assertLessEqual(len(description), 1024)
+            self.assertGreater(len(body.strip()), 20)
+
+
+def _simple_frontmatter(frontmatter: str) -> dict[str, str]:
+    fields = {}
+    for line in frontmatter.splitlines():
+        if not line.strip() or line.startswith(" "):
+            continue
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        fields[key.strip()] = value.strip().strip('"').strip("'")
+    return fields
 
 
 if __name__ == "__main__":

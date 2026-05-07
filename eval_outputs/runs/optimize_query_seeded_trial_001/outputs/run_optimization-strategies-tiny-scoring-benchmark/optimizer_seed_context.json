@@ -1,0 +1,55 @@
+{
+  "goal": "Research optimization strategies for a tiny scoring benchmark",
+  "has_evaluator": true,
+  "mode": "optimize_query",
+  "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+  "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+  "summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+  "top_query_findings": [
+    {
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.805,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "query": "Research optimization strategies for a tiny scoring benchmark baseline evidence",
+      "score": 0.805,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_c93f0cd62ada"
+    },
+    {
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.805,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "query": "Research optimization strategies for a tiny scoring benchmark evaluation metrics",
+      "score": 0.805,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_02db2c654db8"
+    },
+    {
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.79,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "query": "Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+      "score": 0.79,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_40374da99005"
+    }
+  ]
+}

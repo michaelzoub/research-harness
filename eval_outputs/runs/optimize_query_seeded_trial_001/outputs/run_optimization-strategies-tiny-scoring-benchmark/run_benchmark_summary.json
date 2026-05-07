@@ -1,0 +1,755 @@
+{
+  "best_evaluation": {
+    "id": "eval_6aeab5f2267c",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.805,
+      0.903,
+      0.7,
+      0.47,
+      0.55
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.805,
+      "evaluator_relevance": 0.55,
+      "evidence_coverage": 1.0,
+      "implementability": 0.47,
+      "novelty": 0.7
+    },
+    "passed": true,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.805,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+    "variant_id": "variant_c93f0cd62ada"
+  },
+  "counts": {
+    "agent_traces": 2,
+    "claims": 72,
+    "contradictions": 2,
+    "evaluations": 7,
+    "failed_agents": 0,
+    "hypotheses": 0,
+    "outer_rounds": 2,
+    "passed_tasks": 6,
+    "sources": 9,
+    "tasks": 6,
+    "variants": 7
+  },
+  "evaluations": [
+    {
+      "id": "eval_6aeab5f2267c",
+      "inner_loop": "optimize_query",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.805,
+        0.903,
+        0.7,
+        0.47,
+        0.55
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.805,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "passed": true,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.805,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_c93f0cd62ada"
+    },
+    {
+      "id": "eval_c3d1ccbb40c8",
+      "inner_loop": "optimize_query",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.79,
+        0.938,
+        0.7,
+        0.47,
+        0.55
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.79,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "passed": true,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.79,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_40374da99005"
+    },
+    {
+      "id": "eval_3d90260ca4a6",
+      "inner_loop": "optimize_query",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.805,
+        0.901,
+        0.7,
+        0.47,
+        0.55
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.805,
+        "evaluator_relevance": 0.55,
+        "evidence_coverage": 1.0,
+        "implementability": 0.47,
+        "novelty": 0.7
+      },
+      "passed": true,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.805,
+      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_02db2c654db8"
+    },
+    {
+      "id": "eval_aff0419f6301",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.045454545454545456
+      ],
+      "metrics": {
+        "deterministic_score": 0.045454545454545456
+      },
+      "passed": false,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.045454545454545456,
+      "summary": "Deterministic evaluator returned 0.045.",
+      "variant_id": "variant_9f6850b260cc"
+    },
+    {
+      "id": "eval_0bddd0cc61a2",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.045454545454545456
+      ],
+      "metrics": {
+        "deterministic_score": 0.045454545454545456
+      },
+      "passed": false,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.045454545454545456,
+      "summary": "Deterministic evaluator returned 0.045.",
+      "variant_id": "variant_35b77a691117"
+    },
+    {
+      "id": "eval_6a992bbda1b7",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.043478260869565216
+      ],
+      "metrics": {
+        "deterministic_score": 0.043478260869565216
+      },
+      "passed": false,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.043478260869565216,
+      "summary": "Deterministic evaluator returned 0.043.",
+      "variant_id": "variant_750b4358d534"
+    },
+    {
+      "id": "eval_e7a45c09dfb8",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.05263157894736842
+      ],
+      "metrics": {
+        "deterministic_score": 0.05263157894736842
+      },
+      "passed": false,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "score": 0.05263157894736842,
+      "summary": "Deterministic evaluator returned 0.053.",
+      "variant_id": "variant_8b1d117657c2"
+    }
+  ],
+  "models": {
+    "local-deterministic-fallback": 2
+  },
+  "optimizer_seed_context": {
+    "goal": "Research optimization strategies for a tiny scoring benchmark",
+    "has_evaluator": true,
+    "mode": "optimize_query",
+    "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+    "top_query_findings": [
+      {
+        "metrics": {
+          "corroboration": 1.0,
+          "coverage": 1.0,
+          "credibility": 0.805,
+          "evaluator_relevance": 0.55,
+          "evidence_coverage": 1.0,
+          "implementability": 0.47,
+          "novelty": 0.7
+        },
+        "query": "Research optimization strategies for a tiny scoring benchmark baseline evidence",
+        "score": 0.805,
+        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_c93f0cd62ada"
+      },
+      {
+        "metrics": {
+          "corroboration": 1.0,
+          "coverage": 1.0,
+          "credibility": 0.805,
+          "evaluator_relevance": 0.55,
+          "evidence_coverage": 1.0,
+          "implementability": 0.47,
+          "novelty": 0.7
+        },
+        "query": "Research optimization strategies for a tiny scoring benchmark evaluation metrics",
+        "score": 0.805,
+        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_02db2c654db8"
+      },
+      {
+        "metrics": {
+          "corroboration": 1.0,
+          "coverage": 1.0,
+          "credibility": 0.79,
+          "evaluator_relevance": 0.55,
+          "evidence_coverage": 1.0,
+          "implementability": 0.47,
+          "novelty": 0.7
+        },
+        "query": "Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+        "score": 0.79,
+        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_40374da99005"
+      }
+    ]
+  },
+  "prd": {
+    "artifacts": {
+      "decision_dag": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/decision_dag.svg",
+      "final_report": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/final_report.md",
+      "optimizer_seed_context": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+      "progress": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/progress.txt",
+      "run_benchmark": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/run_benchmark.html",
+      "solution": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/solution.py",
+      "trace": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/trace.jsonl"
+    },
+    "execution_mode": "evolutionary",
+    "goal": "Research optimization strategies for a tiny scoring benchmark",
+    "notes": [
+      "This file is the run-local PRD/task map.",
+      "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+    ],
+    "organized_tasks": [
+      {
+        "acceptance_criteria": [
+          "Explicit mode or auto-router selected optimization-query exploration",
+          "A task ingestion decision was persisted"
+        ],
+        "attempts": 1,
+        "dependencies": [],
+        "id": "prd_task_001",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {
+          "selected_mode": "optimize_query"
+        },
+        "passes": true,
+        "priority": 1,
+        "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+        "source_task_id": "task_c38e7a4b6bd7",
+        "status": "passed",
+        "title": "Ingest prompt and select task mode"
+      },
+      {
+        "acceptance_criteria": [
+          "Outer loop proposed query variants about the optimization challenge",
+          "OptimizationQueryLoop scored query variants for evidence and implementability",
+          "Ranked query evaluations were persisted"
+        ],
+        "attempts": 2,
+        "dependencies": [
+          "prd_task_001"
+        ],
+        "id": "prd_task_002",
+        "kind": "search",
+        "last_error": null,
+        "params": {
+          "selected_mode": "optimize_query"
+        },
+        "passes": true,
+        "priority": 2,
+        "result_summary": "Completed 2 evolutionary outer rounds.",
+        "source_task_id": "task_2da1e1c9d7c5",
+        "status": "passed",
+        "title": "Generate and evaluate optimization queries"
+      },
+      {
+        "acceptance_criteria": [
+          "Top query findings were summarized",
+          "optimizer_seed_context.json was written"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_002"
+        ],
+        "id": "prd_task_003",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 3,
+        "result_summary": "Compiled optimizer seed context at eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json.",
+        "source_task_id": "task_9ce593044604",
+        "status": "passed",
+        "title": "Compile optimizer seed context"
+      },
+      {
+        "acceptance_criteria": [
+          "If evaluator exists, optimize/code variants were evaluated",
+          "If evaluator is missing, optimizer phase was explicitly skipped"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_003"
+        ],
+        "id": "prd_task_004",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 4,
+        "result_summary": "Ran optimizer variants using query-derived seed context.",
+        "source_task_id": "task_1a7872ab2e9d",
+        "status": "passed",
+        "title": "Run optimizer variants from query seed context"
+      },
+      {
+        "acceptance_criteria": [
+          "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_004"
+        ],
+        "id": "prd_task_005",
+        "kind": "critique",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 5,
+        "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
+        "source_task_id": "task_b937221fe0fa",
+        "status": "passed",
+        "title": "Critique ranked query and optimizer results"
+      },
+      {
+        "acceptance_criteria": [
+          "Final report included query findings and optimizer seed context"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_005"
+        ],
+        "id": "prd_task_006",
+        "kind": "synthesize",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 6,
+        "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
+        "source_task_id": "task_7bc38bd9d091",
+        "status": "passed",
+        "title": "Synthesize optimize-query run report"
+      }
+    ],
+    "plan": {
+      "goal": "Research optimization strategies for a tiny scoring benchmark",
+      "hypothesis_angles": [
+        "optimization path",
+        "risk mitigation"
+      ],
+      "search_angles": [
+        "baseline evidence",
+        "failure modes constraints",
+        "evaluation metrics"
+      ],
+      "stopping_signals": [
+        "no meaningful new sources after N cycles",
+        "no new high-confidence claims",
+        "hypotheses converge",
+        "critic finds no new major objections",
+        "benchmark/evaluation score plateaus",
+        "cost budget reached",
+        "time budget reached",
+        "human approval needed"
+      ],
+      "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
+      "task_type": "bounded"
+    },
+    "run": {
+      "completed_at": "2026-05-06T22:55:41.432359+00:00",
+      "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+      "id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "started_at": "2026-05-06T22:55:41.400066+00:00",
+      "status": "completed",
+      "task_mode": "optimize_query",
+      "task_type": "bounded",
+      "total_cost": 0.0,
+      "total_tokens": 107,
+      "user_goal": "Research optimization strategies for a tiny scoring benchmark"
+    },
+    "schema_version": "research_harness_prd_v1",
+    "source_strategy": [
+      {
+        "limit": 8,
+        "name": "local_1",
+        "purpose": "baseline evidence",
+        "queries": [
+          "Research optimization strategies for a tiny scoring benchmark baseline evidence"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_2",
+        "purpose": "failure modes constraints",
+        "queries": [
+          "Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_3",
+        "purpose": "evaluation metrics",
+        "queries": [
+          "Research optimization strategies for a tiny scoring benchmark evaluation metrics"
+        ],
+        "retriever": "local"
+      }
+    ],
+    "stage": "completed",
+    "task_mode": "optimize_query"
+  },
+  "rounds": [
+    {
+      "best_score": 0.805,
+      "best_variant_id": "variant_c93f0cd62ada",
+      "completed_at": "2026-05-06T22:55:41.427258+00:00",
+      "id": "round_f21093ac76f2",
+      "mode": "optimize_query",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "termination_signal": "claim_corroboration_threshold",
+      "variant_ids": [
+        "variant_c93f0cd62ada",
+        "variant_40374da99005",
+        "variant_02db2c654db8"
+      ]
+    },
+    {
+      "best_score": 0.05263157894736842,
+      "best_variant_id": "variant_8b1d117657c2",
+      "completed_at": "2026-05-06T22:55:41.428934+00:00",
+      "id": "round_cbecbd45ae57",
+      "mode": "optimize",
+      "outer_iteration": 2,
+      "plateau_count": 0,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "termination_signal": "continue",
+      "variant_ids": [
+        "variant_9f6850b260cc",
+        "variant_35b77a691117",
+        "variant_750b4358d534",
+        "variant_8b1d117657c2"
+      ]
+    }
+  ],
+  "run": {
+    "completed_at": "2026-05-06T22:55:41.432359+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "started_at": "2026-05-06T22:55:41.400066+00:00",
+    "status": "completed",
+    "task_mode": "optimize_query",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Research optimization strategies for a tiny scoring benchmark"
+  },
+  "solution": null,
+  "task_ingestion": {
+    "evaluator_name": "length_score",
+    "id": "decision_7d266ff1a231",
+    "reason": "Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+    "requested_mode": "optimize_query",
+    "selected_mode": "optimize_query"
+  },
+  "tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit mode or auto-router selected optimization-query exploration",
+        "A task ingestion decision was persisted"
+      ],
+      "action": "debug_harness",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.402480+00:00",
+      "created_at": "2026-05-06T22:55:41.401714+00:00",
+      "id": "task_c38e7a4b6bd7",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "Outer loop proposed query variants about the optimization challenge",
+        "OptimizationQueryLoop scored query variants for evidence and implementability",
+        "Ranked query evaluations were persisted"
+      ],
+      "action": "search",
+      "attempts": 2,
+      "completed_at": "2026-05-06T22:55:41.429132+00:00",
+      "created_at": "2026-05-06T22:55:41.401722+00:00",
+      "id": "task_2da1e1c9d7c5",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 2 evolutionary outer rounds.",
+      "status": "passed",
+      "title": "Generate and evaluate optimization queries"
+    },
+    {
+      "acceptance_criteria": [
+        "Top query findings were summarized",
+        "optimizer_seed_context.json was written"
+      ],
+      "action": "debug_harness",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.429377+00:00",
+      "created_at": "2026-05-06T22:55:41.401726+00:00",
+      "id": "task_9ce593044604",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 3,
+      "result_summary": "Compiled optimizer seed context at eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json.",
+      "status": "passed",
+      "title": "Compile optimizer seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "If evaluator exists, optimize/code variants were evaluated",
+        "If evaluator is missing, optimizer phase was explicitly skipped"
+      ],
+      "action": "debug_harness",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.429644+00:00",
+      "created_at": "2026-05-06T22:55:41.401731+00:00",
+      "id": "task_1a7872ab2e9d",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Ran optimizer variants using query-derived seed context.",
+      "status": "passed",
+      "title": "Run optimizer variants from query seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "action": "critique",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.431148+00:00",
+      "created_at": "2026-05-06T22:55:41.401734+00:00",
+      "id": "task_b937221fe0fa",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
+      "status": "passed",
+      "title": "Critique ranked query and optimizer results"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report included query findings and optimizer seed context"
+      ],
+      "action": "synthesize",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.432042+00:00",
+      "created_at": "2026-05-06T22:55:41.401738+00:00",
+      "id": "task_7bc38bd9d091",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 6,
+      "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
+      "status": "passed",
+      "title": "Synthesize optimize-query run report"
+    }
+  ],
+  "trace_summaries": [
+    {
+      "agent_name": "loop_evolution_critic",
+      "model": "local-deterministic-fallback",
+      "role": "critic_reviewer",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions."
+    },
+    {
+      "agent_name": "loop_evolution_synthesis",
+      "model": "local-deterministic-fallback",
+      "role": "synthesis_agent",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses."
+    }
+  ],
+  "variants": [
+    {
+      "id": "variant_c93f0cd62ada",
+      "kind": "query",
+      "metadata": {
+        "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+        "evaluator_name": "length_score",
+        "limit": 8,
+        "purpose": "baseline evidence",
+        "query_intent": "optimization challenge strategy discovery",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research optimization strategies for a tiny scoring benchmark baseline evidence",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_40374da99005",
+      "kind": "query",
+      "metadata": {
+        "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+        "evaluator_name": "length_score",
+        "limit": 8,
+        "purpose": "failure modes constraints",
+        "query_intent": "optimization challenge strategy discovery",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_02db2c654db8",
+      "kind": "query",
+      "metadata": {
+        "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+        "evaluator_name": "length_score",
+        "limit": 8,
+        "purpose": "evaluation metrics",
+        "query_intent": "optimization challenge strategy discovery",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research optimization strategies for a tiny scoring benchmark evaluation metrics",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_9f6850b260cc",
+      "kind": "code",
+      "metadata": {
+        "goal": "Research optimization strategies for a tiny scoring benchmark",
+        "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+        "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [
+        "variant_9faf9428acb1",
+        "variant_d7d67cbd3aaa",
+        "variant_1ca4c73a6fad"
+      ],
+      "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence refined pass 1",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_35b77a691117",
+      "kind": "code",
+      "metadata": {
+        "goal": "Research optimization strategies for a tiny scoring benchmark",
+        "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+        "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [
+        "variant_9faf9428acb1",
+        "variant_d7d67cbd3aaa",
+        "variant_1ca4c73a6fad"
+      ],
+      "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark evaluation metrics refined pass 1",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_750b4358d534",
+      "kind": "code",
+      "metadata": {
+        "goal": "Research optimization strategies for a tiny scoring benchmark",
+        "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+        "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [
+        "variant_9faf9428acb1",
+        "variant_d7d67cbd3aaa",
+        "variant_1ca4c73a6fad"
+      ],
+      "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark failure modes constraints refined pass 1",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    },
+    {
+      "id": "variant_8b1d117657c2",
+      "kind": "code",
+      "metadata": {
+        "goal": "Research optimization strategies for a tiny scoring benchmark",
+        "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+        "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [
+        "variant_9faf9428acb1",
+        "variant_d7d67cbd3aaa",
+        "variant_1ca4c73a6fad"
+      ],
+      "payload": "Optimization strategy sketch: Alternative optimization mutation from query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence",
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+    }
+  ]
+}

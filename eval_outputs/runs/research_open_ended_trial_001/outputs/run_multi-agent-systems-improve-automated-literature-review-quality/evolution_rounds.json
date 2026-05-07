@@ -1,0 +1,18 @@
+[
+  {
+    "best_score": 0.957,
+    "best_variant_id": "variant_5c856588b3ca",
+    "completed_at": "2026-05-06T22:55:41.386943+00:00",
+    "id": "round_0bcab5d2a8ad",
+    "mode": "research",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_5c856588b3ca",
+      "variant_93b99766df6d",
+      "variant_2d8663b20342"
+    ]
+  }
+]

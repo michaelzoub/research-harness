@@ -64,6 +64,13 @@ class ArtifactStore:
         self.trace_log_path = self.root / "trace.jsonl"
         self.report_path = self.root / "final_report.md"
         self.prd_path = self.root / "prd.json"
+        self.optimizer_seed_context_path = self.root / "optimizer_seed_context.json"
+        self.optimized_candidate_path = self.root / "optimized_candidate.txt"
+        self.optimal_code_path = self.root / "optimal_code.py"
+        self.candidates_dir = self.root / "candidates"
+        self.candidates_dir.mkdir(parents=True, exist_ok=True)
+        self.optimization_result_path = self.root / "optimization_result.json"
+        self.solution_path = self.root / "solution.py"
         self.run_benchmark_path = self.root / "run_benchmark.html"
         self.decision_dag_path = self.root / "decision_dag.svg"
         self.progress_path = self.root / "progress.txt"
@@ -178,6 +185,26 @@ class ArtifactStore:
     def write_prd(self, payload: dict[str, Any]) -> Path:
         self.prd_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return self.prd_path
+
+    def write_optimizer_seed_context(self, payload: dict[str, Any]) -> Path:
+        self.optimizer_seed_context_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return self.optimizer_seed_context_path
+
+    def write_solution(self, text: str) -> Path:
+        self.solution_path.write_text(text, encoding="utf-8")
+        return self.solution_path
+
+    def write_optimized_candidate(self, text: str) -> Path:
+        self.optimized_candidate_path.write_text(text, encoding="utf-8")
+        return self.optimized_candidate_path
+
+    def write_optimal_code(self, text: str) -> Path:
+        self.optimal_code_path.write_text(text, encoding="utf-8")
+        return self.optimal_code_path
+
+    def write_optimization_result(self, payload: dict[str, Any]) -> Path:
+        self.optimization_result_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return self.optimization_result_path
 
     def find_by(self, entity: str, key: str, value: Any) -> Optional[dict[str, Any]]:
         return next((row for row in self.list(entity) if row.get(key) == value), None)

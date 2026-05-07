@@ -1,0 +1,143 @@
+[
+  {
+    "id": "eval_6aeab5f2267c",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.805,
+      0.903,
+      0.7,
+      0.47,
+      0.55
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.805,
+      "evaluator_relevance": 0.55,
+      "evidence_coverage": 1.0,
+      "implementability": 0.47,
+      "novelty": 0.7
+    },
+    "passed": true,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.805,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+    "variant_id": "variant_c93f0cd62ada"
+  },
+  {
+    "id": "eval_c3d1ccbb40c8",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.79,
+      0.938,
+      0.7,
+      0.47,
+      0.55
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.79,
+      "evaluator_relevance": 0.55,
+      "evidence_coverage": 1.0,
+      "implementability": 0.47,
+      "novelty": 0.7
+    },
+    "passed": true,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.79,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+    "variant_id": "variant_40374da99005"
+  },
+  {
+    "id": "eval_3d90260ca4a6",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.805,
+      0.901,
+      0.7,
+      0.47,
+      0.55
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.805,
+      "evaluator_relevance": 0.55,
+      "evidence_coverage": 1.0,
+      "implementability": 0.47,
+      "novelty": 0.7
+    },
+    "passed": true,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.805,
+    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+    "variant_id": "variant_02db2c654db8"
+  },
+  {
+    "id": "eval_aff0419f6301",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.045454545454545456
+    ],
+    "metrics": {
+      "deterministic_score": 0.045454545454545456
+    },
+    "passed": false,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.045454545454545456,
+    "summary": "Deterministic evaluator returned 0.045.",
+    "variant_id": "variant_9f6850b260cc"
+  },
+  {
+    "id": "eval_0bddd0cc61a2",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.045454545454545456
+    ],
+    "metrics": {
+      "deterministic_score": 0.045454545454545456
+    },
+    "passed": false,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.045454545454545456,
+    "summary": "Deterministic evaluator returned 0.045.",
+    "variant_id": "variant_35b77a691117"
+  },
+  {
+    "id": "eval_6a992bbda1b7",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.043478260869565216
+    ],
+    "metrics": {
+      "deterministic_score": 0.043478260869565216
+    },
+    "passed": false,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.043478260869565216,
+    "summary": "Deterministic evaluator returned 0.043.",
+    "variant_id": "variant_750b4358d534"
+  },
+  {
+    "id": "eval_e7a45c09dfb8",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.05263157894736842
+    ],
+    "metrics": {
+      "deterministic_score": 0.05263157894736842
+    },
+    "passed": false,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.05263157894736842,
+    "summary": "Deterministic evaluator returned 0.053.",
+    "variant_id": "variant_8b1d117657c2"
+  }
+]

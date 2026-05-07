@@ -1,0 +1,9 @@
+[
+  {
+    "evaluator_name": "prediction_market",
+    "id": "decision_b96d84f36c9b",
+    "reason": "Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'prediction_market'.",
+    "requested_mode": "optimize_query",
+    "selected_mode": "optimize_query"
+  }
+]

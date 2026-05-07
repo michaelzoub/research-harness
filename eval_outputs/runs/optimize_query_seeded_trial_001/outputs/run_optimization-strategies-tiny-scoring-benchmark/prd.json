@@ -1,0 +1,208 @@
+{
+  "artifacts": {
+    "decision_dag": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/decision_dag.svg",
+    "final_report": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/final_report.md",
+    "optimizer_seed_context": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+    "progress": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/progress.txt",
+    "run_benchmark": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/run_benchmark.html",
+    "solution": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/solution.py",
+    "trace": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/trace.jsonl"
+  },
+  "execution_mode": "evolutionary",
+  "goal": "Research optimization strategies for a tiny scoring benchmark",
+  "notes": [
+    "This file is the run-local PRD/task map.",
+    "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+  ],
+  "organized_tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit mode or auto-router selected optimization-query exploration",
+        "A task ingestion decision was persisted"
+      ],
+      "attempts": 1,
+      "dependencies": [],
+      "id": "prd_task_001",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+      "source_task_id": "task_c38e7a4b6bd7",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "Outer loop proposed query variants about the optimization challenge",
+        "OptimizationQueryLoop scored query variants for evidence and implementability",
+        "Ranked query evaluations were persisted"
+      ],
+      "attempts": 2,
+      "dependencies": [
+        "prd_task_001"
+      ],
+      "id": "prd_task_002",
+      "kind": "search",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 2 evolutionary outer rounds.",
+      "source_task_id": "task_2da1e1c9d7c5",
+      "status": "passed",
+      "title": "Generate and evaluate optimization queries"
+    },
+    {
+      "acceptance_criteria": [
+        "Top query findings were summarized",
+        "optimizer_seed_context.json was written"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_002"
+      ],
+      "id": "prd_task_003",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 3,
+      "result_summary": "Compiled optimizer seed context at eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json.",
+      "source_task_id": "task_9ce593044604",
+      "status": "passed",
+      "title": "Compile optimizer seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "If evaluator exists, optimize/code variants were evaluated",
+        "If evaluator is missing, optimizer phase was explicitly skipped"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_003"
+      ],
+      "id": "prd_task_004",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Ran optimizer variants using query-derived seed context.",
+      "source_task_id": "task_1a7872ab2e9d",
+      "status": "passed",
+      "title": "Run optimizer variants from query seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_004"
+      ],
+      "id": "prd_task_005",
+      "kind": "critique",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
+      "source_task_id": "task_b937221fe0fa",
+      "status": "passed",
+      "title": "Critique ranked query and optimizer results"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report included query findings and optimizer seed context"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_005"
+      ],
+      "id": "prd_task_006",
+      "kind": "synthesize",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 6,
+      "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
+      "source_task_id": "task_7bc38bd9d091",
+      "status": "passed",
+      "title": "Synthesize optimize-query run report"
+    }
+  ],
+  "plan": {
+    "goal": "Research optimization strategies for a tiny scoring benchmark",
+    "hypothesis_angles": [
+      "optimization path",
+      "risk mitigation"
+    ],
+    "search_angles": [
+      "baseline evidence",
+      "failure modes constraints",
+      "evaluation metrics"
+    ],
+    "stopping_signals": [
+      "no meaningful new sources after N cycles",
+      "no new high-confidence claims",
+      "hypotheses converge",
+      "critic finds no new major objections",
+      "benchmark/evaluation score plateaus",
+      "cost budget reached",
+      "time budget reached",
+      "human approval needed"
+    ],
+    "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
+    "task_type": "bounded"
+  },
+  "run": {
+    "completed_at": "2026-05-06T22:55:41.432359+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "started_at": "2026-05-06T22:55:41.400066+00:00",
+    "status": "completed",
+    "task_mode": "optimize_query",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Research optimization strategies for a tiny scoring benchmark"
+  },
+  "schema_version": "research_harness_prd_v1",
+  "source_strategy": [
+    {
+      "limit": 8,
+      "name": "local_1",
+      "purpose": "baseline evidence",
+      "queries": [
+        "Research optimization strategies for a tiny scoring benchmark baseline evidence"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_2",
+      "purpose": "failure modes constraints",
+      "queries": [
+        "Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_3",
+      "purpose": "evaluation metrics",
+      "queries": [
+        "Research optimization strategies for a tiny scoring benchmark evaluation metrics"
+      ],
+      "retriever": "local"
+    }
+  ],
+  "stage": "completed",
+  "task_mode": "optimize_query"
+}

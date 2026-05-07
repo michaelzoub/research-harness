@@ -1,0 +1,208 @@
+{
+  "artifacts": {
+    "decision_dag": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/decision_dag.svg",
+    "final_report": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/final_report.md",
+    "optimizer_seed_context": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
+    "progress": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/progress.txt",
+    "run_benchmark": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/run_benchmark.html",
+    "solution": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/solution.py",
+    "trace": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/trace.jsonl"
+  },
+  "execution_mode": "evolutionary",
+  "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
+  "notes": [
+    "This file is the run-local PRD/task map.",
+    "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+  ],
+  "organized_tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit mode or auto-router selected optimization-query exploration",
+        "A task ingestion decision was persisted"
+      ],
+      "attempts": 1,
+      "dependencies": [],
+      "id": "prd_task_001",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'prediction_market'.",
+      "source_task_id": "task_6eea5b1d04ed",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "Outer loop proposed query variants about the optimization challenge",
+        "OptimizationQueryLoop scored query variants for evidence and implementability",
+        "Ranked query evaluations were persisted"
+      ],
+      "attempts": 2,
+      "dependencies": [
+        "prd_task_001"
+      ],
+      "id": "prd_task_002",
+      "kind": "search",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 2 evolutionary outer rounds.",
+      "source_task_id": "task_63402f700c67",
+      "status": "passed",
+      "title": "Generate and evaluate optimization queries"
+    },
+    {
+      "acceptance_criteria": [
+        "Top query findings were summarized",
+        "optimizer_seed_context.json was written"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_002"
+      ],
+      "id": "prd_task_003",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 3,
+      "result_summary": "Compiled optimizer seed context at eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json.",
+      "source_task_id": "task_a38d553b0c71",
+      "status": "passed",
+      "title": "Compile optimizer seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "If evaluator exists, optimize/code variants were evaluated",
+        "If evaluator is missing, optimizer phase was explicitly skipped"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_003"
+      ],
+      "id": "prd_task_004",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Ran optimizer variants using query-derived seed context.",
+      "source_task_id": "task_d3609b9e4372",
+      "status": "passed",
+      "title": "Run optimizer variants from query seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_004"
+      ],
+      "id": "prd_task_005",
+      "kind": "critique",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Reviewed 24 claims and 0 hypotheses; found 2 contradictions.",
+      "source_task_id": "task_0d42584b527d",
+      "status": "passed",
+      "title": "Critique ranked query and optimizer results"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report included query findings and optimizer seed context"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_005"
+      ],
+      "id": "prd_task_006",
+      "kind": "synthesize",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 6,
+      "result_summary": "Synthesized final report with 8 sources, 24 claims, and 0 hypotheses.",
+      "source_task_id": "task_19051f70aa6a",
+      "status": "passed",
+      "title": "Synthesize optimize-query run report"
+    }
+  ],
+  "plan": {
+    "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
+    "hypothesis_angles": [
+      "mechanism",
+      "research direction"
+    ],
+    "search_angles": [
+      "foundational literature mechanisms",
+      "recent empirical evidence",
+      "contradictory evidence limitations"
+    ],
+    "stopping_signals": [
+      "no meaningful new sources after N cycles",
+      "no new high-confidence claims",
+      "hypotheses converge",
+      "critic finds no new major objections",
+      "benchmark/evaluation score plateaus",
+      "cost budget reached",
+      "time budget reached",
+      "human approval needed"
+    ],
+    "strategy": "Allow broad exploration across framings before critic-driven convergence.",
+    "task_type": "open_ended"
+  },
+  "run": {
+    "completed_at": "2026-05-06T22:55:41.501466+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "started_at": "2026-05-06T22:55:41.434321+00:00",
+    "status": "completed",
+    "task_mode": "optimize_query",
+    "task_type": "open_ended",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters."
+  },
+  "schema_version": "research_harness_prd_v1",
+  "source_strategy": [
+    {
+      "limit": 8,
+      "name": "local_1",
+      "purpose": "foundational literature mechanisms",
+      "queries": [
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_2",
+      "purpose": "recent empirical evidence",
+      "queries": [
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_3",
+      "purpose": "contradictory evidence limitations",
+      "queries": [
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+      ],
+      "retriever": "local"
+    }
+  ],
+  "stage": "completed",
+  "task_mode": "optimize_query"
+}

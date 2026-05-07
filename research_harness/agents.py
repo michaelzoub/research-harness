@@ -290,7 +290,8 @@ class SynthesisAgent(BaseAgent):
         hypotheses = sorted(_dedupe_by_id(store.list("hypotheses")), key=lambda row: row["confidence"], reverse=True)
         contradictions = store.list("contradictions")
         questions = sorted(store.list("open_questions"), key=lambda row: row["priority"])
-        report = _build_report_with_llm(self.llm, run, sources, claims, hypotheses, contradictions, questions)
+        seed_context = _read_optional_json(store.optimizer_seed_context_path)
+        report = _build_report_with_llm(self.llm, run, sources, claims, hypotheses, contradictions, questions, seed_context)
         store.write_report(report)
         return f"Synthesized final report with {len(sources)} sources, {len(claims)} claims, and {len(hypotheses)} hypotheses."
 
@@ -446,20 +447,24 @@ def _build_report_with_llm(
     hypotheses: list[dict[str, object]],
     contradictions: list[dict[str, object]],
     questions: list[dict[str, object]],
+    seed_context: dict[str, object],
 ) -> str:
     deterministic_report = _build_report(run, sources, claims, hypotheses, contradictions, questions)
+    seed_section = _optimizer_seed_section(seed_context)
     if not llm.is_live:
-        return deterministic_report
+        return deterministic_report + seed_section
     payload = {
         "goal": run.user_goal,
         "run_id": run.id,
         "task_type": run.task_type,
         "task_mode": run.task_mode,
+        "product_agent": run.product_agent,
         "sources": sources[:12],
         "claims": sorted(claims, key=lambda row: row["confidence"], reverse=True)[:24],
         "hypotheses": hypotheses[:12],
         "contradictions": contradictions[:12],
         "open_questions": questions[:12],
+        "optimizer_seed_context": seed_context,
     }
     system = (
         "You are the synthesis agent in a research harness. Write a concise, evidence-grounded "
@@ -474,7 +479,31 @@ def _build_report_with_llm(
         return deterministic_report + fallback_note
     if not response.text.strip():
         return deterministic_report + "\n\n## LLM Synthesis Fallback\n- Live synthesis returned no text.\n"
-    return response.text.strip() + "\n"
+    return response.text.strip() + "\n" + seed_section
+
+
+def _read_optional_json(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _optimizer_seed_section(seed_context: dict[str, object]) -> str:
+    if not seed_context:
+        return ""
+    lines = [
+        "",
+        "## Optimizer Seed Context",
+        f"- Has evaluator: {seed_context.get('has_evaluator')}",
+        f"- Summary: {seed_context.get('summary', '')}",
+    ]
+    for item in seed_context.get("top_query_findings", []) if isinstance(seed_context.get("top_query_findings"), list) else []:
+        if isinstance(item, dict):
+            lines.append(f"- Query seed {item.get('variant_id')}: score {item.get('score')}; {item.get('query')}")
+    return "\n".join(lines) + "\n"
 
 
 def _executive_summary(

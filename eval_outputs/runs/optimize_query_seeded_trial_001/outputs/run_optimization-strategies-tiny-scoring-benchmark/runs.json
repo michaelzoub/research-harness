@@ -1,0 +1,14 @@
+[
+  {
+    "completed_at": "2026-05-06T22:55:41.432359+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "started_at": "2026-05-06T22:55:41.400066+00:00",
+    "status": "completed",
+    "task_mode": "optimize_query",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Research optimization strategies for a tiny scoring benchmark"
+  }
+]

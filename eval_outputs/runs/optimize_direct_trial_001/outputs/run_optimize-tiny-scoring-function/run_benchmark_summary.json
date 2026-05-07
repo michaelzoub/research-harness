@@ -1,0 +1,444 @@
+{
+  "best_evaluation": {
+    "id": "eval_138916c63911",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_c3b316b78abc"
+  },
+  "counts": {
+    "agent_traces": 2,
+    "claims": 0,
+    "contradictions": 0,
+    "evaluations": 4,
+    "failed_agents": 0,
+    "hypotheses": 0,
+    "outer_rounds": 1,
+    "passed_tasks": 4,
+    "sources": 0,
+    "tasks": 4,
+    "variants": 4
+  },
+  "evaluations": [
+    {
+      "id": "eval_182f0c836e3f",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.3333333333333333
+      ],
+      "metrics": {
+        "deterministic_score": 0.3333333333333333
+      },
+      "passed": false,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "score": 0.3333333333333333,
+      "summary": "Deterministic evaluator returned 0.333.",
+      "variant_id": "variant_8b3592b2c173"
+    },
+    {
+      "id": "eval_138916c63911",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.5
+      ],
+      "metrics": {
+        "deterministic_score": 0.5
+      },
+      "passed": false,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "score": 0.5,
+      "summary": "Deterministic evaluator returned 0.500.",
+      "variant_id": "variant_c3b316b78abc"
+    },
+    {
+      "id": "eval_19df5ec5e20b",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.5
+      ],
+      "metrics": {
+        "deterministic_score": 0.5
+      },
+      "passed": false,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "score": 0.5,
+      "summary": "Deterministic evaluator returned 0.500.",
+      "variant_id": "variant_59f767f225ab"
+    },
+    {
+      "id": "eval_7cffc11e6665",
+      "inner_loop": "optimize",
+      "judge_scores": [
+        0.5
+      ],
+      "metrics": {
+        "deterministic_score": 0.5
+      },
+      "passed": false,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "score": 0.5,
+      "summary": "Deterministic evaluator returned 0.500.",
+      "variant_id": "variant_ceee2e45d1e6"
+    }
+  ],
+  "models": {
+    "local-deterministic-fallback": 2
+  },
+  "optimizer_seed_context": {},
+  "prd": {
+    "artifacts": {
+      "decision_dag": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/decision_dag.svg",
+      "final_report": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/final_report.md",
+      "optimizer_seed_context": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimizer_seed_context.json",
+      "progress": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/progress.txt",
+      "run_benchmark": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/run_benchmark.html",
+      "solution": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/solution.py",
+      "trace": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/trace.jsonl"
+    },
+    "execution_mode": "evolutionary",
+    "goal": "Optimize a tiny scoring function",
+    "notes": [
+      "This file is the run-local PRD/task map.",
+      "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+    ],
+    "organized_tasks": [
+      {
+        "acceptance_criteria": [
+          "Explicit flags, evaluator availability, and prompt heuristics were checked",
+          "A task ingestion decision was persisted"
+        ],
+        "attempts": 1,
+        "dependencies": [],
+        "id": "prd_task_001",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {
+          "selected_mode": "optimize"
+        },
+        "passes": true,
+        "priority": 1,
+        "result_summary": "Selected optimize mode. Optimize mode was explicitly requested with evaluator 'length_score'.",
+        "source_task_id": "task_5e8e7c86b8bb",
+        "status": "passed",
+        "title": "Ingest prompt and select task mode"
+      },
+      {
+        "acceptance_criteria": [
+          "The outer loop proposed code or query variants",
+          "The selected inner loop returned ranked variants with scalar scores",
+          "Plateau or threshold stopping signals were evaluated"
+        ],
+        "attempts": 2,
+        "dependencies": [
+          "prd_task_001"
+        ],
+        "id": "prd_task_002",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {
+          "selected_mode": "optimize"
+        },
+        "passes": true,
+        "priority": 2,
+        "result_summary": "Completed 1 evolutionary outer rounds.",
+        "source_task_id": "task_dbfc829ac6f4",
+        "status": "passed",
+        "title": "Run outer evolutionary orchestrator"
+      },
+      {
+        "acceptance_criteria": [
+          "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_003"
+        ],
+        "id": "prd_task_004",
+        "kind": "critique",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 4,
+        "result_summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions.",
+        "source_task_id": "task_919bb89a5e3e",
+        "status": "passed",
+        "title": "Critique ranked variants and claims"
+      },
+      {
+        "acceptance_criteria": [
+          "Final report was written from run artifacts"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_004"
+        ],
+        "id": "prd_task_005",
+        "kind": "synthesize",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 5,
+        "result_summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses.",
+        "source_task_id": "task_d33f7a915c14",
+        "status": "passed",
+        "title": "Synthesize evolutionary run report"
+      }
+    ],
+    "plan": {
+      "goal": "Optimize a tiny scoring function",
+      "hypothesis_angles": [
+        "optimization path",
+        "risk mitigation"
+      ],
+      "search_angles": [
+        "baseline evidence",
+        "failure modes constraints",
+        "evaluation metrics"
+      ],
+      "stopping_signals": [
+        "no meaningful new sources after N cycles",
+        "no new high-confidence claims",
+        "hypotheses converge",
+        "critic finds no new major objections",
+        "benchmark/evaluation score plateaus",
+        "cost budget reached",
+        "time budget reached",
+        "human approval needed"
+      ],
+      "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
+      "task_type": "bounded"
+    },
+    "run": {
+      "completed_at": "2026-05-06T22:55:41.398506+00:00",
+      "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+      "id": "run_optimize-tiny-scoring-function",
+      "started_at": "2026-05-06T22:55:41.393165+00:00",
+      "status": "completed",
+      "task_mode": "optimize",
+      "task_type": "bounded",
+      "total_cost": 0.0,
+      "total_tokens": 107,
+      "user_goal": "Optimize a tiny scoring function"
+    },
+    "schema_version": "research_harness_prd_v1",
+    "source_strategy": [
+      {
+        "limit": 8,
+        "name": "local_1",
+        "purpose": "baseline evidence",
+        "queries": [
+          "Optimize a tiny scoring function baseline evidence"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_2",
+        "purpose": "failure modes constraints",
+        "queries": [
+          "Optimize a tiny scoring function failure modes constraints"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_3",
+        "purpose": "evaluation metrics",
+        "queries": [
+          "Optimize a tiny scoring function evaluation metrics"
+        ],
+        "retriever": "local"
+      }
+    ],
+    "stage": "completed",
+    "task_mode": "optimize"
+  },
+  "rounds": [
+    {
+      "best_score": 0.5,
+      "best_variant_id": "variant_c3b316b78abc",
+      "completed_at": "2026-05-06T22:55:41.396518+00:00",
+      "id": "round_c44ad700fb1f",
+      "mode": "optimize",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "termination_signal": "improved",
+      "variant_ids": [
+        "variant_8b3592b2c173",
+        "variant_c3b316b78abc",
+        "variant_59f767f225ab",
+        "variant_ceee2e45d1e6"
+      ]
+    }
+  ],
+  "run": {
+    "completed_at": "2026-05-06T22:55:41.398506+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimize-tiny-scoring-function",
+    "started_at": "2026-05-06T22:55:41.393165+00:00",
+    "status": "completed",
+    "task_mode": "optimize",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Optimize a tiny scoring function"
+  },
+  "solution": null,
+  "task_ingestion": {
+    "evaluator_name": "length_score",
+    "id": "decision_eae9f30b2dc0",
+    "reason": "Optimize mode was explicitly requested with evaluator 'length_score'.",
+    "requested_mode": "optimize",
+    "selected_mode": "optimize"
+  },
+  "tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit flags, evaluator availability, and prompt heuristics were checked",
+        "A task ingestion decision was persisted"
+      ],
+      "action": "debug_harness",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.395254+00:00",
+      "created_at": "2026-05-06T22:55:41.394752+00:00",
+      "id": "task_5e8e7c86b8bb",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize mode. Optimize mode was explicitly requested with evaluator 'length_score'.",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "The outer loop proposed code or query variants",
+        "The selected inner loop returned ranked variants with scalar scores",
+        "Plateau or threshold stopping signals were evaluated"
+      ],
+      "action": "debug_harness",
+      "attempts": 2,
+      "completed_at": "2026-05-06T22:55:41.396760+00:00",
+      "created_at": "2026-05-06T22:55:41.394758+00:00",
+      "id": "task_dbfc829ac6f4",
+      "last_error": null,
+      "params": {
+        "selected_mode": "optimize"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 1 evolutionary outer rounds.",
+      "status": "passed",
+      "title": "Run outer evolutionary orchestrator"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "action": "critique",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.397497+00:00",
+      "created_at": "2026-05-06T22:55:41.394763+00:00",
+      "id": "task_919bb89a5e3e",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions.",
+      "status": "passed",
+      "title": "Critique ranked variants and claims"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report was written from run artifacts"
+      ],
+      "action": "synthesize",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.398180+00:00",
+      "created_at": "2026-05-06T22:55:41.394768+00:00",
+      "id": "task_d33f7a915c14",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses.",
+      "status": "passed",
+      "title": "Synthesize evolutionary run report"
+    }
+  ],
+  "trace_summaries": [
+    {
+      "agent_name": "loop_evolution_critic",
+      "model": "local-deterministic-fallback",
+      "role": "critic_reviewer",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions."
+    },
+    {
+      "agent_name": "loop_evolution_synthesis",
+      "model": "local-deterministic-fallback",
+      "role": "synthesis_agent",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses."
+    }
+  ],
+  "variants": [
+    {
+      "id": "variant_8b3592b2c173",
+      "kind": "code",
+      "metadata": {
+        "goal": "Optimize a tiny scoring function"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "baseline direct implementation",
+      "run_id": "run_optimize-tiny-scoring-function"
+    },
+    {
+      "id": "variant_c3b316b78abc",
+      "kind": "code",
+      "metadata": {
+        "goal": "Optimize a tiny scoring function"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "vectorized implementation",
+      "run_id": "run_optimize-tiny-scoring-function"
+    },
+    {
+      "id": "variant_59f767f225ab",
+      "kind": "code",
+      "metadata": {
+        "goal": "Optimize a tiny scoring function"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "cached implementation",
+      "run_id": "run_optimize-tiny-scoring-function"
+    },
+    {
+      "id": "variant_ceee2e45d1e6",
+      "kind": "code",
+      "metadata": {
+        "goal": "Optimize a tiny scoring function"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "branch-reduced implementation",
+      "run_id": "run_optimize-tiny-scoring-function"
+    }
+  ]
+}

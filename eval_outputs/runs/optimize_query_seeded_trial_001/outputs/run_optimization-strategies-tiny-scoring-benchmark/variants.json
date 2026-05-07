@@ -1,0 +1,118 @@
+[
+  {
+    "id": "variant_c93f0cd62ada",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+      "evaluator_name": "length_score",
+      "limit": 8,
+      "purpose": "baseline evidence",
+      "query_intent": "optimization challenge strategy discovery",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research optimization strategies for a tiny scoring benchmark baseline evidence",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_40374da99005",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+      "evaluator_name": "length_score",
+      "limit": 8,
+      "purpose": "failure modes constraints",
+      "query_intent": "optimization challenge strategy discovery",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research optimization strategies for a tiny scoring benchmark failure modes constraints",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_02db2c654db8",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
+      "evaluator_name": "length_score",
+      "limit": 8,
+      "purpose": "evaluation metrics",
+      "query_intent": "optimization challenge strategy discovery",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research optimization strategies for a tiny scoring benchmark evaluation metrics",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_9f6850b260cc",
+    "kind": "code",
+    "metadata": {
+      "goal": "Research optimization strategies for a tiny scoring benchmark",
+      "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+      "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_9faf9428acb1",
+      "variant_d7d67cbd3aaa",
+      "variant_1ca4c73a6fad"
+    ],
+    "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence refined pass 1",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_35b77a691117",
+    "kind": "code",
+    "metadata": {
+      "goal": "Research optimization strategies for a tiny scoring benchmark",
+      "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+      "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_9faf9428acb1",
+      "variant_d7d67cbd3aaa",
+      "variant_1ca4c73a6fad"
+    ],
+    "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark evaluation metrics refined pass 1",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_750b4358d534",
+    "kind": "code",
+    "metadata": {
+      "goal": "Research optimization strategies for a tiny scoring benchmark",
+      "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+      "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_9faf9428acb1",
+      "variant_d7d67cbd3aaa",
+      "variant_1ca4c73a6fad"
+    ],
+    "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark failure modes constraints refined pass 1",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  },
+  {
+    "id": "variant_8b1d117657c2",
+    "kind": "code",
+    "metadata": {
+      "goal": "Research optimization strategies for a tiny scoring benchmark",
+      "optimizer_seed_context_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
+      "query_seed_summary": "Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_9faf9428acb1",
+      "variant_d7d67cbd3aaa",
+      "variant_1ca4c73a6fad"
+    ],
+    "payload": "Optimization strategy sketch: Alternative optimization mutation from query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "evaluator_name": null,
+    "id": "decision_98b3d5eb3974",
+    "reason": "Research mode was explicitly requested.",
+    "requested_mode": "research",
+    "selected_mode": "research"
+  }
+]

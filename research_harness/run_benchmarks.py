@@ -32,6 +32,11 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
     evaluations = store.list("variant_evaluations")
     rounds = store.list("evolution_rounds")
     prd = read_json(store.prd_path, {})
+    optimizer_seed_context = read_json(store.optimizer_seed_context_path, {})
+    optimization_result = read_json(store.optimization_result_path, {})
+    optimized_candidate_exists = store.optimized_candidate_path.exists()
+    optimal_code_exists = store.optimal_code_path.exists()
+    solution_exists = store.solution_path.exists()
     sources = store.list("sources")
     claims = store.list("claims")
     hypotheses = store.list("hypotheses")
@@ -55,6 +60,11 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
         },
         "task_ingestion": decisions[0] if decisions else None,
         "prd": prd,
+        "optimizer_seed_context": optimizer_seed_context,
+        "optimization_result": optimization_result,
+        "optimized_candidate": str(store.optimized_candidate_path) if optimized_candidate_exists else None,
+        "optimal_code": str(store.optimal_code_path) if optimal_code_exists else None,
+        "solution": str(store.solution_path) if solution_exists else None,
         "models": dict(models),
         "tasks": tasks,
         "rounds": rounds,
@@ -87,8 +97,8 @@ def decision_dag_mermaid(summary: dict[str, Any]) -> str:
     lines = [
         "flowchart TD",
         f'  prompt["Prompt: {_mermaid(str(run.get("user_goal", "")))}"]',
-        f'  route["Route: {decision.get("selected_mode", run.get("task_mode", "unknown"))}"]',
-        '  outer["Outer orchestrator: propose variants"]',
+        f'  route["Product agent: {decision.get("product_agent", run.get("product_agent", "unknown"))}\\nLoop mode: {decision.get("selected_mode", run.get("task_mode", "unknown"))}"]',
+        '  outer["Agent harness loop: propose variants"]',
         '  inner["Inner loop: evaluate and rank"]',
         '  select["Tournament selection"]',
         '  stop{"Threshold or plateau?"}',
@@ -112,16 +122,17 @@ def decision_dag_mermaid(summary: dict[str, Any]) -> str:
 def decision_dag_svg(summary: dict[str, Any]) -> str:
     steps = [
         ("Prompt", str((summary.get("run") or {}).get("user_goal", ""))[:80]),
-        ("Route", str((summary.get("task_ingestion") or {}).get("selected_mode", "unknown"))),
+        ("Agent", str((summary.get("task_ingestion") or {}).get("product_agent", (summary.get("run") or {}).get("product_agent", "unknown")))),
+        ("Loop", str((summary.get("task_ingestion") or {}).get("selected_mode", "unknown"))),
         ("Outer", f"{summary.get('counts', {}).get('variants', 0)} variants"),
         ("Inner", f"{summary.get('counts', {}).get('evaluations', 0)} evaluations"),
         ("Best", f"{float((summary.get('best_evaluation') or {}).get('score', 0.0)):.3f} score"),
-        ("Output", "report + per-run benchmark"),
+        ("Output", "prd + report + benchmark"),
     ]
-    width = 1100
-    height = 170
     gap = 18
     box_w = 160
+    width = 48 + (len(steps) * box_w) + ((len(steps) - 1) * gap)
+    height = 170
     y = 46
     parts = [
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>",
@@ -147,6 +158,7 @@ def run_benchmark_markdown(summary: dict[str, Any], dag: str) -> str:
         "# Run Benchmark",
         "",
         f"- Run ID: `{(summary.get('run') or {}).get('id', 'unknown')}`",
+        f"- Product agent: `{decision.get('product_agent', (summary.get('run') or {}).get('product_agent', 'unknown'))}`",
         f"- Mode: `{decision.get('selected_mode', (summary.get('run') or {}).get('task_mode', 'unknown'))}`",
         f"- Tasks passed: {counts.get('passed_tasks', 0)} / {counts.get('tasks', 0)}",
         f"- Outer rounds: {counts.get('outer_rounds', 0)}",

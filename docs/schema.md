@@ -89,12 +89,32 @@ to SQLite or Postgres rows.
 - `id`
 - `user_goal`
 - `task_type`
+- `task_mode`
+- `product_agent`
 - `started_at`
 - `completed_at`
 - `status`
 - `total_cost`
 - `total_tokens`
 - `harness_config_id`
+
+## task_ingestion_decisions
+
+- `id`
+- `requested_mode`
+- `selected_mode`
+- `product_agent`
+- `evaluator_name`
+- `reason`
+
+## Optimization artifacts
+
+Optimization and challenge runs that execute an evaluator write:
+
+- `optimized_candidate.txt`: exact selected best candidate payload
+- `optimal_code.py`: universal code artifact for the selected best candidate
+- `optimization_result.json`: score, evaluator metadata, candidate path, and `optimal_code_path`
+- `solution.py`: optional challenge-specific mirror for upstream runners
 
 ## agent_traces
 

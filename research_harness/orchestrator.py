@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -49,6 +50,7 @@ BOUNDED_MARKERS = {
     "benchmark",
     "choose",
     "rank",
+    "who founded",
 }
 
 
@@ -91,7 +93,7 @@ class HarnessConfig:
     evaluator_name: Optional[str] = None
     evolution_population_size: int = 4
     llm_provider: str = "auto"
-    llm_model: str = "gpt-4.1-mini"
+    llm_model: str = "gpt-5.2"
     echo_progress: bool = True
     default_budget: AgentBudget = field(default_factory=AgentBudget)
 
@@ -166,12 +168,23 @@ class Orchestrator:
             "run": to_dict(run),
             "execution_mode": selected_mode,
             "task_mode": run.task_mode,
+            "product_agent": run.product_agent,
             "goal": run.user_goal,
+            "agent_harness": {
+                "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+                "runtime_mode": run.task_mode,
+                "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+            },
             "plan": to_dict(plan),
             "source_strategy": [to_dict(item) for item in source_strategy],
             "organized_tasks": tasks,
             "artifacts": {
                 "final_report": str(store.report_path),
+                "optimizer_seed_context": str(store.optimizer_seed_context_path),
+                "optimization_result": str(store.optimization_result_path),
+                "optimized_candidate": str(store.optimized_candidate_path),
+                "optimal_code": str(store.optimal_code_path),
+                "solution": str(store.solution_path),
                 "progress": str(store.progress_path),
                 "run_benchmark": str(store.run_benchmark_path),
                 "decision_dag": str(store.decision_dag_path),
@@ -427,9 +440,10 @@ class Orchestrator:
         decision = router.decide(run.user_goal, self.config.task_mode, self.config.evaluator_name)
         store.add_task_ingestion_decision(decision)
         run.task_mode = decision.selected_mode
+        run.product_agent = decision.product_agent
         store.update_run(run)
 
-        tasks = self.create_evolution_tasks(decision.selected_mode)
+        tasks = self.create_evolution_tasks(decision.selected_mode, decision.product_agent)
         for task in tasks:
             store.add_loop_task(task)
         store.append_progress(f"# Progress for {run.id}")
@@ -448,6 +462,9 @@ class Orchestrator:
         tasks[1].status = "running"
         tasks[1].attempts += 1
         store.update_loop_task(tasks[1])
+        population_size = self.config.evolution_population_size
+        if decision.selected_mode == "research" and plan.task_type == "bounded":
+            population_size = 1
         outer_loop = EvolutionaryOuterLoop(
             run_id=run.id,
             goal=run.user_goal,
@@ -455,8 +472,9 @@ class Orchestrator:
             source_strategy=source_strategy,
             search_factory=self._retriever_for,
             evaluator=self.evaluator_registry.get(decision.evaluator_name),
+            evaluator_name=decision.evaluator_name,
             max_outer_iterations=self.config.max_loop_iterations,
-            population_size=self.config.evolution_population_size,
+            population_size=population_size,
             llm=self.llm,
         )
         await outer_loop.run(store)
@@ -471,6 +489,37 @@ class Orchestrator:
 
         iteration = 3
         task_cursor = 2
+        if decision.selected_mode == "optimize_query":
+            await self._pass_task(
+                run,
+                store,
+                tasks[task_cursor],
+                iteration,
+                "optimizer_seed_context",
+                f"Compiled optimizer seed context at {store.optimizer_seed_context_path}.",
+            )
+            iteration += 1
+            task_cursor += 1
+            seed_context = _read_json_if_exists(store.optimizer_seed_context_path)
+            if seed_context.get("has_evaluator"):
+                await self._pass_task(
+                    run,
+                    store,
+                    tasks[task_cursor],
+                    iteration,
+                    "optimize_query_optimizer",
+                    "Ran optimizer variants using query-derived seed context.",
+                )
+            else:
+                await self._skip_task(
+                    run,
+                    store,
+                    tasks[task_cursor],
+                    iteration,
+                    "Skipped optimizer phase because no evaluator was registered.",
+                )
+            iteration += 1
+            task_cursor += 1
         if decision.selected_mode == "research":
             hypothesis = HypothesisAgent(
                 name="loop_research_hypothesis",
@@ -525,24 +574,28 @@ class Orchestrator:
         else:
             store.append_progress("<promise>COMPLETE</promise>")
 
-    def create_evolution_tasks(self, selected_mode: str) -> list[LoopTask]:
+    def create_evolution_tasks(self, selected_mode: str, product_agent: str = "research") -> list[LoopTask]:
+        if selected_mode == "optimize_query":
+            return self._create_optimize_query_tasks(product_agent)
         tasks = [
             LoopTask(
                 title="Ingest prompt and select task mode",
                 action="debug_harness",
                 priority=1,
-                params={"selected_mode": selected_mode},
+                params={"selected_mode": selected_mode, "product_agent": product_agent},
                 acceptance_criteria=[
                     "Explicit flags, evaluator availability, and prompt heuristics were checked",
                     "A task ingestion decision was persisted",
+                    f"The `{product_agent}` product agent was selected",
                 ],
             ),
             LoopTask(
-                title="Run outer evolutionary orchestrator",
+                title=f"Run {product_agent} agent loop",
                 action="debug_harness",
                 priority=2,
-                params={"selected_mode": selected_mode},
+                params={"selected_mode": selected_mode, "product_agent": product_agent},
                 acceptance_criteria=[
+                    "The agent harness ran model/tool/state loop steps for this product option",
                     "The outer loop proposed code or query variants",
                     "The selected inner loop returned ranked variants with scalar scores",
                     "Plateau or threshold stopping signals were evaluated",
@@ -589,6 +642,80 @@ class Orchestrator:
             )
         return tasks
 
+    def _create_optimize_query_tasks(self, product_agent: str = "optimize") -> list[LoopTask]:
+        optimizer_label = "challenge" if product_agent == "challenge" else "optimization"
+        tasks = [
+            LoopTask(
+                title="Ingest prompt and select task mode",
+                action="debug_harness",
+                priority=1,
+                params={"selected_mode": "optimize_query", "product_agent": product_agent},
+                acceptance_criteria=[
+                    "Explicit mode or auto-router selected optimization-query exploration",
+                    "A task ingestion decision was persisted",
+                    f"The `{product_agent}` product agent was selected",
+                ],
+            ),
+            LoopTask(
+                title=f"Generate and evaluate {optimizer_label} strategy queries",
+                action="search",
+                priority=2,
+                params={"selected_mode": "optimize_query", "product_agent": product_agent},
+                acceptance_criteria=[
+                    "The agent harness ran a query-research loop before optimization",
+                    "Outer loop proposed query variants about the optimization target",
+                    "OptimizationQueryLoop scored query variants for evidence and implementability",
+                    "Ranked query evaluations were persisted",
+                ],
+            ),
+            LoopTask(
+                title="Compile optimizer seed context",
+                action="debug_harness",
+                priority=3,
+                params={},
+                acceptance_criteria=[
+                    "Top query findings were summarized",
+                    "optimizer_seed_context.json was written",
+                ],
+            ),
+            LoopTask(
+                title="Run optimizer variants from query seed context",
+                action="debug_harness",
+                priority=4,
+                params={"product_agent": product_agent},
+                acceptance_criteria=[
+                    "If evaluator exists, optimize/code variants were evaluated",
+                    "If evaluator is missing, optimizer phase was explicitly skipped",
+                    "Challenge agents may additionally emit a runnable solution artifact for official grading",
+                ],
+            ),
+            LoopTask(
+                title="Critique ranked query and optimizer results",
+                action="critique",
+                priority=5,
+                params={},
+                acceptance_criteria=["Artifacts were reviewed for contradictions, weak evidence, or missing checks"],
+            ),
+            LoopTask(
+                title="Synthesize optimize-query run report",
+                action="synthesize",
+                priority=6,
+                params={},
+                acceptance_criteria=["Final report included query findings and optimizer seed context"],
+            ),
+        ]
+        if self.config.include_debugger:
+            tasks.append(
+                LoopTask(
+                    title="Inspect harness behavior and propose improvements",
+                    action="debug_harness",
+                    priority=7,
+                    params={},
+                    acceptance_criteria=["A constrained harness-change proposal was recorded"],
+                )
+            )
+        return tasks
+
     async def _record_task_result(
         self, run: RunRecord, store: ArtifactStore, task: LoopTask, iteration: int, result: AgentResult
     ) -> None:
@@ -628,6 +755,35 @@ class Orchestrator:
         summary: str,
     ) -> None:
         await self._record_task_result(run, store, task, iteration, AgentResult(agent_name, summary, []))
+
+    async def _skip_task(
+        self,
+        run: RunRecord,
+        store: ArtifactStore,
+        task: LoopTask,
+        iteration: int,
+        summary: str,
+    ) -> None:
+        task.status = "skipped"
+        task.passes = True
+        task.attempts += 1
+        task.result_summary = summary
+        task.completed_at = now_iso()
+        store.update_loop_task(task)
+        store.add_loop_iteration(
+            LoopIteration(
+                run_id=run.id,
+                iteration=iteration,
+                task_id=task.id,
+                task_title=task.title,
+                agent_name="optimize_query_router",
+                status=task.status,
+                summary=summary,
+                errors=[],
+                completed_at=now_iso(),
+            )
+        )
+        store.append_progress(f"Task {iteration}: skipped - {summary}")
 
     def create_loop_tasks(self, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]) -> list[LoopTask]:
         tasks: list[LoopTask] = []
@@ -909,6 +1065,12 @@ def _single_retriever_strategy(goal: str, plan: ResearchPlan, retriever: str) ->
 def _goal_terms(goal: str) -> list[str]:
     words = re.findall(r"[a-zA-Z0-9]+", goal.lower())
     return [word for word in words if word not in RUN_SLUG_STOPWORDS]
+
+
+def _read_json_if_exists(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _prd_task_from_loop_task(task: dict[str, object], index: int) -> dict[str, object]:

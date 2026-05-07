@@ -1,0 +1,10 @@
+[
+  {
+    "created_by_agent": "loop_evolution_critic",
+    "id": "q_1440dc80389f",
+    "priority": 1,
+    "question": "Which mechanisms or optimization paths should be explored next?",
+    "reason": "No hypotheses were generated from the current evidence set.",
+    "status": "open"
+  }
+]

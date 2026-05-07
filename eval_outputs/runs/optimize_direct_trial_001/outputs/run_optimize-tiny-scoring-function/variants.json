@@ -1,0 +1,46 @@
+[
+  {
+    "id": "variant_8b3592b2c173",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "baseline direct implementation",
+    "run_id": "run_optimize-tiny-scoring-function"
+  },
+  {
+    "id": "variant_c3b316b78abc",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "vectorized implementation",
+    "run_id": "run_optimize-tiny-scoring-function"
+  },
+  {
+    "id": "variant_59f767f225ab",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "cached implementation",
+    "run_id": "run_optimize-tiny-scoring-function"
+  },
+  {
+    "id": "variant_ceee2e45d1e6",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "branch-reduced implementation",
+    "run_id": "run_optimize-tiny-scoring-function"
+  }
+]

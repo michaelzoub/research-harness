@@ -1,0 +1,608 @@
+{
+  "aggregate_score": 0.958,
+  "completed_at": "2026-05-06T22:55:41.503324+00:00",
+  "passed_trials": 4,
+  "started_at": "2026-05-06T22:55:41.367004+00:00",
+  "suite_id": "core",
+  "suite_name": "Core Harness Evaluation Suite",
+  "task_count": 4,
+  "trial_count": 4,
+  "trials": [
+    {
+      "aggregate_score": 0.964,
+      "completed_at": "2026-05-06T22:55:41.392999+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 7,
+              "check": "min_sources",
+              "expected_at_least": 4,
+              "passed": true
+            },
+            {
+              "actual": 57,
+              "check": "min_claims",
+              "expected_at_least": 8,
+              "passed": true
+            },
+            {
+              "actual": 57,
+              "check": "all_claims_have_sources",
+              "passed": true,
+              "total": 57
+            }
+          ],
+          "grader_id": "research_groundedness",
+          "grader_type": "code",
+          "method": "groundedness assertions",
+          "passed": true,
+          "score": 1.0,
+          "summary": "7 sources, 57 claims, 57 grounded claims.",
+          "weight": 1.25
+        },
+        {
+          "assertions": [
+            {
+              "passed": true,
+              "path": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/final_report.md"
+            }
+          ],
+          "grader_id": "artifact_report",
+          "grader_type": "code",
+          "method": "artifact existence",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Final report artifact checked.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=27; traces=3.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/research_open_ended_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/research_open_ended_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "has_summary",
+              "passed": false
+            },
+            {
+              "check": "mentions_sources",
+              "passed": true
+            },
+            {
+              "check": "mentions_uncertainty",
+              "passed": true
+            },
+            {
+              "check": "substantial_length",
+              "passed": true
+            }
+          ],
+          "grader_id": "model_report_rubric",
+          "grader_type": "model",
+          "method": "deterministic rubric scoring",
+          "passed": true,
+          "score": 0.75,
+          "summary": "Local model-style rubric scored the report.",
+          "weight": 0.8
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/research_open_ended_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/research_open_ended_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/research_open_ended_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "research",
+        "best_score": 0.957,
+        "report_exists": true,
+        "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "research"
+      },
+      "passed": true,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "task_id": "research_open_ended",
+      "transcript_path": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 0.895,
+      "completed_at": "2026-05-06T22:55:41.399907+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize",
+              "passed": true,
+              "selected_mode": "optimize"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize; expected optimize.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "best_score": 0.5,
+              "passed": true
+            }
+          ],
+          "grader_id": "optimize_score",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 0.5,
+          "summary": "Best optimize score=0.500.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=25; traces=2.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_direct_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/optimize_direct_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/optimize_direct_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/optimize_direct_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/optimize_direct_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize",
+        "best_score": 0.5,
+        "report_exists": true,
+        "run_id": "run_optimize-tiny-scoring-function",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize"
+      },
+      "passed": true,
+      "run_id": "run_optimize-tiny-scoring-function",
+      "task_id": "optimize_direct",
+      "transcript_path": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-06T22:55:41.434161+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "exists": true,
+              "passed": true,
+              "top_query_findings": 3
+            }
+          ],
+          "grader_id": "seed_context",
+          "grader_type": "code",
+          "method": "artifact existence",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimizer seed context checked.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "loops": [
+                "optimize",
+                "optimize_query"
+              ],
+              "passed": true
+            }
+          ],
+          "grader_id": "optimize_query_phases",
+          "grader_type": "code",
+          "method": "trace/phase verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Inner loops seen: ['optimize', 'optimize_query'].",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=32; traces=2.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_query_seeded_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/optimize_query_seeded_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/optimize_query_seeded_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/optimize_query_seeded_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.805,
+        "report_exists": true,
+        "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+        "seed_context_exists": true,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+      "task_id": "optimize_query_seeded",
+      "transcript_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 0.971,
+      "completed_at": "2026-05-06T22:55:41.503318+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "exists": true,
+              "passed": true,
+              "top_query_findings": 3
+            }
+          ],
+          "grader_id": "seed_context",
+          "grader_type": "code",
+          "method": "artifact existence",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimizer seed context checked.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "solution_exists",
+              "passed": true
+            },
+            {
+              "check": "defines_strategy",
+              "passed": true
+            },
+            {
+              "check": "has_on_step",
+              "passed": true
+            },
+            {
+              "check": "uses_upstream_api",
+              "passed": true
+            },
+            {
+              "check": "uses_cancel_or_orders",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_solution",
+          "grader_type": "code",
+          "method": "static solution checks",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Generated solution.py checked against upstream API shape.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "best_proxy_score": 0.803,
+              "official_score_required": true,
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_proxy_score",
+          "grader_type": "code",
+          "method": "local proxy outcome verification",
+          "passed": true,
+          "score": 0.803,
+          "summary": "Best local proxy score=0.803. This is not the official upstream profit score.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=33; traces=2.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/challenge_prediction_market_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/challenge_prediction_market_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/challenge_prediction_market_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.85,
+        "report_exists": true,
+        "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+      "task_id": "challenge_prediction_market",
+      "transcript_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/trace.jsonl",
+      "trial_index": 1
+    }
+  ],
+  "trials_per_task": 1
+}

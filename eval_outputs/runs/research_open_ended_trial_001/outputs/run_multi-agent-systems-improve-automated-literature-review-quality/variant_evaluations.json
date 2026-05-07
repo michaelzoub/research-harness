@@ -1,0 +1,62 @@
+[
+  {
+    "id": "eval_9a8aab9d7320",
+    "inner_loop": "research",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.767,
+      0.913
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.767
+    },
+    "passed": true,
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "score": 0.957,
+    "summary": "Retrieved 6 sources and 18 claims; median judge score 0.957.",
+    "variant_id": "variant_5c856588b3ca"
+  },
+  {
+    "id": "eval_da040b3f77d2",
+    "inner_loop": "research",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.777,
+      0.904
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.777
+    },
+    "passed": true,
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "score": 0.952,
+    "summary": "Retrieved 7 sources and 21 claims; median judge score 0.952.",
+    "variant_id": "variant_93b99766df6d"
+  },
+  {
+    "id": "eval_88ef1dbe73ea",
+    "inner_loop": "research",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.767,
+      0.909
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.767
+    },
+    "passed": true,
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "score": 0.955,
+    "summary": "Retrieved 6 sources and 18 claims; median judge score 0.955.",
+    "variant_id": "variant_2d8663b20342"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "confidence": 0.48,
+    "contradicting_claim_ids": [],
+    "id": "hyp_a0f3d471e5d4",
+    "next_experiment": "Search for direct evaluations of: mechanism.",
+    "novelty_score": 0.55,
+    "supporting_claim_ids": [
+      "claim_cf0dad3dc225"
+    ],
+    "testability_score": 0.72,
+    "text": "Mechanism path: Entropy injection can reveal overlooked mechanisms and assumptions."
+  }
+]

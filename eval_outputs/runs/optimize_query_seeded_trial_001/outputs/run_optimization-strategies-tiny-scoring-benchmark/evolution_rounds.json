@@ -1,0 +1,35 @@
+[
+  {
+    "best_score": 0.805,
+    "best_variant_id": "variant_c93f0cd62ada",
+    "completed_at": "2026-05-06T22:55:41.427258+00:00",
+    "id": "round_f21093ac76f2",
+    "mode": "optimize_query",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_c93f0cd62ada",
+      "variant_40374da99005",
+      "variant_02db2c654db8"
+    ]
+  },
+  {
+    "best_score": 0.05263157894736842,
+    "best_variant_id": "variant_8b1d117657c2",
+    "completed_at": "2026-05-06T22:55:41.428934+00:00",
+    "id": "round_cbecbd45ae57",
+    "mode": "optimize",
+    "outer_iteration": 2,
+    "plateau_count": 0,
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "termination_signal": "continue",
+    "variant_ids": [
+      "variant_9f6850b260cc",
+      "variant_35b77a691117",
+      "variant_750b4358d534",
+      "variant_8b1d117657c2"
+    ]
+  }
+]

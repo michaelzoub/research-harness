@@ -7,7 +7,8 @@ from uuid import uuid4
 
 
 TaskType = Literal["bounded", "open_ended"]
-TaskMode = Literal["optimize", "research"]
+TaskMode = Literal["optimize", "research", "optimize_query"]
+ProductAgent = Literal["research", "optimize", "challenge"]
 RunStatus = Literal["running", "completed", "failed", "cancelled"]
 WritePolicy = Literal["append_only", "upsert_by_url", "upsert_by_text"]
 LoopTaskStatus = Literal["pending", "running", "passed", "failed", "skipped"]
@@ -73,6 +74,7 @@ class TaskIngestionDecision:
     selected_mode: TaskMode
     reason: str
     evaluator_name: Optional[str] = None
+    product_agent: ProductAgent = "research"
     id: str = field(default_factory=lambda: new_id("decision"))
 
 
@@ -93,7 +95,7 @@ class VariantEvaluation:
     variant_id: str
     inner_loop: TaskMode
     score: float
-    metrics: dict[str, float]
+    metrics: dict[str, Any]
     judge_scores: list[float]
     summary: str
     passed: bool
@@ -209,6 +211,7 @@ class RunRecord:
     task_type: TaskType
     harness_config_id: str
     task_mode: Optional[TaskMode] = None
+    product_agent: Optional[ProductAgent] = None
     status: RunStatus = "running"
     total_cost: float = 0.0
     total_tokens: int = 0

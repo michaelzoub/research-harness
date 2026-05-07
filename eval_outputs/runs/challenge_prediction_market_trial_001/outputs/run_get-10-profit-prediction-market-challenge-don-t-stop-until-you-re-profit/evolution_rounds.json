@@ -1,0 +1,35 @@
+[
+  {
+    "best_score": 0.85,
+    "best_variant_id": "variant_640b44099600",
+    "completed_at": "2026-05-06T22:55:41.461157+00:00",
+    "id": "round_e5eef2f49171",
+    "mode": "optimize_query",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_640b44099600",
+      "variant_d41e044d4bed",
+      "variant_3af102d42f75"
+    ]
+  },
+  {
+    "best_score": 0.803,
+    "best_variant_id": "variant_beb6968cd66d",
+    "completed_at": "2026-05-06T22:55:41.498135+00:00",
+    "id": "round_bbbcadea560c",
+    "mode": "optimize",
+    "outer_iteration": 2,
+    "plateau_count": 0,
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "termination_signal": "score_threshold",
+    "variant_ids": [
+      "variant_beb6968cd66d",
+      "variant_64115c18adad",
+      "variant_79ca12c25e54",
+      "variant_e90a85b592a3"
+    ]
+  }
+]

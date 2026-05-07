@@ -88,5 +88,50 @@
     ],
     "tags": ["adaptive", "harness", "gated", "benchmark", "config", "risk"],
     "credibility_score": 0.76
+  },
+  {
+    "url": "https://github.com/danrobinson/prediction-market-challenge",
+    "title": "Orderbook Prediction Market Challenge",
+    "author": "Dan Robinson",
+    "date": "2026-05-04",
+    "source_type": "optimization_challenge",
+    "summary": "A binary prediction-market optimization challenge where passive market makers quote a YES contract against retail flow, a static competitor ladder, and an informed arbitrageur that sweeps stale quotes.",
+    "claims": [
+      "Positive edge comes from capturing spread against uninformed retail order flow.",
+      "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves.",
+      "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
+    ],
+    "tags": ["prediction", "market", "orderbook", "optimization", "strategy", "arbitrageur", "retail", "stale", "quotes"],
+    "credibility_score": 0.88
+  },
+  {
+    "url": "challenges/prediction_market/spec.md",
+    "title": "Prediction Market Strategy Design Notes",
+    "author": "research-harness",
+    "date": "2026-05-06",
+    "source_type": "challenge_spec",
+    "summary": "Local challenge notes for optimizing passive prediction-market market-making strategies using adaptive fair-value estimation, inventory skew, cancel logic, and quote sizing.",
+    "claims": [
+      "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals.",
+      "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses.",
+      "Inventory skew and moderate size help preserve profitability across randomized regimes."
+    ],
+    "tags": ["prediction", "market", "adaptive", "fair-value", "inventory", "cancel", "jump", "market-making", "evaluator"],
+    "credibility_score": 0.84
+  },
+  {
+    "url": "challenges/prediction_market/evaluator.py",
+    "title": "Prediction Market Local Evaluator Rubric",
+    "author": "research-harness",
+    "date": "2026-05-06",
+    "source_type": "evaluator_rubric",
+    "summary": "The local evaluator maps generated strategy text to a parameterized passive market maker and scores mean edge across deterministic randomized regimes.",
+    "claims": [
+      "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision.",
+      "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards.",
+      "The registered evaluator name is prediction_market and can be used with optimize_query mode."
+    ],
+    "tags": ["prediction_market", "evaluator", "optimize_query", "mean", "edge", "inventory", "stale", "passive"],
+    "credibility_score": 0.82
   }
 ]

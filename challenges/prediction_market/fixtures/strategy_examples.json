@@ -1,0 +1,12 @@
+[
+  {
+    "name": "static_ladder",
+    "variant": "Static ladder around midpoint with size=8 spread=2 and no inventory skew.",
+    "expected_relative_score": "low"
+  },
+  {
+    "name": "adaptive_guarded_market_maker",
+    "variant": "Adaptive fair value estimate from fills and competitor midpoint, CancelAll after stale adverse arbitrageur fills or jump volatility, size=5 spread=4 inventory limit=90 with inventory skew.",
+    "expected_relative_score": "high"
+  }
+]

@@ -1,0 +1,686 @@
+[
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_5eec4ac29d82",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_75140fac0a2b",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_3951ee9647b9",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_d39c7f4586b2",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "moderate",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_cf0dad3dc225",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "moderate",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_81aaee31842e",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "moderate",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  },
+  {
+    "confidence": 0.64,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_b71fea8fc542",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.64,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_598250d4a5bb",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.64,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_a713348af7fe",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_53286c32bb00",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_b596ba9b8bc8",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_6f344bc7f496",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_edd501a3af53",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_3ecafac985a9",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_d49c838de4c0",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_f3494bd8e9a5",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_fab8309dc6d7",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive evolution without benchmark comparison can worsen reliability."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_5c856588b3ca",
+    "id": "claim_ea42dcbd01d4",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_b935aab4f4e7",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_27a1a5c63107",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_0bbb37121144",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_2713f3283112",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_113dee078104",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_f92dd995cfd6",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_969fffff3d73",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_9303cfe57680",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_7d5d04f80df1",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_414b410fc0e1",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_a529c69d07c5",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_3163cc2780c4",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.61,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_db5b077fe07c",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_eb369ee7a501"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.61,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_cd201dd7d41c",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_eb369ee7a501"
+    ],
+    "support_level": "moderate",
+    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
+  },
+  {
+    "confidence": 0.61,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_251d3639388c",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_eb369ee7a501"
+    ],
+    "support_level": "moderate",
+    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_f934e81ea028",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_3e2ec505e5d6",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive evolution without benchmark comparison can worsen reliability."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_ad25eb9ff906",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_7a230e2a8017",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_133db3ca7163",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_93b99766df6d",
+    "id": "claim_da63c3ee7db7",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_4a3d9ce609d7",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_6d54576a89d7",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_5554dec409be",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c1be6f9857a7"
+    ],
+    "support_level": "strong",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_5ebebd7bac64",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_c711c0bf9194",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.66,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_0be42be45380",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_578ef32ac49e"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_fb36b5600977",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_c5f84165d507",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_2e6b92168a18",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_0bf9df48835a"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_19a9183fb704",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_2db92f330c55",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_79ec88a0ed07",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_c40239cfec40"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_50470ccdffc5",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_dcb15be63674",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive evolution without benchmark comparison can worsen reliability."
+  },
+  {
+    "confidence": 0.56,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_24a205877078",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_42520331ee69"
+    ],
+    "support_level": "moderate",
+    "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_0e0f1fa955d8",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_f71d7b8e9daa",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.51,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_2d8663b20342",
+    "id": "claim_7bcb7606aa15",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "source_ids": [
+      "src_dd0f725e779e"
+    ],
+    "support_level": "weak",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  }
+]

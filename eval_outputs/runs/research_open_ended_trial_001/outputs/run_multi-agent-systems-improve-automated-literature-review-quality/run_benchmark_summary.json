@@ -1,0 +1,489 @@
+{
+  "best_evaluation": {
+    "id": "eval_9a8aab9d7320",
+    "inner_loop": "research",
+    "judge_scores": [
+      1.0,
+      1.0,
+      0.767,
+      0.913
+    ],
+    "metrics": {
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.767
+    },
+    "passed": true,
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "score": 0.957,
+    "summary": "Retrieved 6 sources and 18 claims; median judge score 0.957.",
+    "variant_id": "variant_5c856588b3ca"
+  },
+  "counts": {
+    "agent_traces": 3,
+    "claims": 57,
+    "contradictions": 2,
+    "evaluations": 3,
+    "failed_agents": 0,
+    "hypotheses": 1,
+    "outer_rounds": 1,
+    "passed_tasks": 5,
+    "sources": 7,
+    "tasks": 5,
+    "variants": 3
+  },
+  "evaluations": [
+    {
+      "id": "eval_9a8aab9d7320",
+      "inner_loop": "research",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.767,
+        0.913
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.767
+      },
+      "passed": true,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "score": 0.957,
+      "summary": "Retrieved 6 sources and 18 claims; median judge score 0.957.",
+      "variant_id": "variant_5c856588b3ca"
+    },
+    {
+      "id": "eval_da040b3f77d2",
+      "inner_loop": "research",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.777,
+        0.904
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.777
+      },
+      "passed": true,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "score": 0.952,
+      "summary": "Retrieved 7 sources and 21 claims; median judge score 0.952.",
+      "variant_id": "variant_93b99766df6d"
+    },
+    {
+      "id": "eval_88ef1dbe73ea",
+      "inner_loop": "research",
+      "judge_scores": [
+        1.0,
+        1.0,
+        0.767,
+        0.909
+      ],
+      "metrics": {
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.767
+      },
+      "passed": true,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "score": 0.955,
+      "summary": "Retrieved 6 sources and 18 claims; median judge score 0.955.",
+      "variant_id": "variant_2d8663b20342"
+    }
+  ],
+  "models": {
+    "local-deterministic-fallback": 3
+  },
+  "optimizer_seed_context": {},
+  "prd": {
+    "artifacts": {
+      "decision_dag": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/decision_dag.svg",
+      "final_report": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/final_report.md",
+      "optimizer_seed_context": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/optimizer_seed_context.json",
+      "progress": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/progress.txt",
+      "run_benchmark": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/run_benchmark.html",
+      "solution": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/solution.py",
+      "trace": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/trace.jsonl"
+    },
+    "execution_mode": "evolutionary",
+    "goal": "Research how multi-agent systems improve automated literature review quality",
+    "notes": [
+      "This file is the run-local PRD/task map.",
+      "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+    ],
+    "organized_tasks": [
+      {
+        "acceptance_criteria": [
+          "Explicit flags, evaluator availability, and prompt heuristics were checked",
+          "A task ingestion decision was persisted"
+        ],
+        "attempts": 1,
+        "dependencies": [],
+        "id": "prd_task_001",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {
+          "selected_mode": "research"
+        },
+        "passes": true,
+        "priority": 1,
+        "result_summary": "Selected research mode. Research mode was explicitly requested.",
+        "source_task_id": "task_2a746dda85d1",
+        "status": "passed",
+        "title": "Ingest prompt and select task mode"
+      },
+      {
+        "acceptance_criteria": [
+          "The outer loop proposed code or query variants",
+          "The selected inner loop returned ranked variants with scalar scores",
+          "Plateau or threshold stopping signals were evaluated"
+        ],
+        "attempts": 2,
+        "dependencies": [
+          "prd_task_001"
+        ],
+        "id": "prd_task_002",
+        "kind": "debug_harness",
+        "last_error": null,
+        "params": {
+          "selected_mode": "research"
+        },
+        "passes": true,
+        "priority": 2,
+        "result_summary": "Completed 1 evolutionary outer rounds.",
+        "source_task_id": "task_00c44fe98bbb",
+        "status": "passed",
+        "title": "Run outer evolutionary orchestrator"
+      },
+      {
+        "acceptance_criteria": [
+          "Claims from research variants were inspected",
+          "Hypotheses or open questions were created"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_002"
+        ],
+        "id": "prd_task_003",
+        "kind": "hypothesize",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 3,
+        "result_summary": "Generated 1 hypotheses for angle 'mechanism'.",
+        "source_task_id": "task_d46730a1199a",
+        "status": "passed",
+        "title": "Generate hypotheses from winning evidence"
+      },
+      {
+        "acceptance_criteria": [
+          "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_003"
+        ],
+        "id": "prd_task_004",
+        "kind": "critique",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 4,
+        "result_summary": "Reviewed 21 claims and 1 hypotheses; found 2 contradictions.",
+        "source_task_id": "task_1fd8374318f3",
+        "status": "passed",
+        "title": "Critique ranked variants and claims"
+      },
+      {
+        "acceptance_criteria": [
+          "Final report was written from run artifacts"
+        ],
+        "attempts": 1,
+        "dependencies": [
+          "prd_task_004"
+        ],
+        "id": "prd_task_005",
+        "kind": "synthesize",
+        "last_error": null,
+        "params": {},
+        "passes": true,
+        "priority": 5,
+        "result_summary": "Synthesized final report with 7 sources, 21 claims, and 1 hypotheses.",
+        "source_task_id": "task_c6f8f509fd99",
+        "status": "passed",
+        "title": "Synthesize evolutionary run report"
+      }
+    ],
+    "plan": {
+      "goal": "Research how multi-agent systems improve automated literature review quality",
+      "hypothesis_angles": [
+        "mechanism",
+        "research direction"
+      ],
+      "search_angles": [
+        "foundational literature mechanisms",
+        "recent empirical evidence",
+        "contradictory evidence limitations"
+      ],
+      "stopping_signals": [
+        "no meaningful new sources after N cycles",
+        "no new high-confidence claims",
+        "hypotheses converge",
+        "critic finds no new major objections",
+        "benchmark/evaluation score plateaus",
+        "cost budget reached",
+        "time budget reached",
+        "human approval needed"
+      ],
+      "strategy": "Allow broad exploration across framings before critic-driven convergence.",
+      "task_type": "open_ended"
+    },
+    "run": {
+      "completed_at": "2026-05-06T22:55:41.391296+00:00",
+      "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+      "id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "started_at": "2026-05-06T22:55:41.367765+00:00",
+      "status": "completed",
+      "task_mode": "research",
+      "task_type": "open_ended",
+      "total_cost": 0.0,
+      "total_tokens": 169,
+      "user_goal": "Research how multi-agent systems improve automated literature review quality"
+    },
+    "schema_version": "research_harness_prd_v1",
+    "source_strategy": [
+      {
+        "limit": 8,
+        "name": "local_1",
+        "purpose": "foundational literature mechanisms",
+        "queries": [
+          "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_2",
+        "purpose": "recent empirical evidence",
+        "queries": [
+          "Research how multi-agent systems improve automated literature review quality recent empirical evidence"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_3",
+        "purpose": "contradictory evidence limitations",
+        "queries": [
+          "Research how multi-agent systems improve automated literature review quality contradictory evidence limitations"
+        ],
+        "retriever": "local"
+      }
+    ],
+    "stage": "completed",
+    "task_mode": "research"
+  },
+  "rounds": [
+    {
+      "best_score": 0.957,
+      "best_variant_id": "variant_5c856588b3ca",
+      "completed_at": "2026-05-06T22:55:41.386943+00:00",
+      "id": "round_0bcab5d2a8ad",
+      "mode": "research",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "termination_signal": "claim_corroboration_threshold",
+      "variant_ids": [
+        "variant_5c856588b3ca",
+        "variant_93b99766df6d",
+        "variant_2d8663b20342"
+      ]
+    }
+  ],
+  "run": {
+    "completed_at": "2026-05-06T22:55:41.391296+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "started_at": "2026-05-06T22:55:41.367765+00:00",
+    "status": "completed",
+    "task_mode": "research",
+    "task_type": "open_ended",
+    "total_cost": 0.0,
+    "total_tokens": 169,
+    "user_goal": "Research how multi-agent systems improve automated literature review quality"
+  },
+  "solution": null,
+  "task_ingestion": {
+    "evaluator_name": null,
+    "id": "decision_98b3d5eb3974",
+    "reason": "Research mode was explicitly requested.",
+    "requested_mode": "research",
+    "selected_mode": "research"
+  },
+  "tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit flags, evaluator availability, and prompt heuristics were checked",
+        "A task ingestion decision was persisted"
+      ],
+      "action": "debug_harness",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.370168+00:00",
+      "created_at": "2026-05-06T22:55:41.369478+00:00",
+      "id": "task_2a746dda85d1",
+      "last_error": null,
+      "params": {
+        "selected_mode": "research"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected research mode. Research mode was explicitly requested.",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "The outer loop proposed code or query variants",
+        "The selected inner loop returned ranked variants with scalar scores",
+        "Plateau or threshold stopping signals were evaluated"
+      ],
+      "action": "debug_harness",
+      "attempts": 2,
+      "completed_at": "2026-05-06T22:55:41.387144+00:00",
+      "created_at": "2026-05-06T22:55:41.369488+00:00",
+      "id": "task_00c44fe98bbb",
+      "last_error": null,
+      "params": {
+        "selected_mode": "research"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 1 evolutionary outer rounds.",
+      "status": "passed",
+      "title": "Run outer evolutionary orchestrator"
+    },
+    {
+      "acceptance_criteria": [
+        "Claims from research variants were inspected",
+        "Hypotheses or open questions were created"
+      ],
+      "action": "hypothesize",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.388232+00:00",
+      "created_at": "2026-05-06T22:55:41.369494+00:00",
+      "id": "task_d46730a1199a",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 3,
+      "result_summary": "Generated 1 hypotheses for angle 'mechanism'.",
+      "status": "passed",
+      "title": "Generate hypotheses from winning evidence"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "action": "critique",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.389647+00:00",
+      "created_at": "2026-05-06T22:55:41.369499+00:00",
+      "id": "task_1fd8374318f3",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Reviewed 21 claims and 1 hypotheses; found 2 contradictions.",
+      "status": "passed",
+      "title": "Critique ranked variants and claims"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report was written from run artifacts"
+      ],
+      "action": "synthesize",
+      "attempts": 1,
+      "completed_at": "2026-05-06T22:55:41.390978+00:00",
+      "created_at": "2026-05-06T22:55:41.369503+00:00",
+      "id": "task_c6f8f509fd99",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Synthesized final report with 7 sources, 21 claims, and 1 hypotheses.",
+      "status": "passed",
+      "title": "Synthesize evolutionary run report"
+    }
+  ],
+  "trace_summaries": [
+    {
+      "agent_name": "loop_research_hypothesis",
+      "model": "local-deterministic-fallback",
+      "role": "hypothesis_generation",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Generated 1 hypotheses for angle 'mechanism'."
+    },
+    {
+      "agent_name": "loop_evolution_critic",
+      "model": "local-deterministic-fallback",
+      "role": "critic_reviewer",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Reviewed 21 claims and 1 hypotheses; found 2 contradictions."
+    },
+    {
+      "agent_name": "loop_evolution_synthesis",
+      "model": "local-deterministic-fallback",
+      "role": "synthesis_agent",
+      "runtime_ms": 0,
+      "status": "completed",
+      "summary": "Synthesized final report with 7 sources, 21 claims, and 1 hypotheses."
+    }
+  ],
+  "variants": [
+    {
+      "id": "variant_5c856588b3ca",
+      "kind": "query",
+      "metadata": {
+        "limit": 8,
+        "purpose": "foundational literature mechanisms",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms",
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+    },
+    {
+      "id": "variant_93b99766df6d",
+      "kind": "query",
+      "metadata": {
+        "limit": 8,
+        "purpose": "recent empirical evidence",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research how multi-agent systems improve automated literature review quality recent empirical evidence",
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+    },
+    {
+      "id": "variant_2d8663b20342",
+      "kind": "query",
+      "metadata": {
+        "limit": 8,
+        "purpose": "contradictory evidence limitations",
+        "retriever": "local"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research how multi-agent systems improve automated literature review quality contradictory evidence limitations",
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+    }
+  ]
+}

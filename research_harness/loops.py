@@ -3,14 +3,23 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
+import random
+import re
+import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 from statistics import median
 from typing import Callable, Optional, Protocol
+
+from challenges.prediction_market import prediction_market_score
 
 from .llm import LLMClient
 from .schemas import (
     Claim,
     EvolutionRound,
+    FailedPath,
+    ProductAgent,
     SourceStrategyItem,
     TaskIngestionDecision,
     TaskMode,
@@ -23,6 +32,7 @@ from .store import ArtifactStore
 
 EvaluatorFn = Callable[[str], float]
 SearchFactory = Callable[[str], SearchBackend]
+PM_UPSTREAM_PATH = Path(os.environ.get("PREDICTION_MARKET_CHALLENGE_PATH", "/private/tmp/prediction-market-challenge-src"))
 
 
 OPTIMIZE_HINTS = {
@@ -50,6 +60,7 @@ class EvaluatorRegistry:
     def __init__(self) -> None:
         self._evaluators: dict[str, EvaluatorFn] = {
             "length_score": lambda payload: 1.0 / max(1, len(payload.split())),
+            "prediction_market": prediction_market_score,
         }
 
     def get(self, name: Optional[str]) -> Optional[EvaluatorFn]:
@@ -73,37 +84,73 @@ class TaskRouter:
                 requested_mode=requested_mode,
                 selected_mode="research",
                 reason="Research mode was explicitly requested.",
+                product_agent="research",
+            )
+        if requested == "optimize_query":
+            product_agent = _product_agent_for("optimize_query", goal, evaluator_name)
+            return TaskIngestionDecision(
+                requested_mode=requested_mode,
+                selected_mode="optimize_query",
+                evaluator_name=evaluator_name if evaluator else None,
+                product_agent=product_agent,
+                reason=(
+                    f"{product_agent.title()} agent selected optimization-query loop; query exploration will "
+                    + (
+                        f"feed the registered evaluator '{evaluator_name}'."
+                        if evaluator
+                        else "run without an optimizer evaluator."
+                    )
+                ),
             )
         if requested == "optimize" and evaluator:
+            product_agent = _product_agent_for("optimize", goal, evaluator_name)
             return TaskIngestionDecision(
                 requested_mode=requested_mode,
                 selected_mode="optimize",
                 evaluator_name=evaluator_name,
-                reason=f"Optimize mode was explicitly requested with evaluator '{evaluator_name}'.",
+                product_agent=product_agent,
+                reason=f"{product_agent.title()} agent selected optimize loop with evaluator '{evaluator_name}'.",
             )
         if requested == "optimize" and not evaluator:
             return TaskIngestionDecision(
                 requested_mode=requested_mode,
                 selected_mode="research",
                 evaluator_name=evaluator_name,
+                product_agent="research",
                 reason="Optimize mode requested, but register_evaluator failed to resolve a deterministic evaluator; falling back to research mode.",
             )
+        if _looks_like_optimization_query(goal):
+            product_agent = _product_agent_for("optimize_query", goal, evaluator_name)
+            return TaskIngestionDecision(
+                requested_mode=requested_mode,
+                selected_mode="optimize_query",
+                evaluator_name=evaluator_name if evaluator else None,
+                product_agent=product_agent,
+                reason=(
+                    f"The prompt maps to the {product_agent} agent and asks for research/query exploration around an optimization-style task"
+                    + (" and an evaluator is available." if evaluator else ".")
+                ),
+            )
         if evaluator:
+            product_agent = _product_agent_for("optimize", goal, evaluator_name)
             return TaskIngestionDecision(
                 requested_mode=requested_mode,
                 selected_mode="optimize",
                 evaluator_name=evaluator_name,
-                reason=f"Deterministic evaluator '{evaluator_name}' is registered.",
+                product_agent=product_agent,
+                reason=f"{product_agent.title()} agent selected because deterministic evaluator '{evaluator_name}' is registered.",
             )
         if any(hint in goal.lower() for hint in OPTIMIZE_HINTS):
             return TaskIngestionDecision(
                 requested_mode=requested_mode,
                 selected_mode="research",
+                product_agent="research",
                 reason="The prompt looks optimization-shaped, but no deterministic evaluator was registered; using research mode.",
             )
         return TaskIngestionDecision(
             requested_mode=requested_mode,
             selected_mode="research",
+            product_agent="research",
             reason="No deterministic evaluator is available, so the task is routed to research mode.",
         )
 
@@ -171,8 +218,7 @@ class ResearchLoop:
     async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
         retriever_name = str(variant.metadata.get("retriever", "local"))
         limit = int(variant.metadata.get("limit", 6))
-        backend = self.search_factory(retriever_name)
-        backend_results = backend.search(variant.payload, limit=limit)
+        backend, backend_results, retrieval_notes = self._search_with_fallback(retriever_name, variant, limit, store)
         sources = []
         claim_count = 0
         for document, relevance in backend_results:
@@ -192,6 +238,7 @@ class ResearchLoop:
                 )
                 claim_count += 1
         metrics = self._research_metrics(sources, claim_count)
+        metrics["fallback_used"] = 1.0 if retrieval_notes else 0.0
         judge_scores = [
             metrics["coverage"],
             metrics["corroboration"],
@@ -212,9 +259,54 @@ class ResearchLoop:
             summary=(
                 f"Retrieved {len(sources)} sources and {claim_count} claims; {llm_summary}"
                 f"median judge score {score:.3f}."
+                + (f" Retrieval notes: {'; '.join(retrieval_notes)}" if retrieval_notes else "")
             ),
             passed=score >= self.pass_threshold,
         )
+
+    def _search_with_fallback(
+        self,
+        retriever_name: str,
+        variant: Variant,
+        limit: int,
+        store: ArtifactStore,
+    ) -> tuple[SearchBackend, list[tuple[object, float]], list[str]]:
+        backend = self.search_factory(retriever_name)
+        notes: list[str] = []
+        try:
+            return backend, backend.search(variant.payload, limit=limit), notes
+        except Exception as exc:
+            message = f"{type(exc).__name__}: {exc}"
+            store.add_failed_path(
+                FailedPath(
+                    description=f"Retriever '{retriever_name}' failed for variant {variant.id}",
+                    reason=message,
+                    created_by_agent=f"research_loop:{variant.id}",
+                    run_id=self.run_id,
+                )
+            )
+            store.append_progress(f"Retriever fallback: {retriever_name} failed for {variant.id}: {message}")
+            notes.append(f"{retriever_name} failed ({type(exc).__name__})")
+            if retriever_name == "local":
+                return backend, [], notes
+            fallback_backend = self.search_factory("local")
+            try:
+                results = fallback_backend.search(variant.payload, limit=limit)
+            except Exception as fallback_exc:
+                fallback_message = f"{type(fallback_exc).__name__}: {fallback_exc}"
+                store.add_failed_path(
+                    FailedPath(
+                        description=f"Local fallback retriever failed for variant {variant.id}",
+                        reason=fallback_message,
+                        created_by_agent=f"research_loop:{variant.id}",
+                        run_id=self.run_id,
+                    )
+                )
+                store.append_progress(f"Retriever fallback: local failed for {variant.id}: {fallback_message}")
+                notes.append(f"local fallback failed ({type(fallback_exc).__name__})")
+                return fallback_backend, [], notes
+            notes.append("local fallback used")
+            return fallback_backend, results, notes
 
     def _llm_judge_score(
         self, variant: Variant, metrics: dict[str, float], source_count: int, claim_count: int
@@ -256,6 +348,67 @@ class ResearchLoop:
         }
 
 
+class OptimizationQueryLoop(ResearchLoop):
+    mode: TaskMode = "optimize_query"
+
+    async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
+        evaluation = await super()._evaluate_variant(variant, store)
+        metrics = dict(evaluation.metrics)
+        metrics["evidence_coverage"] = metrics.get("coverage", 0.0)
+        metrics["novelty"] = _novelty_score(variant.payload)
+        metrics["implementability"] = _implementability_score(variant.payload)
+        metrics["evaluator_relevance"] = _evaluator_relevance_score(variant.payload, str(variant.metadata.get("evaluator_name", "")))
+        judge_scores = list(evaluation.judge_scores) + [
+            metrics["novelty"],
+            metrics["implementability"],
+            metrics["evaluator_relevance"],
+        ]
+        llm_score, llm_summary = self._llm_optimization_query_score(variant, metrics)
+        if llm_score is not None:
+            judge_scores.append(llm_score)
+        score = round(median(judge_scores), 3)
+        return VariantEvaluation(
+            run_id=evaluation.run_id,
+            variant_id=evaluation.variant_id,
+            inner_loop="optimize_query",
+            score=score,
+            metrics=metrics,
+            judge_scores=judge_scores,
+            summary=(
+                evaluation.summary
+                + f" novelty={metrics['novelty']:.3f}; "
+                + f"implementability={metrics['implementability']:.3f}; "
+                + f"evaluator_relevance={metrics['evaluator_relevance']:.3f}. "
+                + llm_summary
+            ),
+            passed=score >= self.pass_threshold,
+        )
+
+    def _llm_optimization_query_score(self, variant: Variant, metrics: dict[str, float]) -> tuple[Optional[float], str]:
+        if not self.llm.is_live:
+            return None, ""
+        system = (
+            "You are judging whether a query result will help solve an optimization challenge. "
+            "Return JSON only with keys score and rationale. Score 0 to 1 for actionable strategy value, "
+            "implementability, and relevance to the evaluator."
+        )
+        user = json.dumps(
+            {
+                "query_variant": variant.payload,
+                "metadata": variant.metadata,
+                "metrics": metrics,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        try:
+            payload = self.llm.complete_json(system, user, max_output_tokens=350)
+            score = max(0.0, min(1.0, float(payload.get("score", 0.0))))
+            return round(score, 3), f"Optimization-query LLM judge: {payload.get('rationale', '')}"
+        except Exception as exc:
+            return None, f"Optimization-query LLM judge unavailable ({type(exc).__name__})."
+
+
 class PlateauDetector:
     def __init__(self, mode: TaskMode):
         self.mode = mode
@@ -284,6 +437,7 @@ class EvolutionaryOuterLoop:
         source_strategy: list[SourceStrategyItem],
         search_factory: SearchFactory,
         evaluator: Optional[EvaluatorFn] = None,
+        evaluator_name: Optional[str] = None,
         llm: Optional[LLMClient] = None,
         max_outer_iterations: int = 4,
         population_size: int = 4,
@@ -294,22 +448,30 @@ class EvolutionaryOuterLoop:
         self.source_strategy = source_strategy
         self.search_factory = search_factory
         self.evaluator = evaluator
+        self.evaluator_name = evaluator_name or ""
         self.llm = llm or LLMClient()
         self.max_outer_iterations = max_outer_iterations
         self.population_size = population_size
 
     async def run(self, store: ArtifactStore) -> None:
+        if self.task_mode == "optimize_query":
+            await self._run_optimize_query(store)
+            return
         inner_loop = self._inner_loop()
         plateau = PlateauDetector(self.task_mode)
         parents: list[Variant] = []
+        last_result: Optional[InnerLoopResult] = None
+        last_variants: list[Variant] = []
         for outer_iteration in range(1, self.max_outer_iterations + 1):
             variants = self._propose_variants(outer_iteration, parents)
+            last_variants = variants
             for variant in variants:
                 store.add_variant(variant)
             store.append_progress(f"Outer {outer_iteration}: proposed {len(variants)} {self.task_mode} variants")
             for variant in variants:
                 store.append_progress(f"  Variant {variant.id}: {_shorten(variant.payload)}")
             result = await inner_loop.evaluate(variants, store)
+            last_result = result
             best_eval = result.ranked_evaluations[0] if result.ranked_evaluations else None
             plateau_signal = plateau.update(best_eval.score if best_eval else 0.0)
             termination_signal = result.termination_signal
@@ -339,18 +501,306 @@ class EvolutionaryOuterLoop:
             parents = [variant for variant in variants if variant.id in winner_ids]
             if termination_signal in {"score_threshold", "claim_corroboration_threshold", "score_plateau", "coverage_plateau"}:
                 break
+        if self.task_mode == "optimize" and last_result:
+            best_eval = last_result.ranked_evaluations[0] if last_result.ranked_evaluations else None
+            self._write_optimization_outputs(store, last_variants, best_eval)
 
     def _inner_loop(self) -> InnerLoop:
         if self.task_mode == "optimize":
             if self.evaluator is None:
                 raise ValueError("OptimizeLoop requires a deterministic evaluator.")
             return OptimizeLoop(self.run_id, self.evaluator)
+        if self.task_mode == "optimize_query":
+            return OptimizationQueryLoop(self.run_id, self.search_factory, self.llm)
         return ResearchLoop(self.run_id, self.search_factory, self.llm)
 
     def _propose_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
         if self.task_mode == "optimize":
             return self._propose_code_variants(outer_iteration, parents)
         return self._propose_query_variants(outer_iteration, parents)
+
+    async def _run_optimize_query(self, store: ArtifactStore) -> None:
+        query_loop = OptimizationQueryLoop(self.run_id, self.search_factory, self.llm)
+        plateau = PlateauDetector("research")
+        parents: list[Variant] = []
+        last_result: Optional[InnerLoopResult] = None
+        for outer_iteration in range(1, self.max_outer_iterations + 1):
+            variants = self._propose_query_variants(outer_iteration, parents)
+            for variant in variants:
+                variant.metadata.setdefault("challenge_goal", self.goal)
+                variant.metadata.setdefault("evaluator_name", self.evaluator_name)
+                variant.metadata.setdefault("query_intent", "optimization challenge strategy discovery")
+                store.add_variant(variant)
+            store.append_progress(f"Optimization-query phase {outer_iteration}: proposed {len(variants)} query variants")
+            for variant in variants:
+                store.append_progress(f"  Query {variant.id}: {_shorten(variant.payload)}")
+            result = await query_loop.evaluate(variants, store)
+            last_result = result
+            best_eval = result.ranked_evaluations[0] if result.ranked_evaluations else None
+            plateau_signal = plateau.update(best_eval.score if best_eval else 0.0)
+            termination_signal = result.termination_signal
+            if termination_signal == "continue":
+                termination_signal = plateau_signal
+            store.add_evolution_round(
+                EvolutionRound(
+                    run_id=self.run_id,
+                    outer_iteration=outer_iteration,
+                    mode="optimize_query",
+                    variant_ids=[variant.id for variant in variants],
+                    best_variant_id=best_eval.variant_id if best_eval else None,
+                    best_score=best_eval.score if best_eval else 0.0,
+                    termination_signal=termination_signal,
+                    plateau_count=plateau.plateau_count,
+                )
+            )
+            store.append_progress(
+                f"Optimization-query phase {outer_iteration}: best_score={best_eval.score if best_eval else 0.0:.3f} signal={termination_signal}"
+            )
+            for evaluation in result.ranked_evaluations[:3]:
+                store.append_progress(f"  Query score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
+            winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
+            parents = [variant for variant in variants if variant.id in winner_ids]
+            if termination_signal in {"claim_corroboration_threshold", "coverage_plateau"}:
+                break
+
+        seed_context = self._build_optimizer_seed_context(store, last_result)
+        store.write_optimizer_seed_context(seed_context)
+        store.append_progress(f"Optimizer seed context: {store.optimizer_seed_context_path}")
+        if self.evaluator is None:
+            store.append_progress("Optimizer phase skipped: no evaluator was registered for optimize_query mode.")
+            return
+
+        store.append_progress("Optimizer phase: starting code/strategy variants from query seed context")
+        seed_parents = self._seed_context_variants(seed_context)
+        if self.evaluator_name == "prediction_market":
+            await self._run_prediction_market_optimizer(store, seed_parents, seed_context)
+            return
+        optimize_loop = OptimizeLoop(self.run_id, self.evaluator)
+        await self._run_generic_optimizer_rounds(store, optimize_loop, seed_parents, seed_context)
+
+    async def _run_generic_optimizer_rounds(
+        self,
+        store: ArtifactStore,
+        optimize_loop: OptimizeLoop,
+        parents: list[Variant],
+        seed_context: dict[str, object],
+    ) -> None:
+        plateau = PlateauDetector("optimize")
+        best_eval: Optional[VariantEvaluation] = None
+        best_round_variants: list[Variant] = []
+        for round_index in range(1, self.max_outer_iterations + 1):
+            code_variants = self._propose_code_variants(round_index, parents)
+            for variant in code_variants:
+                variant.metadata["optimizer_seed_context_path"] = str(store.optimizer_seed_context_path)
+                variant.metadata["query_seed_summary"] = seed_context.get("summary", "")
+                store.add_variant(variant)
+            result = await optimize_loop.evaluate(code_variants, store)
+            round_best = result.ranked_evaluations[0] if result.ranked_evaluations else None
+            if round_best and (best_eval is None or round_best.score > best_eval.score):
+                best_eval = round_best
+                best_round_variants = code_variants
+            plateau_signal = plateau.update(round_best.score if round_best else 0.0)
+            termination_signal = result.termination_signal if result.termination_signal != "continue" else plateau_signal
+            store.add_evolution_round(
+                EvolutionRound(
+                    run_id=self.run_id,
+                    outer_iteration=(len(store.list("evolution_rounds")) + 1),
+                    mode="optimize",
+                    variant_ids=[variant.id for variant in code_variants],
+                    best_variant_id=round_best.variant_id if round_best else None,
+                    best_score=round_best.score if round_best else 0.0,
+                    termination_signal=termination_signal,
+                    plateau_count=plateau.plateau_count,
+                )
+            )
+            store.append_progress(
+                f"Optimizer phase round {round_index}: best_score={round_best.score if round_best else 0.0:.3f} signal={termination_signal}"
+            )
+            for evaluation in result.ranked_evaluations[:3]:
+                store.append_progress(f"  Optimize score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
+            parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}]
+            if termination_signal == "score_threshold":
+                break
+        self._write_optimization_outputs(store, best_round_variants, best_eval)
+
+    async def _run_prediction_market_optimizer(
+        self,
+        store: ArtifactStore,
+        parents: list[Variant],
+        seed_context: dict[str, object],
+    ) -> None:
+        plateau = PlateauDetector("optimize")
+        best_eval: Optional[VariantEvaluation] = None
+        best_round_variants: list[Variant] = []
+        for round_index in range(1, self.max_outer_iterations + 1):
+            code_variants = self._propose_prediction_market_variants(round_index, parents)
+            for variant in code_variants:
+                variant.metadata["optimizer_seed_context_path"] = str(store.optimizer_seed_context_path)
+                variant.metadata["query_seed_summary"] = seed_context.get("summary", "")
+                store.add_variant(variant)
+            evaluations = await asyncio.gather(
+                *(self._evaluate_prediction_market_variant(variant, store, round_index) for variant in code_variants)
+            )
+            for evaluation in evaluations:
+                store.add_variant_evaluation(evaluation)
+            ranked = sorted(evaluations, key=lambda item: item.score, reverse=True)
+            round_best = ranked[0] if ranked else None
+            if round_best and (best_eval is None or round_best.score > best_eval.score):
+                best_eval = round_best
+                best_round_variants = code_variants
+            plateau_signal = plateau.update(round_best.score if round_best else 0.0)
+            termination_signal = "score_threshold" if round_best and round_best.score >= 0.8 else plateau_signal
+            store.add_evolution_round(
+                EvolutionRound(
+                    run_id=self.run_id,
+                    outer_iteration=(len(store.list("evolution_rounds")) + 1),
+                    mode="optimize",
+                    variant_ids=[variant.id for variant in code_variants],
+                    best_variant_id=round_best.variant_id if round_best else None,
+                    best_score=round_best.score if round_best else 0.0,
+                    termination_signal=termination_signal,
+                    plateau_count=plateau.plateau_count,
+                )
+            )
+            store.append_progress(
+                f"Prediction-market optimizer round {round_index}: best_edge={_pm_edge_from_eval(round_best):.3f} "
+                f"score={round_best.score if round_best else 0.0:.3f} signal={termination_signal}"
+            )
+            for evaluation in ranked[:3]:
+                source = evaluation.metrics.get("score_source", "unknown")
+                store.append_progress(f"  Prediction-market score {evaluation.score:.3f} via {source} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
+            parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in ranked[:2]}]
+            if termination_signal == "score_threshold":
+                break
+        self._write_optimization_outputs(store, best_round_variants, best_eval)
+
+    async def _evaluate_prediction_market_variant(
+        self,
+        variant: Variant,
+        store: ArtifactStore,
+        round_index: int,
+    ) -> VariantEvaluation:
+        code = self._render_optimal_code(variant.payload)
+        candidate_path = store.candidates_dir / f"round_{round_index:02d}_{variant.id}.py"
+        candidate_path.write_text(code, encoding="utf-8")
+        result = await asyncio.to_thread(_run_prediction_market_official, candidate_path)
+        edge = float(result.get("mean_edge", 0.0))
+        score = _normalize_prediction_market_edge(edge)
+        result["candidate_path"] = str(candidate_path)
+        score_source = str(result.get("score_source", "unknown"))
+        measured_label = "upstream orderbook-pm" if result.get("official_measured") else "local challenge fallback"
+        return VariantEvaluation(
+            run_id=self.run_id,
+            variant_id=variant.id,
+            inner_loop="optimize",
+            score=score,
+            metrics=result,
+            judge_scores=[score],
+            summary=(
+                f"{measured_label} mean_edge={edge:.3f}; "
+                f"score_source={score_source}; "
+                f"successes={int(result.get('success_count', 0))}; failures={int(result.get('failure_count', 0))}; "
+                f"candidate={candidate_path}."
+            ),
+            passed=score >= 0.8,
+        )
+
+    def _write_optimization_outputs(
+        self,
+        store: ArtifactStore,
+        variants: list[Variant],
+        best_eval: Optional[VariantEvaluation],
+    ) -> None:
+        if not best_eval:
+            return
+        best_variant = next((variant for variant in variants if variant.id == best_eval.variant_id), None)
+        candidate = best_variant.payload if best_variant else ""
+        store.write_optimized_candidate(candidate + "\n")
+        store.append_progress(f"Optimized candidate: {store.optimized_candidate_path}")
+        optimal_code = self._render_optimal_code(candidate)
+        optimal_code_path = str(store.write_optimal_code(optimal_code))
+        store.append_progress(f"Optimal code: {store.optimal_code_path}")
+        solution = self._render_solution(candidate)
+        solution_path = None
+        if solution:
+            solution_path = str(store.write_solution(solution))
+            store.append_progress(f"Solution: {store.solution_path}")
+        objective = _objective_metadata(self.evaluator_name)
+        official_result = objective["official_result"]
+        if self.evaluator_name == "prediction_market":
+            official_result = {
+                "measured": bool(best_eval.metrics.get("official_measured", False)),
+                "profit_usd": best_eval.metrics.get("mean_edge"),
+                "score_source": best_eval.metrics.get("score_source", "unknown"),
+                "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
+                "candidate_path": best_eval.metrics.get("candidate_path"),
+                "success_count": best_eval.metrics.get("success_count"),
+                "failure_count": best_eval.metrics.get("failure_count"),
+            }
+        payload = {
+            "run_id": self.run_id,
+            "evaluator_name": self.evaluator_name or "unknown",
+            "objective_name": objective["objective_name"],
+            "objective_direction": objective["objective_direction"],
+            "score_variable": "score",
+            "score": best_eval.score,
+            "metrics": best_eval.metrics,
+            "best_variant_id": best_eval.variant_id,
+            "best_candidate_path": str(store.optimized_candidate_path),
+            "optimal_code_path": optimal_code_path,
+            "solution_path": solution_path,
+            "candidate": candidate,
+            "official_result": official_result,
+            "note": objective["note"],
+        }
+        store.write_optimization_result(payload)
+        store.append_progress(
+            f"Optimization result: {store.optimization_result_path} "
+            f"({payload['objective_direction']} {payload['objective_name']}={best_eval.score:.3f})"
+        )
+
+    def _build_optimizer_seed_context(self, store: ArtifactStore, result: Optional[InnerLoopResult]) -> dict[str, object]:
+        evaluations = result.ranked_evaluations if result else []
+        variant_lookup = {row["id"]: row for row in store.list("variants")}
+        top_items = []
+        for evaluation in evaluations[:5]:
+            variant = variant_lookup.get(evaluation.variant_id, {})
+            top_items.append(
+                {
+                    "variant_id": evaluation.variant_id,
+                    "query": variant.get("payload", ""),
+                    "score": evaluation.score,
+                    "metrics": evaluation.metrics,
+                    "summary": evaluation.summary,
+                }
+            )
+        summary = "; ".join(str(item["query"]) for item in top_items[:3])
+        return {
+            "run_id": self.run_id,
+            "goal": self.goal,
+            "mode": "optimize_query",
+            "summary": summary,
+            "top_query_findings": top_items,
+            "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+            "has_evaluator": self.evaluator is not None,
+        }
+
+    def _seed_context_variants(self, seed_context: dict[str, object]) -> list[Variant]:
+        parents = []
+        for item in seed_context.get("top_query_findings", []) if isinstance(seed_context.get("top_query_findings"), list) else []:
+            if not isinstance(item, dict):
+                continue
+            parents.append(
+                Variant(
+                    run_id=self.run_id,
+                    outer_iteration=0,
+                    kind="query",
+                    payload=str(item.get("query", "")),
+                    parent_ids=[],
+                    metadata={"seed_score": item.get("score", 0.0), "seed_summary": item.get("summary", "")},
+                )
+            )
+        return parents
 
     def _propose_query_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
         llm_variants = self._llm_query_variants(outer_iteration, parents)
@@ -398,8 +848,16 @@ class EvolutionaryOuterLoop:
                 "branch-reduced implementation",
             ]
         else:
-            seeds = [f"{parent.payload} refined pass {outer_iteration}" for parent in parents]
-            seeds.extend(f"{parent.payload} alternative mutation {outer_iteration}" for parent in parents)
+            if all(parent.kind == "query" for parent in parents):
+                challenge_context = self._optimizer_seed_prefix()
+                seeds = [
+                    f"{challenge_context} Optimization variant informed by query finding: {parent.payload} refined pass {outer_iteration}"
+                    for parent in parents
+                ]
+                seeds.extend(f"{challenge_context} Alternative optimization mutation from query finding: {parent.payload}" for parent in parents)
+            else:
+                seeds = [f"{parent.payload} refined pass {outer_iteration}" for parent in parents]
+                seeds.extend(f"{parent.payload} alternative mutation {outer_iteration}" for parent in parents)
         return [
             Variant(
                 run_id=self.run_id,
@@ -411,6 +869,56 @@ class EvolutionaryOuterLoop:
             )
             for payload in seeds[: self.population_size]
         ]
+
+    def _optimizer_seed_prefix(self) -> str:
+        if self.evaluator_name == "prediction_market":
+            return (
+                "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, "
+                "avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift "
+                "from fills and competitor best quotes, cancel all each step, small size, wide spread, "
+                "inventory limits, and skip quoting near unstable midpoints."
+            )
+        return "Optimization strategy sketch:"
+
+    def _propose_prediction_market_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
+        templates = [
+            "pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1",
+            "pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1",
+            "pm_strategy=retail_only_extreme_edges size=1 spread=16 inventory=15 skew=12 quote_mode=extreme cancel_all=1",
+            "pm_strategy=ask_fade_bid_fade size=0.75 spread=10 inventory=25 skew=9 quote_mode=outside_competitor cancel_all=1",
+            "pm_strategy=patient_market_maker size=0.5 spread=20 inventory=10 skew=15 quote_mode=extreme cancel_all=1",
+            "pm_strategy=no_trade_control size=0 spread=99 inventory=0 skew=0 quote_mode=none cancel_all=1",
+        ]
+        if parents and all(parent.kind == "code" for parent in parents):
+            templates = [
+                f"{parent.payload} mutation_round={outer_iteration} spread_delta={delta}"
+                for parent in parents
+                for delta in [2, 4, 8]
+            ] + templates
+        elif parents:
+            context = self._optimizer_seed_prefix()
+            templates = [f"{context} {template} query_seed={parents[index % len(parents)].payload}" for index, template in enumerate(templates)]
+        return [
+            Variant(
+                run_id=self.run_id,
+                outer_iteration=outer_iteration,
+                kind="code",
+                payload=payload,
+                parent_ids=[parent.id for parent in parents],
+                metadata={"goal": self.goal, "challenge": "prediction_market"},
+            )
+            for payload in templates[: self.population_size]
+        ]
+
+    def _render_solution(self, payload: str) -> str:
+        if self.evaluator_name != "prediction_market":
+            return ""
+        return _prediction_market_solution(payload)
+
+    def _render_optimal_code(self, payload: str) -> str:
+        if self.evaluator_name == "prediction_market":
+            return _prediction_market_solution(payload)
+        return _generic_optimal_code(payload, self.evaluator_name)
 
     def _llm_query_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
         if not self.llm.is_live:
@@ -519,6 +1027,389 @@ def _stable_judge_score(payload: str, metrics: dict[str, float]) -> float:
     jitter = int(digest[:4], 16) / 0xFFFF
     weighted = (metrics["coverage"] * 0.35) + (metrics["corroboration"] * 0.35) + (metrics["credibility"] * 0.25)
     return round(min(1.0, weighted + (jitter * 0.05)), 3)
+
+
+def _looks_like_optimization_query(goal: str) -> bool:
+    normalized = goal.lower()
+    query_terms = {"research", "find", "query", "search", "investigate", "explore", "look for"}
+    return any(term in normalized for term in query_terms) and any(term in normalized for term in OPTIMIZE_HINTS)
+
+
+def _product_agent_for(selected_mode: TaskMode, goal: str, evaluator_name: Optional[str]) -> ProductAgent:
+    normalized = goal.lower()
+    if evaluator_name == "prediction_market" or "challenge" in normalized:
+        return "challenge"
+    if selected_mode == "research":
+        return "research"
+    return "optimize"
+
+
+def _implementability_score(text: str) -> float:
+    terms = {"implement", "code", "algorithm", "strategy", "heuristic", "benchmark", "test", "optimize", "latency", "throughput"}
+    tokens = set(text.lower().replace("-", " ").split())
+    return round(min(1.0, 0.35 + (len(tokens & terms) * 0.12)), 3)
+
+
+def _novelty_score(text: str) -> float:
+    normalized = text.lower().replace("-", " ")
+    tokens = [token for token in normalized.split() if len(token) > 3]
+    if not tokens:
+        return 0.4
+    distinct_ratio = len(set(tokens)) / len(tokens)
+    novelty_terms = {"novel", "alternative", "contradictory", "recent", "mechanism", "frontier", "unusual", "ablation"}
+    term_bonus = min(0.25, len(set(tokens) & novelty_terms) * 0.08)
+    return round(min(1.0, 0.35 + (distinct_ratio * 0.35) + term_bonus), 3)
+
+
+def _evaluator_relevance_score(text: str, evaluator_name: str) -> float:
+    if not evaluator_name:
+        return 0.45
+    evaluator_terms = set(evaluator_name.lower().replace("_", " ").split())
+    tokens = set(text.lower().replace("-", " ").split())
+    overlap = len(tokens & evaluator_terms)
+    return round(min(1.0, 0.55 + (overlap * 0.15)), 3)
+
+
+def _prediction_market_solution(payload: str) -> str:
+    escaped_payload = payload.replace('"""', '\\"\\"\\"')
+    params = _prediction_market_params(payload)
+    return f'''from __future__ import annotations
+
+from orderbook_pm_challenge.strategy import BaseStrategy
+from orderbook_pm_challenge.types import CancelAll, PlaceOrder, Side, StepState
+
+
+class Strategy(BaseStrategy):
+    """Adaptive passive prediction-market market maker.
+
+    Generated by research-harness from the best optimize-query variant.
+    This file targets the public upstream challenge API:
+    https://github.com/danrobinson/prediction-market-challenge
+
+    Source variant:
+    """  # noqa: D205
+
+    quote_size = {params["size"]!r}
+    base_spread_ticks = {int(params["spread"])}
+    inventory_limit = {params["inventory"]!r}
+    skew_divisor = {params["skew_divisor"]!r}
+    quote_mode = {params["quote_mode"]!r}
+
+    def __init__(self) -> None:
+        self.estimated_mid_ticks = 50.0
+        self.last_buy_fill = 0.0
+        self.last_sell_fill = 0.0
+
+    def on_step(self, state: StepState):
+        competitor_bid = state.competitor_best_bid_ticks
+        competitor_ask = state.competitor_best_ask_ticks
+        if competitor_bid is None and competitor_ask is None:
+            return [CancelAll()]
+        if competitor_bid is None:
+            competitor_bid = max(1, competitor_ask - 8)
+        if competitor_ask is None:
+            competitor_ask = min(99, competitor_bid + 8)
+        competitor_mid = (competitor_bid + competitor_ask) / 2.0
+
+        buy_flow = state.buy_filled_quantity
+        sell_flow = state.sell_filled_quantity
+        net_flow = buy_flow - sell_flow
+        self.last_buy_fill = state.buy_filled_quantity
+        self.last_sell_fill = state.sell_filled_quantity
+
+        # The upstream score is edge at fill time. Quoting too close to the
+        # hidden ladder is punished by the informed arbitrageur, so this strategy
+        # is deliberately patient and cancels every step before replacing quotes.
+        midpoint_jump = abs(competitor_mid - self.estimated_mid_ticks)
+        self.estimated_mid_ticks = (self.estimated_mid_ticks * 0.9) + (competitor_mid * 0.1) + (net_flow * 0.04)
+
+        inventory = state.yes_inventory - state.no_inventory
+        inventory_skew = max(-12.0, min(12.0, inventory / self.skew_divisor))
+        spread = self.base_spread_ticks + (4 if midpoint_jump >= 4 else 0)
+        if self.quote_mode == "none":
+            return [CancelAll()]
+        if self.quote_mode == "extreme":
+            bid_reference = min(competitor_bid, self.estimated_mid_ticks)
+            ask_reference = max(competitor_ask, self.estimated_mid_ticks)
+            bid_ticks = int(max(1, min(98, round(bid_reference - spread - inventory_skew))))
+            ask_ticks = int(max(bid_ticks + 1, min(99, round(ask_reference + spread - inventory_skew))))
+        else:
+            bid_ticks = int(max(1, min(98, round(competitor_bid - spread - inventory_skew))))
+            ask_ticks = int(max(bid_ticks + 1, min(99, round(competitor_ask + spread - inventory_skew))))
+
+        actions = [CancelAll()]
+        ask_cost = max(0.01, ask_ticks / 100.0)
+        bid_cost = max(0.01, bid_ticks / 100.0)
+        if self.quote_size <= 0:
+            return actions
+        size = max(0.01, min(self.quote_size, state.free_cash / ask_cost))
+
+        if state.yes_inventory < self.inventory_limit and state.free_cash >= bid_cost * size:
+            actions.append(PlaceOrder(side=Side.BUY, price_ticks=bid_ticks, quantity=size))
+        if state.no_inventory < self.inventory_limit:
+            actions.append(PlaceOrder(side=Side.SELL, price_ticks=ask_ticks, quantity=size))
+        return actions
+
+
+SOURCE_VARIANT = """{escaped_payload}"""
+'''
+
+
+def _generic_optimal_code(payload: str, evaluator_name: str) -> str:
+    return f'''from __future__ import annotations
+
+"""Best optimization candidate emitted by research-harness.
+
+This module is written for every optimization or challenge run so downstream
+evaluators can always find the agent-selected code artifact at optimal_code.py.
+When a domain adapter can render executable code, it should replace this generic
+representation with evaluator-ready code.
+"""
+
+EVALUATOR_NAME = {evaluator_name!r}
+OPTIMAL_CANDIDATE = {payload!r}
+
+
+def selected_candidate() -> str:
+    """Return the exact candidate payload that achieved the best score."""
+    return OPTIMAL_CANDIDATE
+'''
+
+
+def _prediction_market_params(payload: str) -> dict[str, object]:
+    params = {match.group("name").lower(): float(match.group("value")) for match in re.finditer(r"(?P<name>spread|size|quantity|inventory|limit|skew)\s*[=:]\s*(?P<value>-?\d+(?:\.\d+)?)", payload, re.I)}
+    text = payload.lower()
+    spread = int(max(2, min(30, params.get("spread", 12.0))))
+    size = max(0.0, min(5.0, params.get("quantity", params.get("size", 1.0))))
+    inventory = max(0.0, min(150.0, params.get("inventory", params.get("limit", 30.0))))
+    skew = max(1.0, min(30.0, params.get("skew", 8.0)))
+    if "quote_mode=none" in text or "no_trade" in text:
+        quote_mode = "none"
+    elif "quote_mode=extreme" in text or "extreme" in text:
+        quote_mode = "extreme"
+    else:
+        quote_mode = "outside_competitor"
+    return {
+        "spread": spread,
+        "size": size,
+        "inventory": inventory,
+        "skew_divisor": skew,
+        "quote_mode": quote_mode,
+    }
+
+
+def _normalize_prediction_market_edge(edge: float) -> float:
+    return round(max(0.0, min(1.0, (edge + 30.0) / 60.0)), 3)
+
+
+def _pm_edge_from_eval(evaluation: Optional[VariantEvaluation]) -> float:
+    if not evaluation:
+        return 0.0
+    return float(evaluation.metrics.get("mean_edge", 0.0))
+
+
+def _run_prediction_market_official(strategy_path: Path) -> dict[str, object]:
+    strategy_text = strategy_path.read_text(encoding="utf-8")
+    if os.environ.get("PREDICTION_MARKET_USE_UPSTREAM") != "1":
+        result = _prediction_market_local_semantic_score(strategy_text)
+        result["error"] = "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader."
+        return result
+    if not PM_UPSTREAM_PATH.exists():
+        result = _prediction_market_local_semantic_score(strategy_text)
+        result["error"] = f"Missing upstream repo at {PM_UPSTREAM_PATH}"
+        return result
+    cmd = [
+        "uv",
+        "run",
+        "--project",
+        str(PM_UPSTREAM_PATH),
+        "orderbook-pm",
+        "run",
+        str(strategy_path),
+        "--simulations",
+        os.environ.get("PREDICTION_MARKET_SIMULATIONS", "40"),
+        "--steps",
+        os.environ.get("PREDICTION_MARKET_STEPS", "600"),
+        "--seed-start",
+        os.environ.get("PREDICTION_MARKET_SEED_START", "0"),
+        "--workers",
+        os.environ.get("PREDICTION_MARKET_WORKERS", "4"),
+        "--json",
+    ]
+    try:
+        env = dict(os.environ)
+        env.setdefault("UV_CACHE_DIR", "/private/tmp/research-harness-uv-cache")
+        env.setdefault("UV_PYTHON_INSTALL_DIR", "/private/tmp/research-harness-uv-python")
+        env.setdefault("UV_TOOL_DIR", "/private/tmp/research-harness-uv-tools")
+        completed = subprocess.run(
+            cmd,
+            check=False,
+            text=True,
+            capture_output=True,
+            env=env,
+            timeout=float(os.environ.get("PREDICTION_MARKET_TIMEOUT_SECONDS", "120")),
+        )
+    except Exception as exc:
+        result = _prediction_market_local_semantic_score(strategy_text)
+        result["error"] = f"{type(exc).__name__}: {exc}"
+        return result
+    if completed.returncode != 0:
+        result = _prediction_market_local_semantic_score(strategy_text)
+        result["error"] = (completed.stderr or completed.stdout).strip()[:1000]
+        return result
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        result = _prediction_market_local_semantic_score(strategy_text)
+        result["error"] = f"JSONDecodeError: {exc}; stdout={completed.stdout[:500]}"
+        return result
+    results = payload.get("simulation_results", [])
+    successes = [result for result in results if not result.get("failed")]
+    mean_edge = sum(float(result.get("total_edge", 0.0)) for result in successes) / max(len(successes), 1)
+    mean_arb_edge = sum(float(result.get("arb_edge", 0.0)) for result in successes) / max(len(successes), 1)
+    mean_retail_edge = sum(float(result.get("retail_edge", 0.0)) for result in successes) / max(len(successes), 1)
+    return {
+        "official_measured": True,
+        "mean_edge": round(mean_edge, 6),
+        "mean_arb_edge": round(mean_arb_edge, 6),
+        "mean_retail_edge": round(mean_retail_edge, 6),
+        "success_count": len(successes),
+        "failure_count": len(results) - len(successes),
+        "simulations": len(results),
+        "score_source": "upstream_orderbook_pm_challenge",
+    }
+
+
+def _prediction_market_local_semantic_score(strategy_text: str, simulations: int = 80, steps: int = 800) -> dict[str, object]:
+    params = _params_from_strategy_text(strategy_text)
+    rng = random.Random(20260507)
+    edges = []
+    retail_edges = []
+    arb_edges = []
+    failures = 0
+    for sim in range(simulations):
+        true_prob = max(0.02, min(0.98, 0.5 + rng.uniform(-0.22, 0.22)))
+        competitor_mid = true_prob
+        competitor_spread = rng.choice([1, 2, 3, 4])
+        inventory = 0.0
+        edge = 0.0
+        retail_edge = 0.0
+        arb_edge = 0.0
+        for step in range(steps):
+            if rng.random() < rng.uniform(0.0008, 0.003):
+                true_prob += rng.gauss(0.0, rng.uniform(0.2, 0.6))
+            true_prob += rng.gauss(0.0, 0.02)
+            true_prob = max(0.01, min(0.99, true_prob))
+
+            lower = max(1, min(99, int(true_prob * 100)))
+            competitor_bid = max(1, lower - (competitor_spread - 1))
+            competitor_ask = min(99, lower + 1 + (competitor_spread - 1))
+            if params["quote_mode"] == "none" or params["size"] <= 0:
+                continue
+            skew = max(-12.0, min(12.0, inventory / params["skew_divisor"]))
+            if params["quote_mode"] == "extreme":
+                bid = int(max(1, min(98, round(min(competitor_bid, competitor_mid * 100) - params["spread"] - skew))))
+                ask = int(max(bid + 1, min(99, round(max(competitor_ask, competitor_mid * 100) + params["spread"] - skew))))
+            else:
+                bid = int(max(1, min(98, round(competitor_bid - params["spread"] - skew))))
+                ask = int(max(bid + 1, min(99, round(competitor_ask + params["spread"] - skew))))
+
+            size = min(params["size"], max(0.01, params["inventory"] - abs(inventory)))
+            if size <= 0:
+                continue
+            bid_price = bid / 100.0
+            ask_price = ask / 100.0
+            if ask_price < true_prob:
+                fill_edge = size * (ask_price - true_prob)
+                edge += fill_edge
+                arb_edge += fill_edge
+                inventory -= size
+            if bid_price > true_prob:
+                fill_edge = size * (true_prob - bid_price)
+                edge += fill_edge
+                arb_edge += fill_edge
+                inventory += size
+
+            arrivals = 1 if rng.random() < rng.uniform(0.154, 0.352) else 0
+            for _ in range(arrivals):
+                if rng.random() < 0.5:
+                    # Retail buy crosses our ask only when we improve or equal
+                    # the hidden competitor's visible ask.
+                    if ask <= competitor_ask + 1:
+                        q = min(size, rng.lognormvariate(1.0, 1.2))
+                        fill_edge = q * (ask_price - true_prob)
+                        edge += fill_edge
+                        retail_edge += fill_edge
+                        inventory -= q
+                else:
+                    if bid >= competitor_bid - 1:
+                        q = min(size, rng.lognormvariate(1.0, 1.2) / max(true_prob, 0.05))
+                        fill_edge = q * (true_prob - bid_price)
+                        edge += fill_edge
+                        retail_edge += fill_edge
+                        inventory += q
+        edges.append(edge)
+        retail_edges.append(retail_edge)
+        arb_edges.append(arb_edge)
+    mean_edge = sum(edges) / len(edges)
+    return {
+        "official_measured": False,
+        "mean_edge": round(mean_edge, 6),
+        "mean_arb_edge": round(sum(arb_edges) / len(arb_edges), 6),
+        "mean_retail_edge": round(sum(retail_edges) / len(retail_edges), 6),
+        "success_count": simulations - failures,
+        "failure_count": failures,
+        "simulations": simulations,
+        "score_source": "local_official_semantics_fallback",
+    }
+
+
+def _params_from_strategy_text(strategy_text: str) -> dict[str, object]:
+    values = {}
+    for name in ["quote_size", "base_spread_ticks", "inventory_limit", "skew_divisor"]:
+        match = re.search(rf"{name}\s*=\s*([0-9.]+)", strategy_text)
+        if match:
+            values[name] = float(match.group(1))
+    mode_match = re.search(r"quote_mode\s*=\s*['\"]([^'\"]+)['\"]", strategy_text)
+    return {
+        "size": float(values.get("quote_size", 1.0)),
+        "spread": int(values.get("base_spread_ticks", 12)),
+        "inventory": float(values.get("inventory_limit", 30.0)),
+        "skew_divisor": max(1.0, float(values.get("skew_divisor", 8.0))),
+        "quote_mode": mode_match.group(1) if mode_match else "outside_competitor",
+    }
+
+
+def _objective_metadata(evaluator_name: str) -> dict[str, object]:
+    if evaluator_name == "prediction_market":
+        return {
+            "objective_name": "prediction_market_mean_edge",
+            "objective_direction": "maximize",
+            "official_result": {
+                "measured": True,
+                "profit_usd": None,
+                "score_source": "upstream_orderbook_pm_challenge_when_available",
+                "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
+                "reason": "Optimization evaluates generated candidates with the upstream orderbook-pm runner when available.",
+            },
+            "note": (
+                "Prediction-market optimization uses upstream mean edge when the orderbook_pm_challenge repo is available. "
+                "The normalized score is derived from mean edge for harness aggregation."
+            ),
+        }
+    if evaluator_name == "length_score":
+        return {
+            "objective_name": "length_score",
+            "objective_direction": "maximize",
+            "official_result": {"measured": True, "score_source": "local_deterministic_evaluator"},
+            "note": "This evaluator maximizes 1 / token_count for smoke-test optimization.",
+        }
+    return {
+        "objective_name": evaluator_name or "deterministic_score",
+        "objective_direction": "maximize",
+        "official_result": {"measured": True, "score_source": "local_deterministic_evaluator"},
+        "note": "Optimization result from the registered deterministic evaluator.",
+    }
 
 
 def _shorten(text: str, limit: int = 140) -> str:

@@ -1,0 +1,14 @@
+[
+  {
+    "completed_at": "2026-05-06T22:55:41.391296+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+    "started_at": "2026-05-06T22:55:41.367765+00:00",
+    "status": "completed",
+    "task_mode": "research",
+    "task_type": "open_ended",
+    "total_cost": 0.0,
+    "total_tokens": 169,
+    "user_goal": "Research how multi-agent systems improve automated literature review quality"
+  }
+]

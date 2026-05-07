@@ -31,7 +31,7 @@ class LLMClient:
         timeout_seconds: float = 60.0,
     ):
         self.provider = (provider or os.environ.get("RESEARCH_HARNESS_LLM_PROVIDER") or "auto").lower()
-        self.model = model or os.environ.get("RESEARCH_HARNESS_LLM_MODEL") or "gpt-4.1-mini"
+        self.model = model or os.environ.get("RESEARCH_HARNESS_LLM_MODEL") or "gpt-5.2"
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.timeout_seconds = timeout_seconds
 

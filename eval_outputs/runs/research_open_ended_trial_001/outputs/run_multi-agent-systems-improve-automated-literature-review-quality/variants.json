@@ -1,0 +1,41 @@
+[
+  {
+    "id": "variant_5c856588b3ca",
+    "kind": "query",
+    "metadata": {
+      "limit": 8,
+      "purpose": "foundational literature mechanisms",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+  },
+  {
+    "id": "variant_93b99766df6d",
+    "kind": "query",
+    "metadata": {
+      "limit": 8,
+      "purpose": "recent empirical evidence",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research how multi-agent systems improve automated literature review quality recent empirical evidence",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+  },
+  {
+    "id": "variant_2d8663b20342",
+    "kind": "query",
+    "metadata": {
+      "limit": 8,
+      "purpose": "contradictory evidence limitations",
+      "retriever": "local"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research how multi-agent systems improve automated literature review quality contradictory evidence limitations",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+  }
+]

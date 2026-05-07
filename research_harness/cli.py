@@ -43,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--task-mode",
-        choices=["auto", "optimize", "research"],
+        choices=["auto", "optimize", "research", "optimize_query"],
         default=os.environ.get("RESEARCH_HARNESS_TASK_MODE", "auto"),
         help="Task ingestion mode for the evolutionary agent loop. Auto uses evaluator availability and prompt heuristics.",
     )
@@ -60,7 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--llm-model",
-        default=os.environ.get("RESEARCH_HARNESS_LLM_MODEL", "gpt-4.1-mini"),
+        default=os.environ.get("RESEARCH_HARNESS_LLM_MODEL", "gpt-5.2"),
         help="LLM model name used when the selected provider is live.",
     )
     parser.add_argument(
@@ -107,6 +107,16 @@ def main() -> None:
     print(f"Status: {run.status}")
     print(f"Artifacts: {store.root}")
     print(f"PRD: {store.prd_path}")
+    if store.optimizer_seed_context_path.exists():
+        print(f"Optimizer seed context: {store.optimizer_seed_context_path}")
+    if store.optimization_result_path.exists():
+        print(f"Optimization result: {store.optimization_result_path}")
+    if store.optimized_candidate_path.exists():
+        print(f"Optimized candidate: {store.optimized_candidate_path}")
+    if store.optimal_code_path.exists():
+        print(f"Optimal code: {store.optimal_code_path}")
+    if store.solution_path.exists():
+        print(f"Solution: {store.solution_path}")
     print(f"Report: {store.report_path}")
     print(f"Run benchmark: {store.run_benchmark_path}")
     print(f"Decision DAG: {store.decision_dag_path}")
