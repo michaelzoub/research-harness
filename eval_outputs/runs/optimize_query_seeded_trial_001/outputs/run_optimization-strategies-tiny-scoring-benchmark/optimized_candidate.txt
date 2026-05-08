@@ -1,1 +1,0 @@
-Optimization strategy sketch: Alternative optimization mutation from query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence

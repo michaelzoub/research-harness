@@ -1,9 +1,0 @@
-[
-  {
-    "description": "Search for direct evaluations of: mechanism.",
-    "expected_signal": "Evidence that increases or decreases claim confidence.",
-    "hypothesis_id": "hyp_73d0957a89d8",
-    "id": "exp_a6abc7745551",
-    "priority": 3
-  }
-]
