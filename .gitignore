@@ -27,6 +27,10 @@ ENV/
 # Generated research runs
 outputs/*
 !outputs/.gitkeep
+eval_outputs/*
+!eval_outputs/.gitkeep
+evals/*
+!evals/.gitkeep
 examples/outputs/*
 !examples/outputs/.gitkeep
 logs/*
