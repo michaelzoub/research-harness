@@ -1,0 +1,902 @@
+[
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_33b43d3e8555",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_d3ccddb1d38b",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_58ddd7146210",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_f7ccde4bf9a8",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_cf01fbd0faae",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_2ee15959212b",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_1cbb76eb7e1f",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_f0772a0ddfd7",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_4225e49c9bc4",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
+  },
+  {
+    "confidence": 0.69,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_f1b4ccaf42e9",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
+  },
+  {
+    "confidence": 0.69,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_caa3654a5615",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
+  },
+  {
+    "confidence": 0.69,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_aac470d6a575",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_ec706fa24ec5",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_b08c6fdb4b1c",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_42e997c8a3ba",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_31c576916ac2",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_c8838624cbcb",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_9a6ba326438d",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_de8cbeb3e9e9",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_d47d2f9adb8a",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_bc5071e5e73c",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_f74709e5c9f4",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_b494ce87c953",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_2eacf649d0cf",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_5d17313c57f0",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_47d95e2f7321",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_7ca5ca99aa90",
+    "id": "claim_3ac91688d348",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.78,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_019536cdf42c",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.78,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_1df30ce6f189",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
+  },
+  {
+    "confidence": 0.78,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_cb2c34998f3a",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
+  },
+  {
+    "confidence": 0.68,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_ac7c16e98fe9",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
+  },
+  {
+    "confidence": 0.68,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_f442f79430a7",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
+  },
+  {
+    "confidence": 0.68,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_8ac9a7fc78d0",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_458b133b8215",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_758d318cfeac",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_b0ea7e162b6d",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_6564fcd604c4",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_89cb212c75d4",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_4af282ad9c1f",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_39de5d0a6913"
+    ],
+    "support_level": "moderate",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_e9534c81c8a7",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_f1f6aef912a6",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_48d4155577c8",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_5faedf9b4100",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_bc1a3bbe05b7",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.63,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_d17d28d0e056",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_1c60196e7c47",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_67c5d4b8752c",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_5812dad37a7f",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_58dc73e87cab",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_faf8bad5fcce",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_efeec47c3fe3",
+    "id": "claim_f9b046a1a7f4",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_b35405e8eafb",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_59c6f0c5b251",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
+  },
+  {
+    "confidence": 0.77,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_100a5ce0bcab",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_e6aa8f09a75d"
+    ],
+    "support_level": "strong",
+    "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
+  },
+  {
+    "confidence": 0.73,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_3f4b0b624925",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
+  },
+  {
+    "confidence": 0.73,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_701973e0e255",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
+  },
+  {
+    "confidence": 0.73,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_b5c165370943",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_31dc125b380e"
+    ],
+    "support_level": "moderate",
+    "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
+  },
+  {
+    "confidence": 0.72,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_33b74b5675af",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.72,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_4d941bb2abbd",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
+  },
+  {
+    "confidence": 0.72,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_513cc870c50b",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_82fa9c2c96a8"
+    ],
+    "support_level": "moderate",
+    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
+  },
+  {
+    "confidence": 0.65,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_d6d1ece50bf2",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_8a36ed02f735"
+    ],
+    "support_level": "moderate",
+    "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
+  },
+  {
+    "confidence": 0.65,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_1b940e03b169",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_8a36ed02f735"
+    ],
+    "support_level": "moderate",
+    "text": "Adaptive evolution without benchmark comparison can worsen reliability."
+  },
+  {
+    "confidence": 0.65,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_444f2f79a39f",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_8a36ed02f735"
+    ],
+    "support_level": "moderate",
+    "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_5a0e03d68391",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_12f989e2b928",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_30cc94ba7e45",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_260b8f60781e"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_dbdec32ff3e6",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Typed artifact stores make multi-agent research runs easier to audit."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_ace939282a6f",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
+  },
+  {
+    "confidence": 0.58,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_e2790ba93ed6",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_c270e9c55865"
+    ],
+    "support_level": "moderate",
+    "text": "Persistent world models should be introduced after the artifact schema stabilizes."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_845f7a173be6",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_4e8c14c42f04",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
+  },
+  {
+    "confidence": 0.62,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_69a44f7bfd7b",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_5f28d030dac7"
+    ],
+    "support_level": "moderate",
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_8ac4ab28eb4b",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_f77ae6e1bd15",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_12143b699a4a",
+    "id": "claim_bad736ddb055",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+    "source_ids": [
+      "src_99f3e1629d30"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  }
+]

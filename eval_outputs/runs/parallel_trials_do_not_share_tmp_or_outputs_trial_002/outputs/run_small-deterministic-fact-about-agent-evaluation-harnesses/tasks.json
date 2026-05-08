@@ -1,0 +1,100 @@
+[
+  {
+    "acceptance_criteria": [
+      "Explicit flags, evaluator availability, and prompt heuristics were checked",
+      "A task ingestion decision was persisted",
+      "The `research` product agent was selected"
+    ],
+    "action": "debug_harness",
+    "attempts": 1,
+    "completed_at": "2026-05-07T23:59:17.504791+00:00",
+    "created_at": "2026-05-07T23:59:17.504147+00:00",
+    "id": "task_3d21d24e5682",
+    "last_error": null,
+    "params": {
+      "product_agent": "research",
+      "selected_mode": "research"
+    },
+    "passes": true,
+    "priority": 1,
+    "result_summary": "Selected research mode. Research mode was explicitly requested.",
+    "status": "passed",
+    "title": "Ingest prompt and select task mode"
+  },
+  {
+    "acceptance_criteria": [
+      "The agent harness ran model/tool/state loop steps for this product option",
+      "Research mode used breadth-first parallel query variants before narrowing",
+      "The outer loop proposed code or query variants",
+      "The selected inner loop returned ranked variants with scalar scores",
+      "Plateau or threshold stopping signals were evaluated"
+    ],
+    "action": "debug_harness",
+    "attempts": 2,
+    "completed_at": "2026-05-07T23:59:17.542866+00:00",
+    "created_at": "2026-05-07T23:59:17.504155+00:00",
+    "id": "task_8b9c43397604",
+    "last_error": null,
+    "params": {
+      "product_agent": "research",
+      "selected_mode": "research"
+    },
+    "passes": true,
+    "priority": 2,
+    "result_summary": "Completed 1 evolutionary outer rounds.",
+    "status": "passed",
+    "title": "Run research agent loop"
+  },
+  {
+    "acceptance_criteria": [
+      "Claims from research variants were inspected",
+      "Hypotheses or open questions were created"
+    ],
+    "action": "hypothesize",
+    "attempts": 1,
+    "completed_at": "2026-05-07T23:59:17.543715+00:00",
+    "created_at": "2026-05-07T23:59:17.504160+00:00",
+    "id": "task_428551f3a460",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 3,
+    "result_summary": "Generated 1 hypotheses for angle 'mechanism'.",
+    "status": "passed",
+    "title": "Generate hypotheses from winning evidence"
+  },
+  {
+    "acceptance_criteria": [
+      "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+    ],
+    "action": "critique",
+    "attempts": 1,
+    "completed_at": "2026-05-07T23:59:17.545049+00:00",
+    "created_at": "2026-05-07T23:59:17.504164+00:00",
+    "id": "task_83e1695edcc1",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 4,
+    "result_summary": "Reviewed 27 claims and 1 hypotheses; found 2 contradictions.",
+    "status": "passed",
+    "title": "Critique ranked variants and claims"
+  },
+  {
+    "acceptance_criteria": [
+      "Final report was written from run artifacts"
+    ],
+    "action": "synthesize",
+    "attempts": 1,
+    "completed_at": "2026-05-07T23:59:17.545965+00:00",
+    "created_at": "2026-05-07T23:59:17.504169+00:00",
+    "id": "task_e725979b904c",
+    "last_error": null,
+    "params": {},
+    "passes": true,
+    "priority": 5,
+    "result_summary": "Synthesized final report with 9 sources, 27 claims, and 1 hypotheses.",
+    "status": "passed",
+    "title": "Synthesize evolutionary run report"
+  }
+]

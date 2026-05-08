@@ -1,24 +1,43 @@
 [
   {
-    "id": "variant_5c856588b3ca",
+    "id": "variant_a152dfa6b7fd",
     "kind": "query",
     "metadata": {
       "limit": 8,
-      "purpose": "foundational literature mechanisms",
-      "retriever": "local"
+      "purpose": "breadth-first landscape scan",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],
-    "payload": "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms",
+    "payload": "Research how multi-agent systems improve automated literature review quality breadth-first landscape scan",
     "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
   },
   {
-    "id": "variant_93b99766df6d",
+    "id": "variant_bcd1d0f451f3",
+    "kind": "query",
+    "metadata": {
+      "limit": 8,
+      "purpose": "primary-source mechanisms",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Research how multi-agent systems improve automated literature review quality primary-source mechanisms",
+    "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+  },
+  {
+    "id": "variant_6fbe956b05da",
     "kind": "query",
     "metadata": {
       "limit": 8,
       "purpose": "recent empirical evidence",
-      "retriever": "local"
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],
@@ -26,12 +45,14 @@
     "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
   },
   {
-    "id": "variant_2d8663b20342",
+    "id": "variant_fe63301298f8",
     "kind": "query",
     "metadata": {
       "limit": 8,
       "purpose": "contradictory evidence limitations",
-      "retriever": "local"
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],

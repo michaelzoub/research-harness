@@ -1,7 +1,8 @@
 [
   {
     "evaluator_name": null,
-    "id": "decision_98b3d5eb3974",
+    "id": "decision_37112d9d134e",
+    "product_agent": "research",
     "reason": "Research mode was explicitly requested.",
     "requested_mode": "research",
     "selected_mode": "research"

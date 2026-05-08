@@ -1,9 +1,10 @@
 [
   {
-    "completed_at": "2026-05-06T22:55:41.432359+00:00",
+    "completed_at": "2026-05-07T23:59:25.238492+00:00",
     "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
     "id": "run_optimization-strategies-tiny-scoring-benchmark",
-    "started_at": "2026-05-06T22:55:41.400066+00:00",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:25.204033+00:00",
     "status": "completed",
     "task_mode": "optimize_query",
     "task_type": "bounded",

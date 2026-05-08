@@ -1,35 +1,35 @@
 [
   {
-    "best_score": 0.85,
-    "best_variant_id": "variant_640b44099600",
-    "completed_at": "2026-05-06T22:55:41.461157+00:00",
-    "id": "round_e5eef2f49171",
+    "best_score": 0.868,
+    "best_variant_id": "variant_b2cf81241fc8",
+    "completed_at": "2026-05-07T23:59:25.271998+00:00",
+    "id": "round_f51e113bcfe9",
     "mode": "optimize_query",
     "outer_iteration": 1,
     "plateau_count": 0,
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "termination_signal": "claim_corroboration_threshold",
     "variant_ids": [
-      "variant_640b44099600",
-      "variant_d41e044d4bed",
-      "variant_3af102d42f75"
+      "variant_b2cf81241fc8",
+      "variant_a558bb37125c",
+      "variant_28b37a335704"
     ]
   },
   {
-    "best_score": 0.803,
-    "best_variant_id": "variant_beb6968cd66d",
-    "completed_at": "2026-05-06T22:55:41.498135+00:00",
-    "id": "round_bbbcadea560c",
+    "best_score": 0.502,
+    "best_variant_id": "variant_a2d346028b37",
+    "completed_at": "2026-05-07T23:59:25.764791+00:00",
+    "id": "round_9ce16abe9811",
     "mode": "optimize",
     "outer_iteration": 2,
     "plateau_count": 0,
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "termination_signal": "score_threshold",
+    "termination_signal": "improved",
     "variant_ids": [
-      "variant_beb6968cd66d",
-      "variant_64115c18adad",
-      "variant_79ca12c25e54",
-      "variant_e90a85b592a3"
+      "variant_a2d346028b37",
+      "variant_ba52572ac71a",
+      "variant_90262b0137f2",
+      "variant_0456cbfd6827"
     ]
   }
 ]

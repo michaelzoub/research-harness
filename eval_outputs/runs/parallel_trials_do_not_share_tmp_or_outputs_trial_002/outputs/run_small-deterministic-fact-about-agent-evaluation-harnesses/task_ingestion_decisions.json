@@ -1,0 +1,10 @@
+[
+  {
+    "evaluator_name": null,
+    "id": "decision_6553bcfe7469",
+    "product_agent": "research",
+    "reason": "Research mode was explicitly requested.",
+    "requested_mode": "research",
+    "selected_mode": "research"
+  }
+]

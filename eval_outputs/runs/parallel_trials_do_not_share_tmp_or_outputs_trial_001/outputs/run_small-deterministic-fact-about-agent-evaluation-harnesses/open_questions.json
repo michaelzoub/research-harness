@@ -1,0 +1,26 @@
+[
+  {
+    "created_by_agent": "loop_evolution_critic",
+    "id": "q_219b944127e2",
+    "priority": 2,
+    "question": "What stronger evidence supports or refutes this claim: Open-ended research benefits from broad early exploration before constraints are tightened.",
+    "reason": "Claim confidence is below the recommended synthesis threshold.",
+    "status": "open"
+  },
+  {
+    "created_by_agent": "loop_evolution_critic",
+    "id": "q_bd1fd5796a4b",
+    "priority": 2,
+    "question": "What stronger evidence supports or refutes this claim: Entropy injection can reveal overlooked mechanisms and assumptions.",
+    "reason": "Claim confidence is below the recommended synthesis threshold.",
+    "status": "open"
+  },
+  {
+    "created_by_agent": "loop_evolution_critic",
+    "id": "q_ffa0958eed24",
+    "priority": 2,
+    "question": "What stronger evidence supports or refutes this claim: Too much exploration decreases precision when no critic-driven follow-up is used.",
+    "reason": "Claim confidence is below the recommended synthesis threshold.",
+    "status": "open"
+  }
+]

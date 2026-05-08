@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "author": "Dan Robinson",
+    "credibility_score": 0.88,
+    "date": "2026-05-04",
+    "id": "src_00cffe2bb51f",
+    "relevance_score": 0.447,
+    "retrieved_at": "2026-05-07T23:59:25.196070+00:00",
+    "source_type": "optimization_challenge",
+    "summary": "A binary prediction-market optimization challenge where passive market makers quote a YES contract against retail flow, a static competitor ladder, and an informed arbitrageur that sweeps stale quotes.",
+    "title": "Orderbook Prediction Market Challenge",
+    "url": "https://github.com/danrobinson/prediction-market-challenge"
+  },
+  {
+    "author": "A. Rivera and S. Chen",
+    "credibility_score": 0.82,
+    "date": "2025-02-14",
+    "id": "src_aa12d17f402f",
+    "relevance_score": 0.41,
+    "retrieved_at": "2026-05-07T23:59:25.196187+00:00",
+    "source_type": "paper",
+    "summary": "A controlled evaluation found that assigning separate search framings to parallel agents increased source diversity and evidence recall compared with a single deterministic agent.",
+    "title": "Parallel Agent Review Improves Evidence Recall In Literature Tasks",
+    "url": "https://example.org/multi-agent-review-quality-2025"
+  },
+  {
+    "author": "D. Morales",
+    "credibility_score": 0.8,
+    "date": "2024-04-18",
+    "id": "src_31c65a7bfd5d",
+    "relevance_score": 0.261,
+    "retrieved_at": "2026-05-07T23:59:25.196297+00:00",
+    "source_type": "paper",
+    "summary": "A comparison found that single deterministic agents can match multi-agent systems on narrow questions with clear evaluation criteria.",
+    "title": "Single-Agent Baselines Remain Competitive For Narrow Research Questions",
+    "url": "https://example.org/single-agent-baseline-limitations"
+  }
+]

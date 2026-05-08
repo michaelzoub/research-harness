@@ -8,7 +8,15 @@ from pathlib import Path
 
 from challenges.prediction_market import prediction_market_score
 from research_harness.benchmark import collect_runs, write_outputs
-from research_harness.evals import EvaluationHarness, GraderResult, aggregate_results, default_eval_suite, edge_eval_suite
+from research_harness.evals import (
+    EvaluationHarness,
+    GraderResult,
+    aggregate_results,
+    default_eval_suite,
+    edge_eval_suite,
+    graph_trajectory_match,
+    trajectory_match,
+)
 from research_harness.loops import ResearchLoop
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
 from research_harness.schemas import Variant
@@ -83,7 +91,20 @@ class SmokeTest(unittest.TestCase):
             self.assertGreaterEqual(len(store.list("evolution_rounds")), 1)
             self.assertTrue(store.report_path.exists())
             self.assertTrue(store.prd_path.exists())
-            self.assertGreaterEqual(len(json.loads(store.prd_path.read_text(encoding="utf-8"))["organized_tasks"]), 5)
+            prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
+            self.assertGreaterEqual(len(prd["organized_tasks"]), 5)
+            self.assertTrue(prd["research_architecture"]["enabled_for_mode"])
+            self.assertEqual(prd["research_architecture"]["lead_agent"]["role"], "lead_research_orchestrator")
+            self.assertEqual(prd["research_architecture"]["subagents"]["role"], "parallel_research_subagents")
+            self.assertIn("asyncio.gather", prd["research_architecture"]["subagents"]["parallelism"])
+            self.assertEqual(
+                {item["name"] for item in prd["research_architecture"]["judge_rubric"]},
+                {"factual_accuracy", "citation_accuracy", "completeness", "source_quality", "tool_efficiency"},
+            )
+            research_evaluations = [row for row in store.list("variant_evaluations") if row["inner_loop"] == "research"]
+            self.assertTrue(research_evaluations)
+            for metric in ["factual_accuracy", "citation_accuracy", "completeness", "source_quality", "tool_efficiency"]:
+                self.assertIn(metric, research_evaluations[0]["metrics"])
             self.assertTrue(store.run_benchmark_path.exists())
             self.assertTrue(store.decision_dag_path.exists())
             self.assertTrue((store.root / "run_benchmark_summary.json").exists())
@@ -268,6 +289,44 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(prd["product_agent"], "challenge")
             self.assertEqual(prd["agent_harness"]["runtime_mode"], "optimize_query")
 
+    def test_prediction_market_dont_stop_profit_target_keeps_prd_incomplete_until_met(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    retriever="local",
+                    max_loop_iterations=3,
+                    task_mode="optimize_query",
+                    evaluator_name="prediction_market",
+                    include_debugger=False,
+                    echo_progress=False,
+                ),
+            )
+            run, store = asyncio.run(
+                orchestrator.run(
+                    "Get to $10 profit in the prediction market challenge, don't stop until you're profitable."
+                )
+            )
+
+            rounds = store.list("evolution_rounds")
+            optimize_rounds = [row for row in rounds if row["mode"] == "optimize"]
+            query_rounds = [row for row in rounds if row["mode"] == "optimize_query"]
+            prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
+            optimization_result = json.loads(store.optimization_result_path.read_text(encoding="utf-8"))
+            optimizer_task = next(task for task in prd["organized_tasks"] if task["title"] == "Run optimizer variants from query seed context")
+
+            self.assertEqual(run.product_agent, "challenge")
+            self.assertGreaterEqual(len(query_rounds), 2)
+            self.assertEqual(len(optimize_rounds), 3)
+            self.assertEqual(prd["objective"]["kind"], "profit_usd")
+            self.assertEqual(prd["objective"]["target"], 10.0)
+            self.assertFalse(prd["objective"]["met"])
+            self.assertEqual(optimizer_task["status"], "failed")
+            self.assertFalse(optimizer_task["passes"])
+            self.assertEqual(optimization_result["objective_target"]["target"], 10.0)
+            self.assertFalse(optimization_result["objective_target"]["met"])
+
     def test_goal_slug(self) -> None:
         self.assertEqual(
             goal_slug("Please research new agent paradigms on arxive and determine workplace trends"),
@@ -311,6 +370,7 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertIn("challenge_prediction_market", task_ids)
         self.assertTrue(all(task.success_criteria for task in suite.tasks))
         self.assertTrue(all(task.grader_ids for task in suite.tasks))
+        self.assertTrue(all("prd_tasks_executed" in task.grader_ids for task in suite.tasks))
 
     def test_edge_eval_suite_defines_failure_prone_cases(self) -> None:
         suite = edge_eval_suite()
@@ -324,10 +384,45 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertIn("parallel_trials_do_not_share_tmp_or_outputs", task_ids)
         self.assertIn("challenge_prediction_market_no_repo_root_strategy_files", task_ids)
         self.assertIn("research_should_not_oversearch", task_ids)
+        self.assertIn("nested_loop_multiple_iterations_no_regression", task_ids)
+        self.assertIn("stuck_loop_triggers_literature_search", task_ids)
+        self.assertIn("trajectory_match_modes_are_enforced", task_ids)
+        self.assertIn("optimize_runs_start_with_literature_grounding", task_ids)
         self.assertTrue(any("trajectory_modes" in task.grader_ids for task in suite.tasks))
         self.assertTrue(any("prediction_market_artifact_containment" in task.grader_ids for task in suite.tasks))
         self.assertTrue(any("parallel_trial_isolation" in task.grader_ids for task in suite.tasks))
         self.assertTrue(any("research_search_budget" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("trajectory_graph_artifact" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("literature_refresh_on_stuck" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("literature_grounding_present" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("trajectory_match_modes" in task.grader_ids for task in suite.tasks))
+        self.assertTrue(any("graph_trajectory_match" in task.grader_ids for task in suite.tasks))
+
+    def test_native_trajectory_match_modes(self) -> None:
+        actual = [
+            {"type": "router", "name": "optimize"},
+            {"type": "outer_loop", "name": "optimize"},
+            {"type": "inner_loop", "name": "optimize"},
+            {"type": "selection", "name": "variant"},
+            {"type": "signal", "name": "score_plateau"},
+            {"type": "outcome", "name": "completed"},
+        ]
+        reference = [
+            {"type": "router", "name": "optimize"},
+            {"type": "outer_loop", "name": "optimize"},
+            {"type": "inner_loop", "name": "optimize"},
+        ]
+
+        self.assertTrue(trajectory_match(actual, reference, "strict")["passed"])
+        self.assertTrue(trajectory_match(list(reversed(actual)), reference, "unordered")["passed"])
+        self.assertTrue(trajectory_match(actual, reference + [{"type": "outcome", "name": "completed"}], "superset")["passed"])
+        self.assertFalse(trajectory_match(actual, reference, "subset")["passed"])
+
+    def test_graph_trajectory_match(self) -> None:
+        graph = {"edges": [{"from": "prompt", "to": "router"}, {"from": "router", "to": "outer"}]}
+
+        self.assertTrue(graph_trajectory_match(graph, [["prompt", "router"]])["passed"])
+        self.assertFalse(graph_trajectory_match(graph, [["inner", "select"]])["passed"])
 
     def test_eval_harness_runs_prediction_market_task(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -412,7 +507,43 @@ class ArxivRetrieverTest(unittest.TestCase):
         self.assertIn("github", {item.retriever for item in strategy})
         self.assertIn("memory", {item.retriever for item in strategy})
         self.assertIn("brain", strategy[0].queries[0])
+        self.assertEqual(strategy[0].name, "broad_landscape")
+        self.assertLessEqual(len(strategy[0].queries[0].split()), 4)
         self.assertIsInstance(orchestrator._retriever_for(strategy[0].retriever), OpenAlexSearch)
+
+    def test_source_strategy_uses_prompt_domain_lenses(self) -> None:
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto"),
+        )
+
+        goal = "Get to $10 profit in the prediction market challenge using AMM LMSR entropy literature"
+        plan = orchestrator.create_plan(goal)
+        strategy = orchestrator.create_source_strategy(goal, plan)
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertIn("prediction-market", plan.strategy)
+        self.assertIn("lmsr", queries)
+        self.assertIn("adverse selection", queries)
+        self.assertIn("orderbook", queries.replace(" ", ""))
+        self.assertNotIn("workplace automation", queries)
+
+    def test_source_strategy_does_not_force_prediction_market_lens_without_prompt_topic(self) -> None:
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto", evaluator_name="prediction_market"),
+        )
+
+        goal = "Optimize an image compression routine with a deterministic benchmark"
+        plan = orchestrator.create_plan(goal)
+        strategy = orchestrator.create_source_strategy(goal, plan)
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertNotIn("prediction-market", plan.strategy)
+        self.assertNotIn("lmsr", queries)
+        self.assertNotIn("adverse selection", queries)
 
 
 class SkillSpecTest(unittest.TestCase):

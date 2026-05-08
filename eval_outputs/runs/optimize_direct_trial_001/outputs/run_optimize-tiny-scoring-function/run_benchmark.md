@@ -1,6 +1,7 @@
 # Run Benchmark
 
 - Run ID: `run_optimize-tiny-scoring-function`
+- Product agent: `optimize`
 - Mode: `optimize`
 - Tasks passed: 4 / 4
 - Outer rounds: 1
@@ -12,8 +13,8 @@
 ```mermaid
 flowchart TD
   prompt["Prompt: Optimize a tiny scoring function"]
-  route["Route: optimize"]
-  outer["Outer orchestrator: propose variants"]
+  route["Product agent: optimize\nLoop mode: optimize"]
+  outer["Agent harness loop: propose variants"]
   inner["Inner loop: evaluate and rank"]
   select["Tournament selection"]
   stop{"Threshold or plateau?"}
@@ -26,4 +27,4 @@ flowchart TD
 ```
 
 ## Round Summary
-- Round 1: best `variant_c3b316b78abc` score 0.500; signal `improved`.
+- Round 1: best `variant_03feb757a615` score 0.500; signal `improved`.

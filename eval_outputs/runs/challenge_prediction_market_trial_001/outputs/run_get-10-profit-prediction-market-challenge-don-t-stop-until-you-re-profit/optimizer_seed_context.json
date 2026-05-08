@@ -4,52 +4,70 @@
   "mode": "optimize_query",
   "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
   "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-  "summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations",
+  "summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls",
   "top_query_findings": [
     {
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
         "credibility": 0.797,
         "evaluator_relevance": 0.85,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.868,
+        "fallback_used": 0.0,
         "implementability": 0.35,
-        "novelty": 0.67
+        "novelty": 0.646,
+        "source_quality": 0.797,
+        "tool_efficiency": 1.0
       },
-      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms",
-      "score": 0.85,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.960. novelty=0.670; implementability=0.350; evaluator_relevance=0.850. ",
-      "variant_id": "variant_640b44099600"
+      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms",
+      "score": 0.868,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.970. novelty=0.646; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_b2cf81241fc8"
     },
     {
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
-        "credibility": 0.798,
+        "credibility": 0.797,
         "evaluator_relevance": 0.85,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.868,
+        "fallback_used": 0.0,
         "implementability": 0.35,
-        "novelty": 0.765
+        "novelty": 0.658,
+        "source_quality": 0.797,
+        "tool_efficiency": 1.0
       },
-      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence",
-      "score": 0.85,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.765; implementability=0.350; evaluator_relevance=0.850. ",
-      "variant_id": "variant_d41e044d4bed"
+      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature",
+      "score": 0.868,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.954. novelty=0.658; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_a558bb37125c"
     },
     {
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
-        "credibility": 0.798,
+        "credibility": 0.793,
         "evaluator_relevance": 0.85,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.865,
+        "fallback_used": 0.0,
         "implementability": 0.35,
-        "novelty": 0.765
+        "novelty": 0.687,
+        "source_quality": 0.793,
+        "tool_efficiency": 1.0
       },
-      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations",
-      "score": 0.85,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.958. novelty=0.765; implementability=0.350; evaluator_relevance=0.850. ",
-      "variant_id": "variant_3af102d42f75"
+      "query": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls",
+      "score": 0.865,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.865, citation=1.000, complete=1.000, source_quality=0.793, tool_efficiency=1.000; median judge score 0.951. novelty=0.687; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_28b37a335704"
     }
   ]
 }

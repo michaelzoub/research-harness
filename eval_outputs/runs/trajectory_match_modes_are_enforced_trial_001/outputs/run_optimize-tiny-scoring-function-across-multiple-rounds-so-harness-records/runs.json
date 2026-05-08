@@ -1,0 +1,15 @@
+[
+  {
+    "completed_at": "2026-05-07T23:59:18.126160+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:18.115465+00:00",
+    "status": "completed",
+    "task_mode": "optimize",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+  }
+]

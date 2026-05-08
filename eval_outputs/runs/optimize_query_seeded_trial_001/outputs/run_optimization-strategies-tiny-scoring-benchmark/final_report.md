@@ -2,18 +2,21 @@
 
 - Run ID: `run_optimization-strategies-tiny-scoring-benchmark`
 - Task type: `bounded`
-- Completed: 2026-05-06T22:55:41.431742+00:00
+- Completed: 2026-05-07T23:59:25.237780+00:00
 - Sources reviewed: 9
-- Claims extracted: 27
+- Claims extracted: 30
 - Hypotheses ranked: 0
 
 ## Executive Synthesis
-Evidence quality is 0.65 on average. Leading direction: No ranked hypothesis emerged. Contradictions require follow-up before acting.
+Evidence quality is 0.66 on average. Leading direction: No ranked hypothesis emerged. Contradictions require follow-up before acting.
 
 ## Key Claims
 - Positive edge comes from capturing spread against uninformed retail order flow. Confidence: 0.77 (strong). Sources: Orderbook Prediction Market Challenge (2026-05-04)
 - Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves. Confidence: 0.77 (strong). Sources: Orderbook Prediction Market Challenge (2026-05-04)
 - The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies. Confidence: 0.77 (strong). Sources: Orderbook Prediction Market Challenge (2026-05-04)
+- Literature grounding (initial) found: Positive edge comes from capturing spread against uninformed retail order flow. Confidence: 0.74 (retrieved). Sources: Orderbook Prediction Market Challenge (2026-05-04)
+- Literature grounding (initial) found: Parallel search agents increase evidence recall when each agent explores a distinct framing. Confidence: 0.74 (retrieved). Sources: Parallel Agent Review Improves Evidence Recall In Literature Tasks (2025-02-14)
+- Literature grounding (initial) found: Single deterministic agents can match multi-agent systems on narrow bounded research questions. Confidence: 0.74 (retrieved). Sources: Single-Agent Baselines Remain Competitive For Narrow Research Questions (2024-04-18)
 - Critic agents reduce unsupported claims by challenging evidence gaps after extraction. Confidence: 0.74 (moderate). Sources: Reviewer Agents Reduce Unsupported Claims In Automated Research (2024-11-09)
 - A critic pass increases runtime and may decrease novelty if applied too early. Confidence: 0.74 (moderate). Sources: Reviewer Agents Reduce Unsupported Claims In Automated Research (2024-11-09)
 - Contradiction checks are most useful before final synthesis. Confidence: 0.74 (moderate). Sources: Reviewer Agents Reduce Unsupported Claims In Automated Research (2024-11-09)
@@ -42,8 +45,8 @@ Evidence quality is 0.65 on average. Leading direction: No ranked hypothesis eme
 ## Ranked Hypotheses
 
 ## Contradictions And Caveats
-- claim_0303c94f67eb vs claim_a4bb05412914: Claims appear directionally opposed and need source-level resolution. Severity: medium.
-- claim_0303c94f67eb vs claim_d5f88d0e6470: Claims appear directionally opposed and need source-level resolution. Severity: medium.
+- claim_28e676471969 vs claim_83fad28b3acd: Claims appear directionally opposed and need source-level resolution. Severity: medium.
+- claim_28e676471969 vs claim_2cbf85c7ece2: Claims appear directionally opposed and need source-level resolution. Severity: medium.
 
 ## Open Questions
 - P1: Which mechanisms or optimization paths should be explored next? Reason: No hypotheses were generated from the current evidence set.
@@ -52,19 +55,19 @@ Evidence quality is 0.65 on average. Leading direction: No ranked hypothesis eme
 - P2: What stronger evidence supports or refutes this claim: Too much exploration decreases precision when no critic-driven follow-up is used. Reason: Claim confidence is below the recommended synthesis threshold.
 
 ## Sources
-- [Reviewer Agents Reduce Unsupported Claims In Automated Research](https://example.org/critic-agents-evidence-checking) by M. Okafor (2024-11-09)
 - [Orderbook Prediction Market Challenge](https://github.com/danrobinson/prediction-market-challenge) by Dan Robinson (2026-05-04)
+- [Parallel Agent Review Improves Evidence Recall In Literature Tasks](https://example.org/multi-agent-review-quality-2025) by A. Rivera and S. Chen (2025-02-14)
 - [Single-Agent Baselines Remain Competitive For Narrow Research Questions](https://example.org/single-agent-baseline-limitations) by D. Morales (2024-04-18)
+- [Reviewer Agents Reduce Unsupported Claims In Automated Research](https://example.org/critic-agents-evidence-checking) by M. Okafor (2024-11-09)
 - [Risk Controls For Adaptive Agent Harnesses](https://example.org/adaptive-harness-risk-controls) by E. Novak (2025-01-30)
 - [Structured Artifact Stores For Reproducible Agent Research](https://example.org/artifact-stores-for-agent-traces) by N. Patel (2023-08-21)
 - [Prediction Market Strategy Design Notes](challenges/prediction_market/spec.md) by research-harness (2026-05-06)
-- [Parallel Agent Review Improves Evidence Recall In Literature Tasks](https://example.org/multi-agent-review-quality-2025) by A. Rivera and S. Chen (2025-02-14)
 - [Prediction Market Local Evaluator Rubric](challenges/prediction_market/evaluator.py) by research-harness (2026-05-06)
 - [Entropy And Framing Diversity In Open-Ended Research Agents](https://example.org/open-ended-agent-exploration) by L. Singh (2025-05-03)
 
 ## Optimizer Seed Context
 - Has evaluator: True
 - Summary: Research optimization strategies for a tiny scoring benchmark baseline evidence; Research optimization strategies for a tiny scoring benchmark evaluation metrics; Research optimization strategies for a tiny scoring benchmark failure modes constraints
-- Query seed variant_c93f0cd62ada: score 0.805; Research optimization strategies for a tiny scoring benchmark baseline evidence
-- Query seed variant_02db2c654db8: score 0.805; Research optimization strategies for a tiny scoring benchmark evaluation metrics
-- Query seed variant_40374da99005: score 0.79; Research optimization strategies for a tiny scoring benchmark failure modes constraints
+- Query seed variant_834f7e7a06fa: score 0.873; Research optimization strategies for a tiny scoring benchmark baseline evidence
+- Query seed variant_8723eeea626e: score 0.873; Research optimization strategies for a tiny scoring benchmark evaluation metrics
+- Query seed variant_1e7486bca053: score 0.864; Research optimization strategies for a tiny scoring benchmark failure modes constraints

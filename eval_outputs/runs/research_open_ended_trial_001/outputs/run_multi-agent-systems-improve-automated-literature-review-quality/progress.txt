@@ -6,14 +6,23 @@ PRD: eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-sys
 Prompt: Research how multi-agent systems improve automated literature review quality
 Task ingestion: research mode. Research mode was explicitly requested.
 Task 1: passed - Selected research mode. Research mode was explicitly requested.
-Outer 1: proposed 3 research variants
-  Variant variant_5c856588b3ca: Research how multi-agent systems improve automated literature review quality foundational literature mechanisms
-  Variant variant_93b99766df6d: Research how multi-agent systems improve automated literature review quality recent empirical evidence
-  Variant variant_2d8663b20342: Research how multi-agent systems improve automated literature review quality contradictory evidence limitations
-Outer 1: mode=research best_score=0.957 signal=claim_corroboration_threshold
-  Score 0.957 for variant_5c856588b3ca: Retrieved 6 sources and 18 claims; median judge score 0.957.
-  Score 0.955 for variant_2d8663b20342: Retrieved 6 sources and 18 claims; median judge score 0.955.
-  Score 0.952 for variant_93b99766df6d: Retrieved 7 sources and 21 claims; median judge score 0.952.
+Outer 1: proposed 4 research variants
+  Variant variant_a152dfa6b7fd: Research how multi-agent systems improve automated literature review quality breadth-first landscape scan
+  Variant variant_bcd1d0f451f3: Research how multi-agent systems improve automated literature review quality primary-source mechanisms
+  Variant variant_6fbe956b05da: Research how multi-agent systems improve automated literature review quality recent empirical evidence
+  Variant variant_fe63301298f8: Research how multi-agent systems improve automated literature review quality contradictory evidence limitations
+Retriever search: local for variant_a152dfa6b7fd (limit=8)
+Retriever search: local for variant_bcd1d0f451f3 (limit=8)
+Retriever search: local for variant_6fbe956b05da (limit=8)
+Retriever search: local for variant_fe63301298f8 (limit=8)
+Retriever done: local for variant_a152dfa6b7fd returned 6 result(s)
+Retriever done: local for variant_bcd1d0f451f3 returned 6 result(s)
+Retriever done: local for variant_6fbe956b05da returned 7 result(s)
+Retriever done: local for variant_fe63301298f8 returned 6 result(s)
+Outer 1: mode=research best_score=0.970 signal=claim_corroboration_threshold
+  Score 0.970 for variant_bcd1d0f451f3: Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; med...
+  Score 0.969 for variant_a152dfa6b7fd: Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; med...
+  Score 0.955 for variant_fe63301298f8: Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; med...
 Task 2: passed - Completed 1 evolutionary outer rounds.
 Agent start: loop_research_hypothesis (hypothesis_generation) using local-deterministic-fallback
 Agent completed: loop_research_hypothesis in 0ms - Generated 1 hypotheses for angle 'mechanism'.

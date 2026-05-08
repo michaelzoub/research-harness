@@ -1,0 +1,17 @@
+flowchart TD
+  prompt["Prompt"]
+  router["Router: research"]
+  outer["Outer loop"]
+  inner["Inner evaluator"]
+  select["Selection"]
+  agents["Role agents: 3"]
+  outcome["Outcome"]
+  prompt --> router
+  router --> outer
+  outer --> inner
+  inner --> select
+  select -.-> outer
+  select --> agents
+  agents --> outcome
+  round_1["Round 1: research best=0.970 claim_corroboration_threshold"]
+  inner --> round_1 --> select

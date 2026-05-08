@@ -1,12 +1,48 @@
 [
   {
-    "confidence": 0.79,
+    "confidence": 0.74,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_3a4abed3a55f",
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_e2c2dd297ba5",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_f28081b3f064",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_daabeb891455"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_c9e3894a8315",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_43dbe60c2e1a"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.79,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_7e044087acfb",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
@@ -14,11 +50,11 @@
   {
     "confidence": 0.79,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_43b8a39edcda",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_e8fcf9b197a3",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
@@ -26,23 +62,59 @@
   {
     "confidence": 0.79,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_8a78e907cbe8",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_0425264a42af",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
   },
   {
-    "confidence": 0.65,
+    "confidence": 0.75,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_af15fe7881b0",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_400b86c91259",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_daabeb891455"
+    ],
+    "support_level": "strong",
+    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
+  },
+  {
+    "confidence": 0.75,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_b49eaa75988e",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_daabeb891455"
+    ],
+    "support_level": "strong",
+    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
+  },
+  {
+    "confidence": 0.75,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_ca662148cf42",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_daabeb891455"
+    ],
+    "support_level": "strong",
+    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
+  },
+  {
+    "confidence": 0.65,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_77fa29a9861d",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
@@ -50,11 +122,11 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_c9cbf36c806f",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_a9a1e066991f",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
@@ -62,59 +134,23 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_5241c1cc754b",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_98a0717fe6cc",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
   },
   {
-    "confidence": 0.72,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_92a748753198",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_07cd61c92d53"
-    ],
-    "support_level": "moderate",
-    "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
-  },
-  {
-    "confidence": 0.72,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_dc2ddad75ab1",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_07cd61c92d53"
-    ],
-    "support_level": "moderate",
-    "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
-  },
-  {
-    "confidence": 0.72,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_a28143d8730b",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_07cd61c92d53"
-    ],
-    "support_level": "moderate",
-    "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
-  },
-  {
     "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_c212b1b9bbab",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_f1c9bbd28fca",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
@@ -122,11 +158,11 @@
   {
     "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_3ce1e4ada89d",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_8851c2959fb1",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
@@ -134,11 +170,11 @@
   {
     "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_971f3a710c32",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_35003e1d994c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
@@ -146,11 +182,11 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_86816c78268b",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_2b341024cae4",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
@@ -158,11 +194,11 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_7784827bca22",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_b251a22f7bd8",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
@@ -170,11 +206,11 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_46bcb0d0a935",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_25baf0750461",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
@@ -182,11 +218,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_a2cf3d507be0",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_342e4c7f4d74",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
@@ -194,11 +230,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_b1dedb958686",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_0d48ed932ee0",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "A critic pass increases runtime and may decrease novelty if applied too early."
@@ -206,11 +242,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_c90ebb7a6a11",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_58857b1aa9d7",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "Contradiction checks are most useful before final synthesis."
@@ -218,11 +254,11 @@
   {
     "confidence": 0.57,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_08f1678a4119",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_12b4dea2b9ac",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
@@ -230,11 +266,11 @@
   {
     "confidence": 0.57,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_cbb071e55483",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_2a480a2fd1fa",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
@@ -242,11 +278,11 @@
   {
     "confidence": 0.57,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_b5a3dc2feef0",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_b0b6eb64e332",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
@@ -254,11 +290,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_8679afe108e0",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_8d8d5535a1ff",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
@@ -266,11 +302,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_eb18d406310f",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_43aa307386af",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
@@ -278,11 +314,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_640b44099600",
-    "id": "claim_7a98ee603005",
+    "created_by_agent": "research_loop:variant_b2cf81241fc8",
+    "id": "claim_02b921c83022",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
@@ -290,11 +326,11 @@
   {
     "confidence": 0.79,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_935cf7d0a2eb",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_60f1cb80bb27",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
@@ -302,11 +338,11 @@
   {
     "confidence": 0.79,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_afbc798634ea",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_71a1c588a4b5",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
@@ -314,95 +350,59 @@
   {
     "confidence": 0.79,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_111b80438c4d",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_d80dcd95f4e6",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
   },
   {
-    "confidence": 0.73,
+    "confidence": 0.72,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_21a88f850da1",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_f122ead3626c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
     "support_level": "moderate",
     "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
   },
   {
-    "confidence": 0.73,
+    "confidence": 0.72,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_3912194251e5",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_42d38a434f4a",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
     "support_level": "moderate",
     "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
   },
   {
-    "confidence": 0.73,
+    "confidence": 0.72,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_28fde4ba0809",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_26c053e41db1",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
     "support_level": "moderate",
     "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
   },
   {
-    "confidence": 0.69,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_b13024798b42",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_8b70b44ca4fe"
-    ],
-    "support_level": "moderate",
-    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
-  },
-  {
-    "confidence": 0.69,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_400fe0adc6ed",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_8b70b44ca4fe"
-    ],
-    "support_level": "moderate",
-    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
-  },
-  {
-    "confidence": 0.69,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_1c14eb911359",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_8b70b44ca4fe"
-    ],
-    "support_level": "moderate",
-    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
-  },
-  {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_184ba89213bd",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_38e4e12e7f5c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
@@ -410,11 +410,11 @@
   {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_296555aa8ad1",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_5ab52342a0c8",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
@@ -422,59 +422,59 @@
   {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_dba7a1d2b3f8",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_4b8aaac85779",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_3dacb8aa0873"
     ],
     "support_level": "moderate",
     "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_cbcef143f99b",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_cefb3834d716",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
-    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+    "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_2012cd807576",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_b4e6c1c5ba18",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
-    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+    "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.68,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_9c8c3538ff6f",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_dbafc8c83d70",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
-    "text": "Contradiction checks are most useful before final synthesis."
+    "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
   },
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_028befd503ca",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_129b17384a20",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
@@ -482,11 +482,11 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_da5b17b26a02",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_2f25f32a642c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
@@ -494,23 +494,59 @@
   {
     "confidence": 0.65,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_e3a5670627a8",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_8c00bf38bd75",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
+      "src_3b5e4fcb8e27"
     ],
     "support_level": "moderate",
     "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
   },
   {
-    "confidence": 0.57,
+    "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_4a0d34942fab",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_3af328bc1ffa",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_43dd821f6591"
+    ],
+    "support_level": "moderate",
+    "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_3c6dc19ff365",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_43dd821f6591"
+    ],
+    "support_level": "moderate",
+    "text": "A critic pass increases runtime and may decrease novelty if applied too early."
+  },
+  {
+    "confidence": 0.59,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_605bc074fd81",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_43dd821f6591"
+    ],
+    "support_level": "moderate",
+    "text": "Contradiction checks are most useful before final synthesis."
+  },
+  {
+    "confidence": 0.57,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_45ce9e9e2117",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
@@ -518,11 +554,11 @@
   {
     "confidence": 0.57,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_2bd2f52bda97",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_51d722b188f6",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
@@ -530,11 +566,11 @@
   {
     "confidence": 0.57,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_62a55cfcdd2a",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_3318e808a0e8",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
@@ -542,11 +578,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_dfc89d68ff6e",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_9b3229bd1122",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
@@ -554,11 +590,11 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_c4be9d06199c",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_ce1b01d3e2bd",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
@@ -566,119 +602,191 @@
   {
     "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_d41e044d4bed",
-    "id": "claim_62d25483fe46",
+    "created_by_agent": "research_loop:variant_a558bb37125c",
+    "id": "claim_d70dda9f807c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_5cb30d5b7910"
+      "src_fb49f5d9efaf"
     ],
     "support_level": "moderate",
     "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
   },
   {
-    "confidence": 0.79,
+    "confidence": 0.78,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_21aaf676d6b8",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_f7464fe3f7a8",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
   },
   {
-    "confidence": 0.79,
+    "confidence": 0.78,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_de45cd9d4ff7",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_d36065ba2ee6",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
   },
   {
-    "confidence": 0.79,
+    "confidence": 0.78,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_d2f35dd3fd41",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_cd6383e14919",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_7df0f2caba80"
+      "src_e9c4a7a6638f"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
   },
   {
-    "confidence": 0.71,
+    "confidence": 0.75,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_2356220b36b3",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_352512a3428c",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
-    "support_level": "moderate",
+    "support_level": "strong",
     "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
   },
   {
-    "confidence": 0.71,
+    "confidence": 0.75,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_b59ad3ec5dc2",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_03eabd09d429",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
-    "support_level": "moderate",
+    "support_level": "strong",
     "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
   },
   {
-    "confidence": 0.71,
+    "confidence": 0.75,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_d47bd3f244db",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_468a6b4625de",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_07cd61c92d53"
+      "src_daabeb891455"
     ],
-    "support_level": "moderate",
+    "support_level": "strong",
     "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
   },
   {
     "confidence": 0.69,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_1bec1535c60f",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_6580f732a644",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_3b5e4fcb8e27"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
+  },
+  {
+    "confidence": 0.69,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_bf0bc6f66b99",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3b5e4fcb8e27"
+    ],
+    "support_level": "moderate",
+    "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
+  },
+  {
+    "confidence": 0.69,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_351012b6099a",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3b5e4fcb8e27"
+    ],
+    "support_level": "moderate",
+    "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_9a5357cf924e",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3dacb8aa0873"
+    ],
+    "support_level": "moderate",
+    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_3b5750899884",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3dacb8aa0873"
+    ],
+    "support_level": "moderate",
+    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+  },
+  {
+    "confidence": 0.6,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_7735abcebf5f",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_3dacb8aa0873"
+    ],
+    "support_level": "moderate",
+    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+  },
+  {
+    "confidence": 0.67,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_ace0adcee5d6",
+    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+    "source_ids": [
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
   },
   {
-    "confidence": 0.69,
+    "confidence": 0.67,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_a62890fda272",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_515b0ecd3655",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
   },
   {
-    "confidence": 0.69,
+    "confidence": 0.67,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_26778b76b069",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_1b579fee6323",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_8b70b44ca4fe"
+      "src_43dbe60c2e1a"
     ],
     "support_level": "moderate",
     "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
@@ -686,181 +794,109 @@
   {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_695d7b246227",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_1f05faefed01",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_e159d28d6fad"
     ],
     "support_level": "moderate",
-    "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
+    "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
   },
   {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_d3107f6b8351",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_3164c2e77c6a",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_e159d28d6fad"
     ],
     "support_level": "moderate",
-    "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
+    "text": "Adaptive evolution without benchmark comparison can worsen reliability."
   },
   {
     "confidence": 0.61,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_54cbc1a6b578",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_91631460ecbb",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_39bf8fabfd4c"
+      "src_e159d28d6fad"
     ],
     "support_level": "moderate",
-    "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
+    "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_d6186a521e66",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_2f9db4c7f9c5",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_9e7ca3880b2d",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_edc1e12634d7",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "A critic pass increases runtime and may decrease novelty if applied too early."
   },
   {
-    "confidence": 0.63,
+    "confidence": 0.59,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_fb7ad81bd9ef",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_8d7e4274cf1a",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_65736e4c2e1f"
+      "src_43dd821f6591"
     ],
     "support_level": "moderate",
     "text": "Contradiction checks are most useful before final synthesis."
   },
   {
-    "confidence": 0.65,
+    "confidence": 0.56,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_63a543c4efee",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_feb2e7c1350a",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_66d77c05d5ea"
-    ],
-    "support_level": "moderate",
-    "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
-  },
-  {
-    "confidence": 0.65,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_b865a40e3798",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_66d77c05d5ea"
-    ],
-    "support_level": "moderate",
-    "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
-  },
-  {
-    "confidence": 0.65,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_54522f98fb7f",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_66d77c05d5ea"
-    ],
-    "support_level": "moderate",
-    "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
-  },
-  {
-    "confidence": 0.57,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_5a5e5396ce3f",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
   },
   {
-    "confidence": 0.57,
+    "confidence": 0.56,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_e1685880d4bd",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_58bd7ef5eff2",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
   },
   {
-    "confidence": 0.57,
+    "confidence": 0.56,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_dda27bf5d44a",
+    "created_by_agent": "research_loop:variant_28b37a335704",
+    "id": "claim_df62526679a9",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
     "source_ids": [
-      "src_eba0ede1c4b5"
+      "src_a4fc609858f1"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
-  },
-  {
-    "confidence": 0.59,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_01a43304e36e",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_5cb30d5b7910"
-    ],
-    "support_level": "moderate",
-    "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
-  },
-  {
-    "confidence": 0.59,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_d0fb58e65d35",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_5cb30d5b7910"
-    ],
-    "support_level": "moderate",
-    "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
-  },
-  {
-    "confidence": 0.59,
-    "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_3af102d42f75",
-    "id": "claim_def346e72c77",
-    "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "source_ids": [
-      "src_5cb30d5b7910"
-    ],
-    "support_level": "moderate",
-    "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
   }
 ]

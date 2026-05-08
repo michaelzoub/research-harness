@@ -1,0 +1,10 @@
+[
+  {
+    "evaluator_name": null,
+    "id": "decision_8f74a4412744",
+    "product_agent": "optimize",
+    "reason": "Optimize agent selected optimization-query loop; query exploration will run without an optimizer evaluator.",
+    "requested_mode": "optimize_query",
+    "selected_mode": "optimize_query"
+  }
+]

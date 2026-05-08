@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
+import re
+import sys
 from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -151,7 +154,7 @@ class ArtifactStore:
 
     def append_progress(self, text: str) -> None:
         if self.echo_progress:
-            print(text, flush=True)
+            print(_format_progress_for_terminal(text), flush=True)
         with self.progress_path.open("a", encoding="utf-8") as handle:
             handle.write(text.rstrip() + "\n")
 
@@ -217,3 +220,35 @@ class ArtifactStore:
     def _write(self, entity: str, rows: list[dict[str, Any]]) -> None:
         path = self.root / ENTITY_FILES[entity]
         path.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _format_progress_for_terminal(text: str) -> str:
+    if os.environ.get("NO_COLOR") or os.environ.get("RESEARCH_HARNESS_COLOR") == "0":
+        return text
+    if not sys.stdout.isatty() and os.environ.get("RESEARCH_HARNESS_COLOR") != "1":
+        return text
+    reset = "\033[0m"
+    bold = "\033[1m"
+    dim = "\033[2m"
+    red_italic = "\033[31;3m"
+    cyan_bold = "\033[1;36m"
+    green_bold = "\033[1;32m"
+    yellow_bold = "\033[1;33m"
+    magenta_bold = "\033[1;35m"
+
+    lowered = text.lower()
+    if any(term in lowered for term in ["error", "failed", "traceback", "fallback:", "http error", "timeout"]):
+        return f"{red_italic}{text}{reset}"
+    if text.startswith("# "):
+        return f"{bold}{text}{reset}"
+    if re.match(r"^(Starting run|Execution mode|Goal|PRD|Run:|Status|Artifacts):", text):
+        return f"{cyan_bold}{text}{reset}"
+    if re.match(r"^(Task \d+: passed|<promise>COMPLETE</promise>)", text):
+        return f"{green_bold}{text}{reset}"
+    if re.match(r"^(Optimization-query phase|Optimizer phase|Prediction-market optimizer round|Outer \d+:|Literature grounding|Literature refresh)", text):
+        return f"{magenta_bold}{text}{reset}"
+    if re.match(r"^(Retriever search|Retriever done|Optimized candidate|Optimal code|Solution|Optimization result|Report|Run benchmark|Decision DAG):", text):
+        return f"{yellow_bold}{text}{reset}"
+    if text.startswith("  ") or "LLM judge" in text or "thinking" in lowered:
+        return f"{dim}{text}{reset}"
+    return text

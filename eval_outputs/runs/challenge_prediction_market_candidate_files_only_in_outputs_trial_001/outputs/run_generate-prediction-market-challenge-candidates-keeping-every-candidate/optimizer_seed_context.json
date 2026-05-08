@@ -1,0 +1,73 @@
+{
+  "goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+  "has_evaluator": true,
+  "mode": "optimize_query",
+  "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+  "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+  "summary": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls",
+  "top_query_findings": [
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.798,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.869,
+        "fallback_used": 0.0,
+        "implementability": 0.35,
+        "novelty": 0.638,
+        "source_quality": 0.798,
+        "tool_efficiency": 1.0
+      },
+      "query": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms",
+      "score": 0.869,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.869, citation=1.000, complete=1.000, source_quality=0.798, tool_efficiency=1.000; median judge score 0.974. novelty=0.638; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_af3f241ebc4d"
+    },
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.797,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.868,
+        "fallback_used": 0.0,
+        "implementability": 0.35,
+        "novelty": 0.7,
+        "source_quality": 0.797,
+        "tool_efficiency": 1.0
+      },
+      "query": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature",
+      "score": 0.868,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.974. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_513f1848d483"
+    },
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.795,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.867,
+        "fallback_used": 0.0,
+        "implementability": 0.35,
+        "novelty": 0.7,
+        "source_quality": 0.795,
+        "tool_efficiency": 1.0
+      },
+      "query": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls",
+      "score": 0.867,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.867, citation=1.000, complete=1.000, source_quality=0.795, tool_efficiency=1.000; median judge score 0.959. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+      "variant_id": "variant_7ec3fcf21eb5"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ from .agents import (
     SynthesisAgent,
 )
 from .llm import LLMClient
-from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter
+from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter, _loop_objective_from_goal
 from .run_benchmarks import write_run_benchmarks
 from .schemas import AgentBudget, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
 from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
@@ -94,6 +94,8 @@ class HarnessConfig:
     evolution_population_size: int = 4
     llm_provider: str = "auto"
     llm_model: str = "gpt-5.2"
+    research_lead_model: Optional[str] = None
+    research_subagent_model: Optional[str] = None
     echo_progress: bool = True
     default_budget: AgentBudget = field(default_factory=AgentBudget)
 
@@ -175,6 +177,14 @@ class Orchestrator:
                 "runtime_mode": run.task_mode,
                 "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
             },
+            "ralph_loop": {
+                "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+                "state_files": ["prd.json", "progress.txt", "trace.jsonl"],
+                "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+                "max_iterations": self.config.max_loop_iterations,
+            },
+            "research_architecture": _research_architecture_payload(self.config, run.task_mode),
+            "objective": _objective_payload(run.user_goal, self.config.evaluator_name, store),
             "plan": to_dict(plan),
             "source_strategy": [to_dict(item) for item in source_strategy],
             "organized_tasks": tasks,
@@ -301,7 +311,16 @@ class Orchestrator:
 
     def create_plan(self, goal: str) -> ResearchPlan:
         task_type = self.classify_task(goal)
-        if task_type == "bounded":
+        topics = _prompt_topics(goal)
+        if "prediction_market" in topics:
+            search_angles = [
+                "prediction-market microstructure and market-making mechanisms",
+                "AMM LMSR entropy and scoring-rule literature",
+                "adverse selection arbitrage inventory and risk controls",
+            ]
+            hypothesis_angles = ["market-making edge", "adverse-selection mitigation", "entropy-guided exploration"]
+            strategy = "Ground the challenge in prediction-market and market-making literature before optimizing strategy code."
+        elif task_type == "bounded":
             search_angles = [
                 "baseline evidence",
                 "failure modes constraints",
@@ -311,12 +330,13 @@ class Orchestrator:
             strategy = "Assign bounded roles and collect evidence against explicit success criteria."
         else:
             search_angles = [
-                "foundational literature mechanisms",
+                "breadth-first landscape scan",
+                "primary-source mechanisms",
                 "recent empirical evidence",
                 "contradictory evidence limitations",
             ]
             hypothesis_angles = ["mechanism", "research direction"]
-            strategy = "Allow broad exploration across framings before critic-driven convergence."
+            strategy = "Use a lead research agent to start wide across independent subagent searches, then narrow with critic-driven convergence."
         return ResearchPlan(
             task_type=task_type,
             goal=goal,
@@ -502,14 +522,31 @@ class Orchestrator:
             task_cursor += 1
             seed_context = _read_json_if_exists(store.optimizer_seed_context_path)
             if seed_context.get("has_evaluator"):
-                await self._pass_task(
-                    run,
-                    store,
-                    tasks[task_cursor],
-                    iteration,
-                    "optimize_query_optimizer",
-                    "Ran optimizer variants using query-derived seed context.",
+                optimize_eval_count = len([row for row in store.list("variant_evaluations") if row.get("inner_loop") == "optimize"])
+                artifact_bits = []
+                if store.optimization_result_path.exists():
+                    artifact_bits.append("optimization_result.json")
+                if store.optimal_code_path.exists():
+                    artifact_bits.append("optimal_code.py")
+                if store.solution_path.exists():
+                    artifact_bits.append("solution.py")
+                optimizer_summary = (
+                    f"Ran {optimize_eval_count} optimizer variant evaluations using query-derived seed context"
+                    + (f"; emitted {', '.join(artifact_bits)}." if artifact_bits else ".")
                 )
+                objective_status = _objective_status(run.user_goal, decision.evaluator_name, store)
+                if objective_status.get("requires_target") and not objective_status.get("met"):
+                    await self._fail_task(
+                        run,
+                        store,
+                        tasks[task_cursor],
+                        iteration,
+                        "optimize_query_optimizer",
+                        optimizer_summary
+                        + f" Objective incomplete: {objective_status.get('summary')}. Continue the Ralph loop with a larger --max-iterations budget.",
+                    )
+                else:
+                    await self._pass_task(run, store, tasks[task_cursor], iteration, "optimize_query_optimizer", optimizer_summary)
             else:
                 await self._skip_task(
                     run,
@@ -596,6 +633,7 @@ class Orchestrator:
                 params={"selected_mode": selected_mode, "product_agent": product_agent},
                 acceptance_criteria=[
                     "The agent harness ran model/tool/state loop steps for this product option",
+                    "Research mode used breadth-first parallel query variants before narrowing",
                     "The outer loop proposed code or query variants",
                     "The selected inner loop returned ranked variants with scalar scores",
                     "Plateau or threshold stopping signals were evaluated",
@@ -687,6 +725,7 @@ class Orchestrator:
                     "If evaluator exists, optimize/code variants were evaluated",
                     "If evaluator is missing, optimizer phase was explicitly skipped",
                     "Challenge agents may additionally emit a runnable solution artifact for official grading",
+                    "Explicit objective targets from the prompt must be met before this PRD item passes",
                 ],
             ),
             LoopTask(
@@ -755,6 +794,17 @@ class Orchestrator:
         summary: str,
     ) -> None:
         await self._record_task_result(run, store, task, iteration, AgentResult(agent_name, summary, []))
+
+    async def _fail_task(
+        self,
+        run: RunRecord,
+        store: ArtifactStore,
+        task: LoopTask,
+        iteration: int,
+        agent_name: str,
+        summary: str,
+    ) -> None:
+        await self._record_task_result(run, store, task, iteration, AgentResult(agent_name, summary, [summary]))
 
     async def _skip_task(
         self,
@@ -978,59 +1028,150 @@ def goal_slug(goal: str, max_length: int = 72) -> str:
     return slug or "research-run"
 
 
+def _objective_payload(goal: str, evaluator_name: Optional[str], store: ArtifactStore) -> dict[str, object]:
+    status = _objective_status(goal, evaluator_name, store)
+    return {
+        "kind": status.get("kind"),
+        "target": status.get("target"),
+        "current": status.get("current"),
+        "met": status.get("met"),
+        "no_stop_until_target": status.get("no_stop_until_target"),
+        "summary": status.get("summary"),
+    }
+
+
+def _objective_status(goal: str, evaluator_name: Optional[str], store: ArtifactStore) -> dict[str, object]:
+    objective = _loop_objective_from_goal(goal, evaluator_name)
+    current = None
+    if store.optimization_result_path.exists():
+        try:
+            payload = json.loads(store.optimization_result_path.read_text(encoding="utf-8"))
+            official = payload.get("official_result") if isinstance(payload.get("official_result"), dict) else {}
+            if objective.kind == "profit_usd":
+                current = official.get("profit_usd") if isinstance(official, dict) else None
+            else:
+                current = payload.get("score")
+        except Exception:
+            current = None
+    met = False
+    if objective.target is None:
+        met = current is not None
+    elif current is not None:
+        try:
+            met = float(current) >= objective.target
+        except (TypeError, ValueError):
+            met = False
+    summary = (
+        f"{objective.kind} current={current} target={objective.target} met={met}"
+        if objective.target is not None
+        else f"{objective.kind} current={current}"
+    )
+    return {
+        "kind": objective.kind,
+        "target": objective.target,
+        "current": current,
+        "met": met,
+        "no_stop_until_target": objective.no_stop_until_target,
+        "requires_target": objective.target is not None,
+        "summary": summary,
+    }
+
+
+def _research_architecture_payload(config: HarnessConfig, task_mode: Optional[str]) -> dict[str, object]:
+    return {
+        "enabled_for_mode": task_mode == "research",
+        "lead_agent": {
+            "role": "lead_research_orchestrator",
+            "model": config.research_lead_model or config.llm_model,
+            "responsibilities": [
+                "decompose the question into independent directions",
+                "fan out subagent searches in parallel when directions are independent",
+                "start with broad landscape queries before narrowing",
+                "merge evidence and route weak spots to critic or follow-up search",
+            ],
+        },
+        "subagents": {
+            "role": "parallel_research_subagents",
+            "model": config.research_subagent_model or config.llm_model,
+            "parallelism": "asyncio.gather over independent search agents or query variants",
+            "search_policy": "start wide, evaluate source yield, then progressively narrow",
+        },
+        "judge_rubric": _research_judge_rubric(),
+    }
+
+
+def _research_judge_rubric() -> list[dict[str, object]]:
+    return [
+        {"name": "factual_accuracy", "question": "Do claims match retrieved sources?", "weight": 0.25},
+        {"name": "citation_accuracy", "question": "Do cited sources support the cited claims?", "weight": 0.2},
+        {"name": "completeness", "question": "Are all requested aspects covered?", "weight": 0.2},
+        {"name": "source_quality", "question": "Were primary or authoritative sources preferred?", "weight": 0.2},
+        {"name": "tool_efficiency", "question": "Were the right tools used a reasonable number of times?", "weight": 0.15},
+    ]
+
+
 def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
     concepts = _goal_terms(goal)
     core = " ".join(concepts[:6]) or goal
+    broad = _broad_landscape_query(goal)
+    topic_queries = _topic_query_lenses(goal)
     brain_terms = "brain neuroscience cognitive computational neuroscience intelligence"
     agent_terms = "agentic agents autonomous multi-agent planner executor tool use memory"
     workplace_terms = "workplace automation enterprise productivity software agents"
     trend_terms = "survey benchmark adoption evaluation future trends"
     contrarian_terms = "limitations failures safety reliability critique"
-    if any(term in concepts for term in ["brain", "brains", "neuroscience", "cognitive"]):
+    if topic_queries:
+        first_query = topic_queries[0]
+    elif any(term in concepts for term in ["brain", "brains", "neuroscience", "cognitive"]):
         first_query = f"{core} {brain_terms}"
     else:
         first_query = f"{core} {agent_terms}"
+    method_query = topic_queries[1] if len(topic_queries) > 1 else f"{core} {trend_terms}"
+    implementation_query = topic_queries[2] if len(topic_queries) > 2 else f"{core} {agent_terms}"
+    limitations_query = topic_queries[3] if len(topic_queries) > 3 else f"{core} {contrarian_terms}"
+    adoption_query = topic_queries[0] if topic_queries else f"{core} {workplace_terms}"
+    social_query = topic_queries[0] if topic_queries else f"{core} workplace AI agents"
     return [
         SourceStrategyItem(
-            name="academic_papers",
+            name="broad_landscape",
             retriever="openalex",
-            purpose="core academic mechanisms",
-            queries=[first_query, f"{core} survey taxonomy"],
+            purpose="breadth-first landscape scan",
+            queries=[broad, first_query],
             limit=8,
         ),
         SourceStrategyItem(
             name="preprints_and_benchmarks",
             retriever="arxiv",
             purpose="methods, benchmarks, and empirical evidence",
-            queries=[f"{core} {trend_terms}", f"{core} benchmark evaluation"],
+            queries=[method_query, f"{core} benchmark evaluation"],
             limit=8,
         ),
         SourceStrategyItem(
             name="implementation_signals",
             retriever="github",
             purpose="implementation signals and open-source adoption",
-            queries=[f"{core} {agent_terms}", f"{core} framework tools"],
+            queries=[implementation_query, f"{core} framework tools"],
             limit=8,
         ),
         SourceStrategyItem(
             name="docs_blogs_workplace",
             retriever="docs_blogs",
             purpose="adoption signals and workplace-relevant directions",
-            queries=[f"{core} {workplace_terms}", f"{core} human AI collaboration"],
+            queries=[adoption_query, f"{core} human AI collaboration"],
             limit=8,
         ),
         SourceStrategyItem(
             name="social_trend_signals",
             retriever="twitter",
             purpose="public social trend signals",
-            queries=[f"{core} workplace AI agents", f"{core} agentic AI"],
+            queries=[social_query, f"{core} agentic AI"],
             limit=6,
         ),
         SourceStrategyItem(
             name="contrarian_limitations",
             retriever="web",
             purpose="contradictory evidence, limitations, and risks",
-            queries=[f"{core} {contrarian_terms}", f"{core} failure mode"],
+            queries=[limitations_query, f"{core} failure mode"],
             limit=8,
         ),
         SourceStrategyItem(
@@ -1065,6 +1206,67 @@ def _single_retriever_strategy(goal: str, plan: ResearchPlan, retriever: str) ->
 def _goal_terms(goal: str) -> list[str]:
     words = re.findall(r"[a-zA-Z0-9]+", goal.lower())
     return [word for word in words if word not in RUN_SLUG_STOPWORDS]
+
+
+def _broad_landscape_query(goal: str) -> str:
+    topics = _prompt_topics(goal)
+    if "prediction_market" in topics:
+        return "prediction markets"
+    if "neuroscience" in topics and "agents" in topics:
+        return "brain artificial intelligence"
+    if "agents" in topics:
+        return "AI agents"
+    terms = _goal_terms(goal)
+    if not terms:
+        return goal
+    return " ".join(terms[: min(4, len(terms))])
+
+
+def _prompt_topics(goal: str) -> set[str]:
+    normalized = goal.lower()
+    topics: set[str] = set()
+    if "prediction market" in normalized or "prediction-market" in normalized:
+        topics.add("prediction_market")
+    if any(term in normalized for term in ["amm", "lmsr", "automated market maker", "constant product"]):
+        topics.add("amm")
+    if any(term in normalized for term in ["options", "option pricing", "black scholes", "volatility"]):
+        topics.add("options")
+    if any(term in normalized for term in ["entropy", "exploration", "regularization"]):
+        topics.add("entropy")
+    if any(term in normalized for term in ["agent", "llm", "multi-agent", "tool use", "react", "reflexion"]):
+        topics.add("agents")
+    if any(term in normalized for term in ["brain", "neuroscience", "cognitive"]):
+        topics.add("neuroscience")
+    return topics
+
+
+def _topic_query_lenses(goal: str) -> list[str]:
+    topics = _prompt_topics(goal)
+    queries: list[str] = []
+    if "prediction_market" in topics:
+        queries.append("prediction market limit order book market making adverse selection arbitrage retail order flow")
+        if "amm" in topics:
+            queries.append("LMSR automated market maker prediction markets liquidity cost function")
+        else:
+            queries.append("prediction market trading strategies calibration market scoring rules arbitrage")
+        queries.append("prediction market challenge orderbook market making simulator strategy implementation")
+        queries.append("market making adverse selection stale quotes inventory skew cancel widen quotes")
+    if "amm" in topics:
+        queries.append("LMSR automated market maker prediction markets liquidity cost function")
+        queries.append("constant product automated market maker arbitrage inventory risk")
+    if "entropy" in topics:
+        queries.append("entropy regularization exploration optimization strategy stochastic search")
+    if "options" in topics:
+        queries.append("options market making volatility hedging adverse selection risk controls")
+    if "agents" in topics:
+        queries.append("LLM agents tool use planning execution memory evaluation benchmark")
+    if "neuroscience" in topics:
+        queries.append("brain neuroscience cognitive computational neuroscience intelligence")
+    deduped: list[str] = []
+    for query in queries:
+        if query not in deduped:
+            deduped.append(query)
+    return deduped
 
 
 def _read_json_if_exists(path: Path) -> dict[str, object]:

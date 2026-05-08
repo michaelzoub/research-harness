@@ -1,0 +1,10 @@
+[
+  {
+    "evaluator_name": "length_score",
+    "id": "decision_2a23a583258e",
+    "product_agent": "optimize",
+    "reason": "Optimize agent selected optimize loop with evaluator 'length_score'.",
+    "requested_mode": "optimize",
+    "selected_mode": "optimize"
+  }
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "eval_db7e55381255",
+    "inner_loop": "research",
+    "judge_scores": [
+      0.862,
+      1.0,
+      1.0,
+      0.787,
+      1.0,
+      0.93
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.787,
+      "factual_accuracy": 0.862,
+      "fallback_used": 0.0,
+      "source_quality": 0.787,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+    "score": 0.965,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.862, citation=1.000, complete=1.000, source_quality=0.787, tool_efficiency=1.000; median judge score 0.965.",
+    "variant_id": "variant_4b267cf61241"
+  },
+  {
+    "id": "eval_04b79dbdecd6",
+    "inner_loop": "research",
+    "judge_scores": [
+      0.862,
+      1.0,
+      1.0,
+      0.787,
+      1.0,
+      0.933
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.787,
+      "factual_accuracy": 0.862,
+      "fallback_used": 0.0,
+      "source_quality": 0.787,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+    "score": 0.967,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.862, citation=1.000, complete=1.000, source_quality=0.787, tool_efficiency=1.000; median judge score 0.967.",
+    "variant_id": "variant_6f58a233ba22"
+  },
+  {
+    "id": "eval_232bae88be68",
+    "inner_loop": "research",
+    "judge_scores": [
+      0.873,
+      1.0,
+      1.0,
+      0.805,
+      1.0,
+      0.913
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.805,
+      "factual_accuracy": 0.873,
+      "fallback_used": 0.0,
+      "source_quality": 0.805,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+    "score": 0.957,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.957.",
+    "variant_id": "variant_65f9512703bc"
+  },
+  {
+    "id": "eval_d73228dbe2f0",
+    "inner_loop": "research",
+    "judge_scores": [
+      0.862,
+      1.0,
+      1.0,
+      0.788,
+      1.0,
+      0.908
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.788,
+      "factual_accuracy": 0.862,
+      "fallback_used": 0.0,
+      "source_quality": 0.788,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+    "score": 0.954,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.862, citation=1.000, complete=1.000, source_quality=0.788, tool_efficiency=1.000; median judge score 0.954.",
+    "variant_id": "variant_7d141fb16199"
+  }
+]

@@ -1,0 +1,80 @@
+{
+  "edges": [
+    {
+      "from": "prompt",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "outer"
+    },
+    {
+      "from": "outer",
+      "to": "inner"
+    },
+    {
+      "from": "inner",
+      "to": "select"
+    },
+    {
+      "from": "select",
+      "kind": "loop",
+      "to": "outer"
+    },
+    {
+      "from": "select",
+      "to": "agents"
+    },
+    {
+      "from": "agents",
+      "to": "outcome"
+    }
+  ],
+  "evaluation_count": 1,
+  "nodes": [
+    {
+      "id": "prompt",
+      "label": "Prompt"
+    },
+    {
+      "id": "router",
+      "label": "Router: research"
+    },
+    {
+      "id": "outer",
+      "label": "Outer loop"
+    },
+    {
+      "id": "inner",
+      "label": "Inner evaluator"
+    },
+    {
+      "id": "select",
+      "label": "Selection"
+    },
+    {
+      "id": "agents",
+      "label": "Role agents: 3"
+    },
+    {
+      "id": "outcome",
+      "label": "Outcome"
+    }
+  ],
+  "rounds": [
+    {
+      "best_score": 0.96,
+      "best_variant_id": "variant_f97207678010",
+      "completed_at": "2026-05-07T23:59:18.092554+00:00",
+      "id": "round_7d4bedfe6b24",
+      "mode": "research",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_who-founded-apple-answer-with-concise-sourced-summary",
+      "termination_signal": "claim_corroboration_threshold",
+      "variant_ids": [
+        "variant_f97207678010"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "confidence": 0.62,
+    "contradicting_claim_ids": [],
+    "id": "hyp_ec2f634a04e6",
+    "next_experiment": "Search for direct evaluations of: optimization path.",
+    "novelty_score": 0.55,
+    "supporting_claim_ids": [
+      "claim_603b5ec9c18f"
+    ],
+    "testability_score": 0.72,
+    "text": "Optimization Path path: Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.62,
+    "contradicting_claim_ids": [],
+    "id": "hyp_a365586ceac5",
+    "next_experiment": "Search for direct evaluations of: optimization path.",
+    "novelty_score": 0.63,
+    "supporting_claim_ids": [
+      "claim_bc5191719da9"
+    ],
+    "testability_score": 0.72,
+    "text": "Optimization Path path: Multi-agent fan-out has less advantage when the task already has clear success criteria."
+  },
+  {
+    "confidence": 0.62,
+    "contradicting_claim_ids": [],
+    "id": "hyp_482b4d12acd0",
+    "next_experiment": "Search for direct evaluations of: optimization path.",
+    "novelty_score": 0.71,
+    "supporting_claim_ids": [
+      "claim_9ef68d9013ca"
+    ],
+    "testability_score": 0.72,
+    "text": "Optimization Path path: Parallel research increases cost and can decrease precision if agents duplicate similar searches."
+  },
+  {
+    "confidence": 0.58,
+    "contradicting_claim_ids": [],
+    "id": "hyp_0c251d50d69e",
+    "next_experiment": "Search for direct evaluations of: optimization path.",
+    "novelty_score": 0.79,
+    "supporting_claim_ids": [
+      "claim_22482d486d5d"
+    ],
+    "testability_score": 0.72,
+    "text": "Optimization Path path: Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
+  }
+]

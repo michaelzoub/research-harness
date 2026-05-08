@@ -1,16 +1,16 @@
 {
-  "aggregate_score": 0.958,
-  "completed_at": "2026-05-06T22:55:41.503324+00:00",
+  "aggregate_score": 0.961,
+  "completed_at": "2026-05-07T23:59:25.771864+00:00",
   "passed_trials": 4,
-  "started_at": "2026-05-06T22:55:41.367004+00:00",
+  "started_at": "2026-05-07T23:59:25.153412+00:00",
   "suite_id": "core",
   "suite_name": "Core Harness Evaluation Suite",
   "task_count": 4,
   "trial_count": 4,
   "trials": [
     {
-      "aggregate_score": 0.964,
-      "completed_at": "2026-05-06T22:55:41.392999+00:00",
+      "aggregate_score": 0.976,
+      "completed_at": "2026-05-07T23:59:25.191383+00:00",
       "grader_results": [
         {
           "assertions": [
@@ -31,22 +31,93 @@
         {
           "assertions": [
             {
+              "check": "prd_exists",
+              "passed": true
+            },
+            {
+              "check": "prd_has_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_loop_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_iterations",
+              "passed": true
+            },
+            {
+              "check": "all_prd_task_statuses_match",
+              "passed": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_001",
+              "source_task_id": "task_663ca5839d93",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_002",
+              "source_task_id": "task_fe390d326853",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_003",
+              "source_task_id": "task_7917c29a4131",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_004",
+              "source_task_id": "task_4b5db25ff2a2",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_005",
+              "source_task_id": "task_ff4a090dd5d2",
+              "status_matches": true
+            }
+          ],
+          "grader_id": "prd_tasks_executed",
+          "grader_type": "code",
+          "method": "prd execution verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Verified 5/5 PRD task(s) against loop tasks and iterations.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
               "actual": 7,
               "check": "min_sources",
               "expected_at_least": 4,
               "passed": true
             },
             {
-              "actual": 57,
+              "actual": 75,
               "check": "min_claims",
               "expected_at_least": 8,
               "passed": true
             },
             {
-              "actual": 57,
+              "actual": 75,
               "check": "all_claims_have_sources",
               "passed": true,
-              "total": 57
+              "total": 75
             }
           ],
           "grader_id": "research_groundedness",
@@ -54,7 +125,7 @@
           "method": "groundedness assertions",
           "passed": true,
           "score": 1.0,
-          "summary": "7 sources, 57 claims, 57 grounded claims.",
+          "summary": "7 sources, 75 claims, 75 grounded claims.",
           "weight": 1.25
         },
         {
@@ -75,7 +146,7 @@
         {
           "assertions": [
             {
-              "check": "complete_marker",
+              "check": "complete_or_incomplete_stop_marker",
               "passed": true
             },
             {
@@ -88,7 +159,7 @@
           "method": "transcript analysis",
           "passed": true,
           "score": 1.0,
-          "summary": "Progress lines=27; traces=3.",
+          "summary": "Progress lines=36; traces=3.",
           "weight": 0.75
         },
         {
@@ -133,6 +204,10 @@
               "passed": true
             },
             {
+              "check": "has_research_rubric_metrics",
+              "passed": true
+            },
+            {
               "check": "substantial_length",
               "passed": true
             }
@@ -141,7 +216,7 @@
           "grader_type": "model",
           "method": "deterministic rubric scoring",
           "passed": true,
-          "score": 0.75,
+          "score": 0.8,
           "summary": "Local model-style rubric scored the report.",
           "weight": 0.8
         }
@@ -156,7 +231,11 @@
       },
       "outcome": {
         "best_inner_loop": "research",
-        "best_score": 0.957,
+        "best_score": 0.97,
+        "optimal_code_exists": false,
+        "optimization_result_exists": false,
+        "optimized_candidate_exists": false,
+        "product_agent": "research",
         "report_exists": true,
         "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
         "seed_context_exists": false,
@@ -167,12 +246,13 @@
       "passed": true,
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
       "task_id": "research_open_ended",
+      "trajectory_graph_path": "eval_outputs/runs/research_open_ended_trial_001/trajectory_graph.svg",
       "transcript_path": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/trace.jsonl",
       "trial_index": 1
     },
     {
-      "aggregate_score": 0.895,
-      "completed_at": "2026-05-06T22:55:41.399907+00:00",
+      "aggregate_score": 0.926,
+      "completed_at": "2026-05-07T23:59:25.201933+00:00",
       "grader_results": [
         {
           "assertions": [
@@ -209,6 +289,69 @@
         {
           "assertions": [
             {
+              "check": "prd_exists",
+              "passed": true
+            },
+            {
+              "check": "prd_has_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_loop_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_iterations",
+              "passed": true
+            },
+            {
+              "check": "all_prd_task_statuses_match",
+              "passed": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_001",
+              "source_task_id": "task_025c993fac20",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_002",
+              "source_task_id": "task_591214123e4e",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_004",
+              "source_task_id": "task_9a6564cf9488",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_005",
+              "source_task_id": "task_577392519e69",
+              "status_matches": true
+            }
+          ],
+          "grader_id": "prd_tasks_executed",
+          "grader_type": "code",
+          "method": "prd execution verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Verified 4/4 PRD task(s) against loop tasks and iterations.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
               "best_score": 0.5,
               "passed": true
             }
@@ -224,7 +367,34 @@
         {
           "assertions": [
             {
-              "check": "complete_marker",
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
               "passed": true
             },
             {
@@ -237,7 +407,7 @@
           "method": "transcript analysis",
           "passed": true,
           "score": 1.0,
-          "summary": "Progress lines=25; traces=2.",
+          "summary": "Progress lines=30; traces=2.",
           "weight": 0.75
         },
         {
@@ -279,6 +449,10 @@
       "outcome": {
         "best_inner_loop": "optimize",
         "best_score": 0.5,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
         "report_exists": true,
         "run_id": "run_optimize-tiny-scoring-function",
         "seed_context_exists": false,
@@ -289,12 +463,13 @@
       "passed": true,
       "run_id": "run_optimize-tiny-scoring-function",
       "task_id": "optimize_direct",
+      "trajectory_graph_path": "eval_outputs/runs/optimize_direct_trial_001/trajectory_graph.svg",
       "transcript_path": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/trace.jsonl",
       "trial_index": 1
     },
     {
       "aggregate_score": 1.0,
-      "completed_at": "2026-05-06T22:55:41.434161+00:00",
+      "completed_at": "2026-05-07T23:59:25.240958+00:00",
       "grader_results": [
         {
           "assertions": [
@@ -326,6 +501,85 @@
           "passed": true,
           "score": 1.0,
           "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "prd_exists",
+              "passed": true
+            },
+            {
+              "check": "prd_has_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_loop_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_iterations",
+              "passed": true
+            },
+            {
+              "check": "all_prd_task_statuses_match",
+              "passed": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_001",
+              "source_task_id": "task_6a17be14197a",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_002",
+              "source_task_id": "task_63e2f42aeb6f",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_003",
+              "source_task_id": "task_4a80e4a1bbd2",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_004",
+              "source_task_id": "task_b7c4d27b5627",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_005",
+              "source_task_id": "task_ebb2d9ad137b",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_006",
+              "source_task_id": "task_e3976ad82c03",
+              "status_matches": true
+            }
+          ],
+          "grader_id": "prd_tasks_executed",
+          "grader_type": "code",
+          "method": "prd execution verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Verified 6/6 PRD task(s) against loop tasks and iterations.",
           "weight": 1.0
         },
         {
@@ -365,7 +619,34 @@
         {
           "assertions": [
             {
-              "check": "complete_marker",
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
               "passed": true
             },
             {
@@ -378,7 +659,7 @@
           "method": "transcript analysis",
           "passed": true,
           "score": 1.0,
-          "summary": "Progress lines=32; traces=2.",
+          "summary": "Progress lines=43; traces=2.",
           "weight": 0.75
         },
         {
@@ -419,7 +700,11 @@
       },
       "outcome": {
         "best_inner_loop": "optimize_query",
-        "best_score": 0.805,
+        "best_score": 0.873,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
         "report_exists": true,
         "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
         "seed_context_exists": true,
@@ -430,12 +715,13 @@
       "passed": true,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "task_id": "optimize_query_seeded",
+      "trajectory_graph_path": "eval_outputs/runs/optimize_query_seeded_trial_001/trajectory_graph.svg",
       "transcript_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/trace.jsonl",
       "trial_index": 1
     },
     {
-      "aggregate_score": 0.971,
-      "completed_at": "2026-05-06T22:55:41.503318+00:00",
+      "aggregate_score": 0.943,
+      "completed_at": "2026-05-07T23:59:25.771856+00:00",
       "grader_results": [
         {
           "assertions": [
@@ -472,6 +758,85 @@
         {
           "assertions": [
             {
+              "check": "prd_exists",
+              "passed": true
+            },
+            {
+              "check": "prd_has_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_loop_tasks",
+              "passed": true
+            },
+            {
+              "check": "all_prd_tasks_have_iterations",
+              "passed": true
+            },
+            {
+              "check": "all_prd_task_statuses_match",
+              "passed": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_001",
+              "source_task_id": "task_8c032343239d",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_002",
+              "source_task_id": "task_866481c51d44",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_003",
+              "source_task_id": "task_5f1dadc43c68",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_004",
+              "source_task_id": "task_3b66d4977892",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_005",
+              "source_task_id": "task_c045aecdc60e",
+              "status_matches": true
+            },
+            {
+              "has_iteration": true,
+              "has_loop_task": true,
+              "passed": true,
+              "prd_task_id": "prd_task_006",
+              "source_task_id": "task_a402e915eeeb",
+              "status_matches": true
+            }
+          ],
+          "grader_id": "prd_tasks_executed",
+          "grader_type": "code",
+          "method": "prd execution verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Verified 6/6 PRD task(s) against loop tasks and iterations.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
               "exists": true,
               "passed": true,
               "top_query_findings": 3
@@ -488,7 +853,46 @@
         {
           "assertions": [
             {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
               "check": "solution_exists",
+              "passed": true
+            },
+            {
+              "check": "optimized_candidate_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
               "passed": true
             },
             {
@@ -519,7 +923,7 @@
         {
           "assertions": [
             {
-              "best_proxy_score": 0.803,
+              "best_proxy_score": 0.502,
               "official_score_required": true,
               "passed": true
             }
@@ -528,14 +932,14 @@
           "grader_type": "code",
           "method": "local proxy outcome verification",
           "passed": true,
-          "score": 0.803,
-          "summary": "Best local proxy score=0.803. This is not the official upstream profit score.",
+          "score": 0.502,
+          "summary": "Best local proxy score=0.502. This is not the official upstream profit score.",
           "weight": 1.0
         },
         {
           "assertions": [
             {
-              "check": "complete_marker",
+              "check": "complete_or_incomplete_stop_marker",
               "passed": true
             },
             {
@@ -548,7 +952,7 @@
           "method": "transcript analysis",
           "passed": true,
           "score": 1.0,
-          "summary": "Progress lines=33; traces=2.",
+          "summary": "Progress lines=52; traces=2.",
           "weight": 0.75
         },
         {
@@ -589,7 +993,11 @@
       },
       "outcome": {
         "best_inner_loop": "optimize_query",
-        "best_score": 0.85,
+        "best_score": 0.868,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
         "report_exists": true,
         "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
         "seed_context_exists": true,
@@ -600,6 +1008,7 @@
       "passed": true,
       "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
       "task_id": "challenge_prediction_market",
+      "trajectory_graph_path": "eval_outputs/runs/challenge_prediction_market_trial_001/trajectory_graph.svg",
       "transcript_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/trace.jsonl",
       "trial_index": 1
     }

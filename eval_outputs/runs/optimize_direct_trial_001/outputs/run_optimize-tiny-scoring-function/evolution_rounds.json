@@ -1,19 +1,19 @@
 [
   {
     "best_score": 0.5,
-    "best_variant_id": "variant_c3b316b78abc",
-    "completed_at": "2026-05-06T22:55:41.396518+00:00",
-    "id": "round_c44ad700fb1f",
+    "best_variant_id": "variant_03feb757a615",
+    "completed_at": "2026-05-07T23:59:25.197638+00:00",
+    "id": "round_46b87e40deb8",
     "mode": "optimize",
     "outer_iteration": 1,
     "plateau_count": 0,
     "run_id": "run_optimize-tiny-scoring-function",
     "termination_signal": "improved",
     "variant_ids": [
-      "variant_8b3592b2c173",
-      "variant_c3b316b78abc",
-      "variant_59f767f225ab",
-      "variant_ceee2e45d1e6"
+      "variant_86d51652ea09",
+      "variant_03feb757a615",
+      "variant_76479524c5c0",
+      "variant_16d3b1be4405"
     ]
   }
 ]

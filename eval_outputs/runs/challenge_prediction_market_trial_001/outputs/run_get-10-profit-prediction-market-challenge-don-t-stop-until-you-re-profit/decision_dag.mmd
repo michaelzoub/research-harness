@@ -1,7 +1,7 @@
 flowchart TD
   prompt["Prompt: Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy fr"]
-  route["Route: optimize_query"]
-  outer["Outer orchestrator: propose variants"]
+  route["Product agent: challenge\nLoop mode: optimize_query"]
+  outer["Agent harness loop: propose variants"]
   inner["Inner loop: evaluate and rank"]
   select["Tournament selection"]
   stop{"Threshold or plateau?"}
@@ -9,7 +9,7 @@ flowchart TD
   prompt --> route --> outer --> inner --> select --> stop
   stop -- continue --> outer
   stop -- stop --> synth
-  round1["Round 1: best=0.850, claim_corroboration_threshold"]
+  round1["Round 1: best=0.868, claim_corroboration_threshold"]
   inner --> round1 --> select
-  round2["Round 2: best=0.803, score_threshold"]
+  round2["Round 2: best=0.502, improved"]
   inner --> round2 --> select

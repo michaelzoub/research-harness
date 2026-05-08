@@ -1,34 +1,42 @@
 {
   "best_evaluation": {
-    "id": "eval_6aeab5f2267c",
+    "id": "eval_8d8a481463e3",
     "inner_loop": "optimize_query",
     "judge_scores": [
+      0.873,
       1.0,
       1.0,
       0.805,
+      1.0,
       0.903,
       0.7,
       0.47,
       0.55
     ],
     "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
       "corroboration": 1.0,
       "coverage": 1.0,
       "credibility": 0.805,
       "evaluator_relevance": 0.55,
       "evidence_coverage": 1.0,
+      "factual_accuracy": 0.873,
+      "fallback_used": 0.0,
       "implementability": 0.47,
-      "novelty": 0.7
+      "novelty": 0.7,
+      "source_quality": 0.805,
+      "tool_efficiency": 1.0
     },
     "passed": true,
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-    "score": 0.805,
-    "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-    "variant_id": "variant_c93f0cd62ada"
+    "score": 0.873,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+    "variant_id": "variant_834f7e7a06fa"
   },
   "counts": {
     "agent_traces": 2,
-    "claims": 72,
+    "claims": 75,
     "contradictions": 2,
     "evaluations": 7,
     "failed_agents": 0,
@@ -41,88 +49,112 @@
   },
   "evaluations": [
     {
-      "id": "eval_6aeab5f2267c",
+      "id": "eval_8d8a481463e3",
       "inner_loop": "optimize_query",
       "judge_scores": [
+        0.873,
         1.0,
         1.0,
         0.805,
+        1.0,
         0.903,
         0.7,
         0.47,
         0.55
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
         "credibility": 0.805,
         "evaluator_relevance": 0.55,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.873,
+        "fallback_used": 0.0,
         "implementability": 0.47,
-        "novelty": 0.7
+        "novelty": 0.7,
+        "source_quality": 0.805,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-      "score": 0.805,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-      "variant_id": "variant_c93f0cd62ada"
+      "score": 0.873,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_834f7e7a06fa"
     },
     {
-      "id": "eval_c3d1ccbb40c8",
+      "id": "eval_efd2d9b7c677",
       "inner_loop": "optimize_query",
       "judge_scores": [
+        0.864,
         1.0,
         1.0,
         0.79,
+        1.0,
         0.938,
         0.7,
         0.47,
         0.55
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
         "credibility": 0.79,
         "evaluator_relevance": 0.55,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.864,
+        "fallback_used": 0.0,
         "implementability": 0.47,
-        "novelty": 0.7
+        "novelty": 0.7,
+        "source_quality": 0.79,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-      "score": 0.79,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-      "variant_id": "variant_40374da99005"
+      "score": 0.864,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.864, citation=1.000, complete=1.000, source_quality=0.790, tool_efficiency=1.000; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_1e7486bca053"
     },
     {
-      "id": "eval_3d90260ca4a6",
+      "id": "eval_d95a3235ad4e",
       "inner_loop": "optimize_query",
       "judge_scores": [
+        0.873,
         1.0,
         1.0,
         0.805,
+        1.0,
         0.901,
         0.7,
         0.47,
         0.55
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
         "credibility": 0.805,
         "evaluator_relevance": 0.55,
         "evidence_coverage": 1.0,
+        "factual_accuracy": 0.873,
+        "fallback_used": 0.0,
         "implementability": 0.47,
-        "novelty": 0.7
+        "novelty": 0.7,
+        "source_quality": 0.805,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-      "score": 0.805,
-      "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-      "variant_id": "variant_02db2c654db8"
+      "score": 0.873,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+      "variant_id": "variant_8723eeea626e"
     },
     {
-      "id": "eval_aff0419f6301",
+      "id": "eval_3dd9ced41d39",
       "inner_loop": "optimize",
       "judge_scores": [
         0.045454545454545456
@@ -134,10 +166,10 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "score": 0.045454545454545456,
       "summary": "Deterministic evaluator returned 0.045.",
-      "variant_id": "variant_9f6850b260cc"
+      "variant_id": "variant_399063ca585a"
     },
     {
-      "id": "eval_0bddd0cc61a2",
+      "id": "eval_3626f5ab1bb4",
       "inner_loop": "optimize",
       "judge_scores": [
         0.045454545454545456
@@ -149,10 +181,10 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "score": 0.045454545454545456,
       "summary": "Deterministic evaluator returned 0.045.",
-      "variant_id": "variant_35b77a691117"
+      "variant_id": "variant_e1e7fae95af3"
     },
     {
-      "id": "eval_6a992bbda1b7",
+      "id": "eval_749e62da6a8e",
       "inner_loop": "optimize",
       "judge_scores": [
         0.043478260869565216
@@ -164,10 +196,10 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "score": 0.043478260869565216,
       "summary": "Deterministic evaluator returned 0.043.",
-      "variant_id": "variant_750b4358d534"
+      "variant_id": "variant_9176984fe818"
     },
     {
-      "id": "eval_e7a45c09dfb8",
+      "id": "eval_95dd32609186",
       "inner_loop": "optimize",
       "judge_scores": [
         0.05263157894736842
@@ -179,12 +211,41 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "score": 0.05263157894736842,
       "summary": "Deterministic evaluator returned 0.053.",
-      "variant_id": "variant_8b1d117657c2"
+      "variant_id": "variant_366423cf8ad7"
     }
   ],
   "models": {
     "local-deterministic-fallback": 2
   },
+  "optimal_code": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimal_code.py",
+  "optimization_result": {
+    "best_candidate_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimized_candidate.txt",
+    "best_variant_id": "variant_366423cf8ad7",
+    "candidate": "Optimization strategy sketch: Alternative optimization mutation from query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence",
+    "evaluator_name": "length_score",
+    "metrics": {
+      "deterministic_score": 0.05263157894736842
+    },
+    "note": "This evaluator maximizes 1 / token_count for smoke-test optimization.",
+    "objective_direction": "maximize",
+    "objective_name": "length_score",
+    "objective_target": {
+      "kind": "score",
+      "met": false,
+      "no_stop_until_target": false,
+      "target": null
+    },
+    "official_result": {
+      "measured": true,
+      "score_source": "local_deterministic_evaluator"
+    },
+    "optimal_code_path": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimal_code.py",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "score": 0.05263157894736842,
+    "score_variable": "score",
+    "solution_path": null
+  },
+  "optimized_candidate": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimized_candidate.txt",
   "optimizer_seed_context": {
     "goal": "Research optimization strategies for a tiny scoring benchmark",
     "has_evaluator": true,
@@ -195,55 +256,81 @@
     "top_query_findings": [
       {
         "metrics": {
+          "citation_accuracy": 1.0,
+          "completeness": 1.0,
           "corroboration": 1.0,
           "coverage": 1.0,
           "credibility": 0.805,
           "evaluator_relevance": 0.55,
           "evidence_coverage": 1.0,
+          "factual_accuracy": 0.873,
+          "fallback_used": 0.0,
           "implementability": 0.47,
-          "novelty": 0.7
+          "novelty": 0.7,
+          "source_quality": 0.805,
+          "tool_efficiency": 1.0
         },
         "query": "Research optimization strategies for a tiny scoring benchmark baseline evidence",
-        "score": 0.805,
-        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-        "variant_id": "variant_c93f0cd62ada"
+        "score": 0.873,
+        "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.952. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_834f7e7a06fa"
       },
       {
         "metrics": {
+          "citation_accuracy": 1.0,
+          "completeness": 1.0,
           "corroboration": 1.0,
           "coverage": 1.0,
           "credibility": 0.805,
           "evaluator_relevance": 0.55,
           "evidence_coverage": 1.0,
+          "factual_accuracy": 0.873,
+          "fallback_used": 0.0,
           "implementability": 0.47,
-          "novelty": 0.7
+          "novelty": 0.7,
+          "source_quality": 0.805,
+          "tool_efficiency": 1.0
         },
         "query": "Research optimization strategies for a tiny scoring benchmark evaluation metrics",
-        "score": 0.805,
-        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-        "variant_id": "variant_02db2c654db8"
+        "score": 0.873,
+        "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.951. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_8723eeea626e"
       },
       {
         "metrics": {
+          "citation_accuracy": 1.0,
+          "completeness": 1.0,
           "corroboration": 1.0,
           "coverage": 1.0,
           "credibility": 0.79,
           "evaluator_relevance": 0.55,
           "evidence_coverage": 1.0,
+          "factual_accuracy": 0.864,
+          "fallback_used": 0.0,
           "implementability": 0.47,
-          "novelty": 0.7
+          "novelty": 0.7,
+          "source_quality": 0.79,
+          "tool_efficiency": 1.0
         },
         "query": "Research optimization strategies for a tiny scoring benchmark failure modes constraints",
-        "score": 0.79,
-        "summary": "Retrieved 8 sources and 24 claims; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
-        "variant_id": "variant_40374da99005"
+        "score": 0.864,
+        "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.864, citation=1.000, complete=1.000, source_quality=0.790, tool_efficiency=1.000; median judge score 0.969. novelty=0.700; implementability=0.470; evaluator_relevance=0.550. ",
+        "variant_id": "variant_1e7486bca053"
       }
     ]
   },
   "prd": {
+    "agent_harness": {
+      "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+      "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+      "runtime_mode": "optimize_query"
+    },
     "artifacts": {
       "decision_dag": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/decision_dag.svg",
       "final_report": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/final_report.md",
+      "optimal_code": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimal_code.py",
+      "optimization_result": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimization_result.json",
+      "optimized_candidate": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimized_candidate.txt",
       "optimizer_seed_context": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json",
       "progress": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/progress.txt",
       "run_benchmark": "eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/run_benchmark.html",
@@ -256,11 +343,20 @@
       "This file is the run-local PRD/task map.",
       "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
     ],
+    "objective": {
+      "current": 0.05263157894736842,
+      "kind": "score",
+      "met": true,
+      "no_stop_until_target": false,
+      "summary": "score current=0.05263157894736842",
+      "target": null
+    },
     "organized_tasks": [
       {
         "acceptance_criteria": [
           "Explicit mode or auto-router selected optimization-query exploration",
-          "A task ingestion decision was persisted"
+          "A task ingestion decision was persisted",
+          "The `optimize` product agent was selected"
         ],
         "attempts": 1,
         "dependencies": [],
@@ -268,18 +364,20 @@
         "kind": "debug_harness",
         "last_error": null,
         "params": {
+          "product_agent": "optimize",
           "selected_mode": "optimize_query"
         },
         "passes": true,
         "priority": 1,
-        "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
-        "source_task_id": "task_c38e7a4b6bd7",
+        "result_summary": "Selected optimize_query mode. Optimize agent selected optimization-query loop; query exploration will feed the registered evaluator 'length_score'.",
+        "source_task_id": "task_6a17be14197a",
         "status": "passed",
         "title": "Ingest prompt and select task mode"
       },
       {
         "acceptance_criteria": [
-          "Outer loop proposed query variants about the optimization challenge",
+          "The agent harness ran a query-research loop before optimization",
+          "Outer loop proposed query variants about the optimization target",
           "OptimizationQueryLoop scored query variants for evidence and implementability",
           "Ranked query evaluations were persisted"
         ],
@@ -291,14 +389,15 @@
         "kind": "search",
         "last_error": null,
         "params": {
+          "product_agent": "optimize",
           "selected_mode": "optimize_query"
         },
         "passes": true,
         "priority": 2,
         "result_summary": "Completed 2 evolutionary outer rounds.",
-        "source_task_id": "task_2da1e1c9d7c5",
+        "source_task_id": "task_63e2f42aeb6f",
         "status": "passed",
-        "title": "Generate and evaluate optimization queries"
+        "title": "Generate and evaluate optimization strategy queries"
       },
       {
         "acceptance_criteria": [
@@ -316,14 +415,16 @@
         "passes": true,
         "priority": 3,
         "result_summary": "Compiled optimizer seed context at eval_outputs/runs/optimize_query_seeded_trial_001/outputs/run_optimization-strategies-tiny-scoring-benchmark/optimizer_seed_context.json.",
-        "source_task_id": "task_9ce593044604",
+        "source_task_id": "task_4a80e4a1bbd2",
         "status": "passed",
         "title": "Compile optimizer seed context"
       },
       {
         "acceptance_criteria": [
           "If evaluator exists, optimize/code variants were evaluated",
-          "If evaluator is missing, optimizer phase was explicitly skipped"
+          "If evaluator is missing, optimizer phase was explicitly skipped",
+          "Challenge agents may additionally emit a runnable solution artifact for official grading",
+          "Explicit objective targets from the prompt must be met before this PRD item passes"
         ],
         "attempts": 1,
         "dependencies": [
@@ -332,11 +433,13 @@
         "id": "prd_task_004",
         "kind": "debug_harness",
         "last_error": null,
-        "params": {},
+        "params": {
+          "product_agent": "optimize"
+        },
         "passes": true,
         "priority": 4,
-        "result_summary": "Ran optimizer variants using query-derived seed context.",
-        "source_task_id": "task_1a7872ab2e9d",
+        "result_summary": "Ran 4 optimizer variant evaluations using query-derived seed context; emitted optimization_result.json, optimal_code.py.",
+        "source_task_id": "task_b7c4d27b5627",
         "status": "passed",
         "title": "Run optimizer variants from query seed context"
       },
@@ -354,8 +457,8 @@
         "params": {},
         "passes": true,
         "priority": 5,
-        "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
-        "source_task_id": "task_b937221fe0fa",
+        "result_summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions.",
+        "source_task_id": "task_ebb2d9ad137b",
         "status": "passed",
         "title": "Critique ranked query and optimizer results"
       },
@@ -373,8 +476,8 @@
         "params": {},
         "passes": true,
         "priority": 6,
-        "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
-        "source_task_id": "task_7bc38bd9d091",
+        "result_summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses.",
+        "source_task_id": "task_e3976ad82c03",
         "status": "passed",
         "title": "Synthesize optimize-query run report"
       }
@@ -403,11 +506,69 @@
       "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
       "task_type": "bounded"
     },
+    "product_agent": "optimize",
+    "ralph_loop": {
+      "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+      "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+      "max_iterations": 1,
+      "state_files": [
+        "prd.json",
+        "progress.txt",
+        "trace.jsonl"
+      ]
+    },
+    "research_architecture": {
+      "enabled_for_mode": false,
+      "judge_rubric": [
+        {
+          "name": "factual_accuracy",
+          "question": "Do claims match retrieved sources?",
+          "weight": 0.25
+        },
+        {
+          "name": "citation_accuracy",
+          "question": "Do cited sources support the cited claims?",
+          "weight": 0.2
+        },
+        {
+          "name": "completeness",
+          "question": "Are all requested aspects covered?",
+          "weight": 0.2
+        },
+        {
+          "name": "source_quality",
+          "question": "Were primary or authoritative sources preferred?",
+          "weight": 0.2
+        },
+        {
+          "name": "tool_efficiency",
+          "question": "Were the right tools used a reasonable number of times?",
+          "weight": 0.15
+        }
+      ],
+      "lead_agent": {
+        "model": "gpt-5.2",
+        "responsibilities": [
+          "decompose the question into independent directions",
+          "fan out subagent searches in parallel when directions are independent",
+          "start with broad landscape queries before narrowing",
+          "merge evidence and route weak spots to critic or follow-up search"
+        ],
+        "role": "lead_research_orchestrator"
+      },
+      "subagents": {
+        "model": "gpt-5.2",
+        "parallelism": "asyncio.gather over independent search agents or query variants",
+        "role": "parallel_research_subagents",
+        "search_policy": "start wide, evaluate source yield, then progressively narrow"
+      }
+    },
     "run": {
-      "completed_at": "2026-05-06T22:55:41.432359+00:00",
+      "completed_at": "2026-05-07T23:59:25.238492+00:00",
       "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
       "id": "run_optimization-strategies-tiny-scoring-benchmark",
-      "started_at": "2026-05-06T22:55:41.400066+00:00",
+      "product_agent": "optimize",
+      "started_at": "2026-05-07T23:59:25.204033+00:00",
       "status": "completed",
       "task_mode": "optimize_query",
       "task_type": "bounded",
@@ -450,44 +611,45 @@
   },
   "rounds": [
     {
-      "best_score": 0.805,
-      "best_variant_id": "variant_c93f0cd62ada",
-      "completed_at": "2026-05-06T22:55:41.427258+00:00",
-      "id": "round_f21093ac76f2",
+      "best_score": 0.873,
+      "best_variant_id": "variant_834f7e7a06fa",
+      "completed_at": "2026-05-07T23:59:25.232712+00:00",
+      "id": "round_77d43fe6d5b6",
       "mode": "optimize_query",
       "outer_iteration": 1,
       "plateau_count": 0,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
       "termination_signal": "claim_corroboration_threshold",
       "variant_ids": [
-        "variant_c93f0cd62ada",
-        "variant_40374da99005",
-        "variant_02db2c654db8"
+        "variant_834f7e7a06fa",
+        "variant_1e7486bca053",
+        "variant_8723eeea626e"
       ]
     },
     {
       "best_score": 0.05263157894736842,
-      "best_variant_id": "variant_8b1d117657c2",
-      "completed_at": "2026-05-06T22:55:41.428934+00:00",
-      "id": "round_cbecbd45ae57",
+      "best_variant_id": "variant_366423cf8ad7",
+      "completed_at": "2026-05-07T23:59:25.234429+00:00",
+      "id": "round_3e8685d0ebfe",
       "mode": "optimize",
       "outer_iteration": 2,
       "plateau_count": 0,
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-      "termination_signal": "continue",
+      "termination_signal": "improved",
       "variant_ids": [
-        "variant_9f6850b260cc",
-        "variant_35b77a691117",
-        "variant_750b4358d534",
-        "variant_8b1d117657c2"
+        "variant_399063ca585a",
+        "variant_e1e7fae95af3",
+        "variant_9176984fe818",
+        "variant_366423cf8ad7"
       ]
     }
   ],
   "run": {
-    "completed_at": "2026-05-06T22:55:41.432359+00:00",
+    "completed_at": "2026-05-07T23:59:25.238492+00:00",
     "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
     "id": "run_optimization-strategies-tiny-scoring-benchmark",
-    "started_at": "2026-05-06T22:55:41.400066+00:00",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:25.204033+00:00",
     "status": "completed",
     "task_mode": "optimize_query",
     "task_type": "bounded",
@@ -498,8 +660,9 @@
   "solution": null,
   "task_ingestion": {
     "evaluator_name": "length_score",
-    "id": "decision_7d266ff1a231",
-    "reason": "Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+    "id": "decision_57c771b473de",
+    "product_agent": "optimize",
+    "reason": "Optimize agent selected optimization-query loop; query exploration will feed the registered evaluator 'length_score'.",
     "requested_mode": "optimize_query",
     "selected_mode": "optimize_query"
   },
@@ -507,43 +670,47 @@
     {
       "acceptance_criteria": [
         "Explicit mode or auto-router selected optimization-query exploration",
-        "A task ingestion decision was persisted"
+        "A task ingestion decision was persisted",
+        "The `optimize` product agent was selected"
       ],
       "action": "debug_harness",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.402480+00:00",
-      "created_at": "2026-05-06T22:55:41.401714+00:00",
-      "id": "task_c38e7a4b6bd7",
+      "completed_at": "2026-05-07T23:59:25.206826+00:00",
+      "created_at": "2026-05-07T23:59:25.205996+00:00",
+      "id": "task_6a17be14197a",
       "last_error": null,
       "params": {
+        "product_agent": "optimize",
         "selected_mode": "optimize_query"
       },
       "passes": true,
       "priority": 1,
-      "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+      "result_summary": "Selected optimize_query mode. Optimize agent selected optimization-query loop; query exploration will feed the registered evaluator 'length_score'.",
       "status": "passed",
       "title": "Ingest prompt and select task mode"
     },
     {
       "acceptance_criteria": [
-        "Outer loop proposed query variants about the optimization challenge",
+        "The agent harness ran a query-research loop before optimization",
+        "Outer loop proposed query variants about the optimization target",
         "OptimizationQueryLoop scored query variants for evidence and implementability",
         "Ranked query evaluations were persisted"
       ],
       "action": "search",
       "attempts": 2,
-      "completed_at": "2026-05-06T22:55:41.429132+00:00",
-      "created_at": "2026-05-06T22:55:41.401722+00:00",
-      "id": "task_2da1e1c9d7c5",
+      "completed_at": "2026-05-07T23:59:25.234866+00:00",
+      "created_at": "2026-05-07T23:59:25.206003+00:00",
+      "id": "task_63e2f42aeb6f",
       "last_error": null,
       "params": {
+        "product_agent": "optimize",
         "selected_mode": "optimize_query"
       },
       "passes": true,
       "priority": 2,
       "result_summary": "Completed 2 evolutionary outer rounds.",
       "status": "passed",
-      "title": "Generate and evaluate optimization queries"
+      "title": "Generate and evaluate optimization strategy queries"
     },
     {
       "acceptance_criteria": [
@@ -552,9 +719,9 @@
       ],
       "action": "debug_harness",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.429377+00:00",
-      "created_at": "2026-05-06T22:55:41.401726+00:00",
-      "id": "task_9ce593044604",
+      "completed_at": "2026-05-07T23:59:25.235117+00:00",
+      "created_at": "2026-05-07T23:59:25.206008+00:00",
+      "id": "task_4a80e4a1bbd2",
       "last_error": null,
       "params": {},
       "passes": true,
@@ -566,18 +733,22 @@
     {
       "acceptance_criteria": [
         "If evaluator exists, optimize/code variants were evaluated",
-        "If evaluator is missing, optimizer phase was explicitly skipped"
+        "If evaluator is missing, optimizer phase was explicitly skipped",
+        "Challenge agents may additionally emit a runnable solution artifact for official grading",
+        "Explicit objective targets from the prompt must be met before this PRD item passes"
       ],
       "action": "debug_harness",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.429644+00:00",
-      "created_at": "2026-05-06T22:55:41.401731+00:00",
-      "id": "task_1a7872ab2e9d",
+      "completed_at": "2026-05-07T23:59:25.235542+00:00",
+      "created_at": "2026-05-07T23:59:25.206012+00:00",
+      "id": "task_b7c4d27b5627",
       "last_error": null,
-      "params": {},
+      "params": {
+        "product_agent": "optimize"
+      },
       "passes": true,
       "priority": 4,
-      "result_summary": "Ran optimizer variants using query-derived seed context.",
+      "result_summary": "Ran 4 optimizer variant evaluations using query-derived seed context; emitted optimization_result.json, optimal_code.py.",
       "status": "passed",
       "title": "Run optimizer variants from query seed context"
     },
@@ -587,14 +758,14 @@
       ],
       "action": "critique",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.431148+00:00",
-      "created_at": "2026-05-06T22:55:41.401734+00:00",
-      "id": "task_b937221fe0fa",
+      "completed_at": "2026-05-07T23:59:25.237163+00:00",
+      "created_at": "2026-05-07T23:59:25.206017+00:00",
+      "id": "task_ebb2d9ad137b",
       "last_error": null,
       "params": {},
       "passes": true,
       "priority": 5,
-      "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
+      "result_summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions.",
       "status": "passed",
       "title": "Critique ranked query and optimizer results"
     },
@@ -604,14 +775,14 @@
       ],
       "action": "synthesize",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.432042+00:00",
-      "created_at": "2026-05-06T22:55:41.401738+00:00",
-      "id": "task_7bc38bd9d091",
+      "completed_at": "2026-05-07T23:59:25.238079+00:00",
+      "created_at": "2026-05-07T23:59:25.206021+00:00",
+      "id": "task_e3976ad82c03",
       "last_error": null,
       "params": {},
       "passes": true,
       "priority": 6,
-      "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
+      "result_summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses.",
       "status": "passed",
       "title": "Synthesize optimize-query run report"
     }
@@ -621,9 +792,9 @@
       "agent_name": "loop_evolution_critic",
       "model": "local-deterministic-fallback",
       "role": "critic_reviewer",
-      "runtime_ms": 0,
+      "runtime_ms": 1,
       "status": "completed",
-      "summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions."
+      "summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions."
     },
     {
       "agent_name": "loop_evolution_synthesis",
@@ -631,12 +802,12 @@
       "role": "synthesis_agent",
       "runtime_ms": 0,
       "status": "completed",
-      "summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses."
+      "summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses."
     }
   ],
   "variants": [
     {
-      "id": "variant_c93f0cd62ada",
+      "id": "variant_834f7e7a06fa",
       "kind": "query",
       "metadata": {
         "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -644,7 +815,9 @@
         "limit": 8,
         "purpose": "baseline evidence",
         "query_intent": "optimization challenge strategy discovery",
-        "retriever": "local"
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],
@@ -652,7 +825,7 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_40374da99005",
+      "id": "variant_1e7486bca053",
       "kind": "query",
       "metadata": {
         "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -660,7 +833,9 @@
         "limit": 8,
         "purpose": "failure modes constraints",
         "query_intent": "optimization challenge strategy discovery",
-        "retriever": "local"
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],
@@ -668,7 +843,7 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_02db2c654db8",
+      "id": "variant_8723eeea626e",
       "kind": "query",
       "metadata": {
         "challenge_goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -676,7 +851,9 @@
         "limit": 8,
         "purpose": "evaluation metrics",
         "query_intent": "optimization challenge strategy discovery",
-        "retriever": "local"
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],
@@ -684,7 +861,7 @@
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_9f6850b260cc",
+      "id": "variant_399063ca585a",
       "kind": "code",
       "metadata": {
         "goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -693,15 +870,15 @@
       },
       "outer_iteration": 1,
       "parent_ids": [
-        "variant_9faf9428acb1",
-        "variant_d7d67cbd3aaa",
-        "variant_1ca4c73a6fad"
+        "variant_347283a5b488",
+        "variant_7b3c04efad2d",
+        "variant_7afdde763b1f"
       ],
       "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence refined pass 1",
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_35b77a691117",
+      "id": "variant_e1e7fae95af3",
       "kind": "code",
       "metadata": {
         "goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -710,15 +887,15 @@
       },
       "outer_iteration": 1,
       "parent_ids": [
-        "variant_9faf9428acb1",
-        "variant_d7d67cbd3aaa",
-        "variant_1ca4c73a6fad"
+        "variant_347283a5b488",
+        "variant_7b3c04efad2d",
+        "variant_7afdde763b1f"
       ],
       "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark evaluation metrics refined pass 1",
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_750b4358d534",
+      "id": "variant_9176984fe818",
       "kind": "code",
       "metadata": {
         "goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -727,15 +904,15 @@
       },
       "outer_iteration": 1,
       "parent_ids": [
-        "variant_9faf9428acb1",
-        "variant_d7d67cbd3aaa",
-        "variant_1ca4c73a6fad"
+        "variant_347283a5b488",
+        "variant_7b3c04efad2d",
+        "variant_7afdde763b1f"
       ],
       "payload": "Optimization strategy sketch: Optimization variant informed by query finding: Research optimization strategies for a tiny scoring benchmark failure modes constraints refined pass 1",
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"
     },
     {
-      "id": "variant_8b1d117657c2",
+      "id": "variant_366423cf8ad7",
       "kind": "code",
       "metadata": {
         "goal": "Research optimization strategies for a tiny scoring benchmark",
@@ -744,9 +921,9 @@
       },
       "outer_iteration": 1,
       "parent_ids": [
-        "variant_9faf9428acb1",
-        "variant_d7d67cbd3aaa",
-        "variant_1ca4c73a6fad"
+        "variant_347283a5b488",
+        "variant_7b3c04efad2d",
+        "variant_7afdde763b1f"
       ],
       "payload": "Optimization strategy sketch: Alternative optimization mutation from query finding: Research optimization strategies for a tiny scoring benchmark baseline evidence",
       "run_id": "run_optimization-strategies-tiny-scoring-benchmark"

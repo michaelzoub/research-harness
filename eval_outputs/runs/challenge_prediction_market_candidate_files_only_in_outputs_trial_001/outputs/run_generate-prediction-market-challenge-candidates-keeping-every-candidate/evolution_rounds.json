@@ -1,0 +1,35 @@
+[
+  {
+    "best_score": 0.869,
+    "best_variant_id": "variant_af3f241ebc4d",
+    "completed_at": "2026-05-07T23:59:16.952911+00:00",
+    "id": "round_af988b75987c",
+    "mode": "optimize_query",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_af3f241ebc4d",
+      "variant_513f1848d483",
+      "variant_7ec3fcf21eb5"
+    ]
+  },
+  {
+    "best_score": 0.502,
+    "best_variant_id": "variant_f791784ac944",
+    "completed_at": "2026-05-07T23:59:17.446975+00:00",
+    "id": "round_a164bdc35cb1",
+    "mode": "optimize",
+    "outer_iteration": 2,
+    "plateau_count": 0,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "termination_signal": "improved",
+    "variant_ids": [
+      "variant_f791784ac944",
+      "variant_a654d71c3f96",
+      "variant_255c4810bb04",
+      "variant_89ac56907470"
+    ]
+  }
+]

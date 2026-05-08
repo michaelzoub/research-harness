@@ -1,0 +1,99 @@
+{
+  "edges": [
+    {
+      "from": "prompt",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "outer"
+    },
+    {
+      "from": "outer",
+      "to": "inner"
+    },
+    {
+      "from": "inner",
+      "to": "select"
+    },
+    {
+      "from": "select",
+      "kind": "loop",
+      "to": "outer"
+    },
+    {
+      "from": "select",
+      "to": "agents"
+    },
+    {
+      "from": "agents",
+      "to": "outcome"
+    }
+  ],
+  "evaluation_count": 7,
+  "nodes": [
+    {
+      "id": "prompt",
+      "label": "Prompt"
+    },
+    {
+      "id": "router",
+      "label": "Router: optimize_query"
+    },
+    {
+      "id": "outer",
+      "label": "Outer loop"
+    },
+    {
+      "id": "inner",
+      "label": "Inner evaluator"
+    },
+    {
+      "id": "select",
+      "label": "Selection"
+    },
+    {
+      "id": "agents",
+      "label": "Role agents: 2"
+    },
+    {
+      "id": "outcome",
+      "label": "Outcome"
+    }
+  ],
+  "rounds": [
+    {
+      "best_score": 0.87,
+      "best_variant_id": "variant_ba8493966061",
+      "completed_at": "2026-05-07T23:59:17.579806+00:00",
+      "id": "round_1e16b4bdc5d2",
+      "mode": "optimize_query",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_optimize-prediction-market-challenge-without-creating-temporary-strategy",
+      "termination_signal": "claim_corroboration_threshold",
+      "variant_ids": [
+        "variant_ba8493966061",
+        "variant_19799b74100b",
+        "variant_73141bbb0dbd"
+      ]
+    },
+    {
+      "best_score": 0.502,
+      "best_variant_id": "variant_df1258852366",
+      "completed_at": "2026-05-07T23:59:18.076033+00:00",
+      "id": "round_b2fb39546154",
+      "mode": "optimize",
+      "outer_iteration": 2,
+      "plateau_count": 0,
+      "run_id": "run_optimize-prediction-market-challenge-without-creating-temporary-strategy",
+      "termination_signal": "improved",
+      "variant_ids": [
+        "variant_df1258852366",
+        "variant_cc964f156147",
+        "variant_7138bd9dfb0e",
+        "variant_3b90b0e85012"
+      ]
+    }
+  ]
+}

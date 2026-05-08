@@ -1,0 +1,2175 @@
+{
+  "aggregate_score": 0.994,
+  "completed_at": "2026-05-07T23:59:18.156664+00:00",
+  "passed_trials": 13,
+  "started_at": "2026-05-07T23:59:15.305531+00:00",
+  "suite_id": "edge",
+  "suite_name": "Edge-Case Harness Evaluation Suite",
+  "task_count": 12,
+  "trial_count": 13,
+  "trials": [
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:15.347371+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "exists": true,
+              "passed": true,
+              "top_query_findings": 3
+            }
+          ],
+          "grader_id": "seed_context",
+          "grader_type": "code",
+          "method": "artifact existence",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimizer seed context checked.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "seed_context_exists",
+              "passed": true
+            },
+            {
+              "check": "seed_context_has_no_evaluator",
+              "passed": true
+            },
+            {
+              "check": "no_optimize_inner_loop",
+              "passed": true
+            },
+            {
+              "check": "skip_recorded_in_progress",
+              "passed": true
+            },
+            {
+              "check": "no_optimization_result_fabricated",
+              "passed": true
+            },
+            {
+              "check": "no_optimal_code_fabricated",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimizer_skipped_without_evaluator",
+          "grader_type": "code",
+          "method": "negative-path outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Inner loops seen: ['optimize_query']; has_evaluator=False.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "required_modes_subset",
+              "missing": [],
+              "passed": true
+            },
+            {
+              "check": "forbidden_modes_absent",
+              "forbidden_seen": [],
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_modes",
+          "grader_type": "code",
+          "method": "trajectory subset/superset match",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Required modes=['optimize_query']; forbidden modes=['optimize']; observed modes=['optimize_query'].",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=36; traces=2.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.873,
+        "optimal_code_exists": false,
+        "optimization_result_exists": false,
+        "optimized_candidate_exists": false,
+        "product_agent": "optimize",
+        "report_exists": true,
+        "run_id": "run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist",
+        "seed_context_exists": true,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist",
+      "task_id": "optimize_query_missing_evaluator_skips_optimizer",
+      "trajectory_graph_path": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:15.868738+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "solution_exists",
+              "passed": true
+            },
+            {
+              "check": "optimized_candidate_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "defines_strategy",
+              "passed": true
+            },
+            {
+              "check": "has_on_step",
+              "passed": true
+            },
+            {
+              "check": "uses_upstream_api",
+              "passed": true
+            },
+            {
+              "check": "uses_cancel_or_orders",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_solution",
+          "grader_type": "code",
+          "method": "static solution checks",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Generated solution.py checked against upstream API shape.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "candidates_dir_exists",
+              "passed": true
+            },
+            {
+              "check": "candidate_files_exist",
+              "passed": true
+            },
+            {
+              "check": "winner_inside_candidates_dir",
+              "passed": true
+            },
+            {
+              "check": "no_repo_root_strategy_leaks",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_artifact_containment",
+          "grader_type": "code",
+          "method": "artifact containment",
+          "passed": true,
+          "score": 1.0,
+          "summary": "4 candidate file(s); leaked repo-root strategy files=0.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "required_modes_subset",
+              "missing": [],
+              "passed": true
+            },
+            {
+              "check": "forbidden_modes_absent",
+              "forbidden_seen": [],
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_modes",
+          "grader_type": "code",
+          "method": "trajectory subset/superset match",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Required modes=['optimize', 'optimize_query']; forbidden modes=[]; observed modes=['optimize', 'optimize_query'].",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=52; traces=2.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/outputs/run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/prediction_market_outputs_are_contained_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.873,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
+        "report_exists": true,
+        "run_id": "run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy",
+      "task_id": "prediction_market_outputs_are_contained",
+      "trajectory_graph_path": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/prediction_market_outputs_are_contained_trial_001/outputs/run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 0.917,
+      "completed_at": "2026-05-07T23:59:16.396168+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "official_result_present",
+              "passed": true
+            },
+            {
+              "check": "measured_status_truthful",
+              "passed": true
+            },
+            {
+              "check": "score_source_recorded",
+              "passed": true
+            },
+            {
+              "check": "candidate_path_recorded",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_official_status",
+          "grader_type": "code",
+          "method": "official-status verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "official_result measured=False, score_source=local_official_semantics_fallback, candidate_path=eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/candidates/round_01_variant_70ca75105289.py.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "best_proxy_score": 0.502,
+              "official_score_required": true,
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_proxy_score",
+          "grader_type": "code",
+          "method": "local proxy outcome verification",
+          "passed": true,
+          "score": 0.502,
+          "summary": "Best local proxy score=0.502. This is not the official upstream profit score.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.873,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
+        "report_exists": true,
+        "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+      "task_id": "prediction_market_unmeasured_official_status",
+      "trajectory_graph_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:16.922314+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "official_result_present",
+              "passed": true
+            },
+            {
+              "check": "measured_status_truthful",
+              "passed": true
+            },
+            {
+              "check": "score_source_recorded",
+              "passed": true
+            },
+            {
+              "check": "candidate_path_recorded",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_official_status",
+          "grader_type": "code",
+          "method": "official-status verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "official_result measured=False, score_source=local_official_semantics_fallback, candidate_path=eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_96c6325a69b4.py.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.869,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
+        "report_exists": true,
+        "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+      "task_id": "challenge_prediction_market_official_unavailable_records_unmeasured",
+      "trajectory_graph_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:17.453727+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "candidates_dir_exists",
+              "passed": true
+            },
+            {
+              "check": "candidate_files_exist",
+              "passed": true
+            },
+            {
+              "check": "all_candidate_files_under_candidates_dir",
+              "passed": true
+            },
+            {
+              "check": "winner_candidate_under_candidates_dir",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_promoted",
+              "passed": true
+            },
+            {
+              "check": "solution_promoted",
+              "passed": true
+            }
+          ],
+          "grader_id": "prediction_market_candidate_files_only_in_outputs",
+          "grader_type": "code",
+          "method": "artifact containment",
+          "passed": true,
+          "score": 1.0,
+          "summary": "4 candidate Python file(s) under eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.869,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
+        "report_exists": true,
+        "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+      "task_id": "challenge_prediction_market_candidate_files_only_in_outputs",
+      "trajectory_graph_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:17.500524+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=36; traces=3.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/outputs/run_small-deterministic-fact-about-agent-evaluation-harnesses"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "expected_trial_count",
+              "passed": true
+            },
+            {
+              "check": "unique_trial_roots",
+              "passed": true
+            },
+            {
+              "check": "unique_output_roots",
+              "passed": true
+            },
+            {
+              "check": "unique_tmpdirs",
+              "passed": true
+            },
+            {
+              "check": "all_paths_exist",
+              "passed": true
+            }
+          ],
+          "grader_id": "parallel_trial_isolation",
+          "grader_type": "code",
+          "method": "cross-trial isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Checked 2 trial(s) for distinct roots, output roots, tmpdirs, and run ids.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "research",
+        "best_score": 0.967,
+        "optimal_code_exists": false,
+        "optimization_result_exists": false,
+        "optimized_candidate_exists": false,
+        "product_agent": "research",
+        "report_exists": true,
+        "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "research"
+      },
+      "passed": true,
+      "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+      "task_id": "parallel_trials_do_not_share_tmp_or_outputs",
+      "trajectory_graph_path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_001/outputs/run_small-deterministic-fact-about-agent-evaluation-harnesses/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:17.548235+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=36; traces=3.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/outputs/run_small-deterministic-fact-about-agent-evaluation-harnesses"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "expected_trial_count",
+              "passed": true
+            },
+            {
+              "check": "unique_trial_roots",
+              "passed": true
+            },
+            {
+              "check": "unique_output_roots",
+              "passed": true
+            },
+            {
+              "check": "unique_tmpdirs",
+              "passed": true
+            },
+            {
+              "check": "all_paths_exist",
+              "passed": true
+            }
+          ],
+          "grader_id": "parallel_trial_isolation",
+          "grader_type": "code",
+          "method": "cross-trial isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Checked 2 trial(s) for distinct roots, output roots, tmpdirs, and run ids.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/tmp",
+        "trial_root": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002"
+      },
+      "outcome": {
+        "best_inner_loop": "research",
+        "best_score": 0.967,
+        "optimal_code_exists": false,
+        "optimization_result_exists": false,
+        "optimized_candidate_exists": false,
+        "product_agent": "research",
+        "report_exists": true,
+        "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "research"
+      },
+      "passed": true,
+      "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+      "task_id": "parallel_trials_do_not_share_tmp_or_outputs",
+      "trajectory_graph_path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/parallel_trials_do_not_share_tmp_or_outputs_trial_002/outputs/run_small-deterministic-fact-about-agent-evaluation-harnesses/trace.jsonl",
+      "trial_index": 2
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.082904+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize_query",
+              "passed": true,
+              "selected_mode": "optimize_query"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize_query; expected optimize_query.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "no_repo_root_strategy_files",
+              "passed": true
+            }
+          ],
+          "grader_id": "no_repo_root_strategy_files",
+          "grader_type": "code",
+          "method": "artifact containment",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Repository root generated strategy leak count=0.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/outputs/run_optimize-prediction-market-challenge-without-creating-temporary-strategy"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize_query",
+        "best_score": 0.87,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "challenge",
+        "report_exists": true,
+        "run_id": "run_optimize-prediction-market-challenge-without-creating-temporary-strategy",
+        "seed_context_exists": true,
+        "solution_exists": true,
+        "status": "completed",
+        "task_mode": "optimize_query"
+      },
+      "passed": true,
+      "run_id": "run_optimize-prediction-market-challenge-without-creating-temporary-strategy",
+      "task_id": "challenge_prediction_market_no_repo_root_strategy_files",
+      "trajectory_graph_path": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/challenge_prediction_market_no_repo_root_strategy_files_trial_001/outputs/run_optimize-prediction-market-challenge-without-creating-temporary-strategy/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.098347+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "passed": true,
+              "path": "eval_outputs/runs/research_should_not_oversearch_trial_001/outputs/run_who-founded-apple-answer-with-concise-sourced-summary/final_report.md"
+            }
+          ],
+          "grader_id": "artifact_report",
+          "grader_type": "code",
+          "method": "artifact existence",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Final report artifact checked.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 8,
+              "check": "sources_under_budget",
+              "max": 8,
+              "passed": true
+            },
+            {
+              "actual": 24,
+              "check": "claims_under_budget",
+              "max": 24,
+              "passed": true
+            },
+            {
+              "actual": 1,
+              "check": "query_evaluations_under_budget",
+              "max": 4,
+              "passed": true
+            },
+            {
+              "actual": 1,
+              "check": "evolution_rounds_under_budget",
+              "max": 1,
+              "passed": true
+            }
+          ],
+          "grader_id": "research_search_budget",
+          "grader_type": "code",
+          "method": "search budget verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "sources=8/8, claims=24/24, query_evaluations=1/4, rounds=1/1.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "complete_or_incomplete_stop_marker",
+              "passed": true
+            },
+            {
+              "check": "step_visibility",
+              "passed": true
+            }
+          ],
+          "grader_id": "transcript_progress",
+          "grader_type": "code",
+          "method": "transcript analysis",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Progress lines=25; traces=3.",
+          "weight": 0.75
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/research_should_not_oversearch_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/research_should_not_oversearch_trial_001/outputs/run_who-founded-apple-answer-with-concise-sourced-summary"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/research_should_not_oversearch_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/research_should_not_oversearch_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/research_should_not_oversearch_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/research_should_not_oversearch_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "research",
+        "best_score": 0.96,
+        "optimal_code_exists": false,
+        "optimization_result_exists": false,
+        "optimized_candidate_exists": false,
+        "product_agent": "research",
+        "report_exists": true,
+        "run_id": "run_who-founded-apple-answer-with-concise-sourced-summary",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "research"
+      },
+      "passed": true,
+      "run_id": "run_who-founded-apple-answer-with-concise-sourced-summary",
+      "task_id": "research_should_not_oversearch",
+      "trajectory_graph_path": "eval_outputs/runs/research_should_not_oversearch_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/research_should_not_oversearch_trial_001/outputs/run_who-founded-apple-answer-with-concise-sourced-summary/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.113591+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize",
+              "passed": true,
+              "selected_mode": "optimize"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize; expected optimize.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "min_rounds",
+              "passed": true
+            },
+            {
+              "check": "all_rounds_have_best_score",
+              "passed": true
+            },
+            {
+              "check": "all_rounds_have_signal",
+              "passed": true
+            },
+            {
+              "check": "variant_evaluations_exist",
+              "passed": true
+            }
+          ],
+          "grader_id": "multi_iteration_loop",
+          "grader_type": "code",
+          "method": "multi-round trajectory check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Observed 3 evolution round(s); required at least 3.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "selected_score_preserves_best",
+              "passed": true
+            },
+            {
+              "check": "final_drop_recorded_within_budget_or_best_preserved",
+              "passed": true
+            },
+            {
+              "check": "best_at_least_first",
+              "passed": true
+            },
+            {
+              "check": "scores_in_unit_interval",
+              "passed": true
+            }
+          ],
+          "grader_id": "loop_no_score_regression",
+          "grader_type": "code",
+          "method": "score regression check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "round_scores=[0.5, 0.2, 0.125]; best=0.500; final=0.125; selected=0.500; worst_drop=0.375.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "mermaid_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "svg_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "json_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_outer_loop",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_inner_loop",
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_graph_artifact",
+          "grader_type": "code",
+          "method": "graph trajectory artifact",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trajectory graph artifacts: eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/trajectory_graph.mmd, eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/trajectory_graph.svg, eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/trajectory_graph.json.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize",
+        "best_score": 0.5,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
+        "report_exists": true,
+        "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize"
+      },
+      "passed": true,
+      "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+      "task_id": "nested_loop_multiple_iterations_no_regression",
+      "trajectory_graph_path": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.128656+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize",
+              "passed": true,
+              "selected_mode": "optimize"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize; expected optimize.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual_count": 16,
+              "check": "strict",
+              "passed": true,
+              "reference_count": 4
+            },
+            {
+              "actual_count": 16,
+              "check": "unordered",
+              "passed": true,
+              "reference_count": 4
+            },
+            {
+              "actual_count": 16,
+              "check": "superset",
+              "passed": true,
+              "reference_count": 4
+            },
+            {
+              "actual_count": 16,
+              "check": "subset",
+              "passed": true,
+              "reference_count": 10
+            }
+          ],
+          "grader_id": "trajectory_match_modes",
+          "grader_type": "code",
+          "method": "trajectory match modes",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Matched normalized trajectory using modes: strict=True, unordered=True, superset=True, subset=True.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "required_graph_edges_present",
+              "missing_edges": [],
+              "passed": true
+            }
+          ],
+          "grader_id": "graph_trajectory_match",
+          "grader_type": "code",
+          "method": "graph trajectory match",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Graph trajectory required_edges=6 missing=0.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "mermaid_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "svg_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "json_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_outer_loop",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_inner_loop",
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_graph_artifact",
+          "grader_type": "code",
+          "method": "graph trajectory artifact",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trajectory graph artifacts: eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/trajectory_graph.mmd, eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/trajectory_graph.svg, eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/trajectory_graph.json.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize",
+        "best_score": 0.5,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
+        "report_exists": true,
+        "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize"
+      },
+      "passed": true,
+      "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records",
+      "task_id": "trajectory_match_modes_are_enforced",
+      "trajectory_graph_path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.143909+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize",
+              "passed": true,
+              "selected_mode": "optimize"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize; expected optimize.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "min_rounds",
+              "passed": true
+            },
+            {
+              "check": "all_rounds_have_best_score",
+              "passed": true
+            },
+            {
+              "check": "all_rounds_have_signal",
+              "passed": true
+            },
+            {
+              "check": "variant_evaluations_exist",
+              "passed": true
+            }
+          ],
+          "grader_id": "multi_iteration_loop",
+          "grader_type": "code",
+          "method": "multi-round trajectory check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Observed 3 evolution round(s); required at least 3.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "stuck_signal_observed",
+              "passed": true
+            },
+            {
+              "check": "progress_records_literature_refresh",
+              "passed": true
+            },
+            {
+              "check": "refresh_source_created",
+              "passed": true
+            },
+            {
+              "check": "refresh_claim_created",
+              "passed": true
+            }
+          ],
+          "grader_id": "literature_refresh_on_stuck",
+          "grader_type": "code",
+          "method": "stuck-loop literature trigger",
+          "passed": true,
+          "score": 1.0,
+          "summary": "stuck_signals=['score_plateau']; refresh_sources=1; refresh_claims=1.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "mermaid_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "svg_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "json_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_outer_loop",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_inner_loop",
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_graph_artifact",
+          "grader_type": "code",
+          "method": "graph trajectory artifact",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trajectory graph artifacts: eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/trajectory_graph.mmd, eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/trajectory_graph.svg, eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/trajectory_graph.json.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/outputs/run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize",
+        "best_score": 0.5,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
+        "report_exists": true,
+        "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize"
+      },
+      "passed": true,
+      "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+      "task_id": "stuck_loop_triggers_literature_search",
+      "trajectory_graph_path": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/stuck_loop_triggers_literature_search_trial_001/outputs/run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis/trace.jsonl",
+      "trial_index": 1
+    },
+    {
+      "aggregate_score": 1.0,
+      "completed_at": "2026-05-07T23:59:18.156570+00:00",
+      "grader_results": [
+        {
+          "assertions": [
+            {
+              "expected": "completed",
+              "passed": true,
+              "status": "completed"
+            }
+          ],
+          "grader_id": "outcome_completed",
+          "grader_type": "code",
+          "method": "outcome verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Run status is completed.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "expected": "optimize",
+              "passed": true,
+              "selected_mode": "optimize"
+            }
+          ],
+          "grader_id": "mode_selected",
+          "grader_type": "code",
+          "method": "tool/output verification",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Selected mode optimize; expected optimize.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "progress_records_initial_grounding",
+              "passed": true
+            },
+            {
+              "check": "grounding_claim_created",
+              "passed": true
+            },
+            {
+              "check": "grounding_claim_has_source",
+              "passed": true
+            },
+            {
+              "check": "grounding_source_exists",
+              "passed": true
+            }
+          ],
+          "grader_id": "literature_grounding_present",
+          "grader_type": "code",
+          "method": "initial literature grounding",
+          "passed": true,
+          "score": 1.0,
+          "summary": "grounding_claims=3; grounding_source_ids=3.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "optimal_code_exists",
+              "passed": true
+            },
+            {
+              "check": "optimal_code_nonempty",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_exists",
+              "passed": true
+            },
+            {
+              "check": "optimization_result_points_to_optimal_code",
+              "passed": true
+            }
+          ],
+          "grader_id": "optimization_code_artifact",
+          "grader_type": "code",
+          "method": "artifact contract",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Optimization run emitted the universal optimal_code.py artifact.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "check": "mermaid_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "svg_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "json_graph_exists",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_outer_loop",
+              "passed": true
+            },
+            {
+              "check": "graph_mentions_inner_loop",
+              "passed": true
+            }
+          ],
+          "grader_id": "trajectory_graph_artifact",
+          "grader_type": "code",
+          "method": "graph trajectory artifact",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trajectory graph artifacts: eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/trajectory_graph.mmd, eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/trajectory_graph.svg, eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/trajectory_graph.json.",
+          "weight": 1.0
+        },
+        {
+          "assertions": [
+            {
+              "actual": 1,
+              "check": "single_run_directory",
+              "expected": 1,
+              "passed": true
+            },
+            {
+              "check": "per_trial_tmpdir",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/tmp"
+            },
+            {
+              "check": "store_under_trial_root",
+              "passed": true,
+              "path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/outputs/run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure"
+            }
+          ],
+          "grader_id": "isolation_clean_trial",
+          "grader_type": "code",
+          "method": "environment isolation check",
+          "passed": true,
+          "score": 1.0,
+          "summary": "Trial root eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001 contains 1 run artifact directory/directories.",
+          "weight": 1.0
+        }
+      ],
+      "isolation": {
+        "clean_start": true,
+        "output_root": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/outputs",
+        "production_agent_path": "research_harness.orchestrator.Orchestrator",
+        "shared_state_policy": "No shared output directories between trials; local corpus is read-only; TMPDIR is per-trial.",
+        "tmpdir": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/tmp",
+        "trial_root": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001"
+      },
+      "outcome": {
+        "best_inner_loop": "optimize",
+        "best_score": 0.5,
+        "optimal_code_exists": true,
+        "optimization_result_exists": true,
+        "optimized_candidate_exists": true,
+        "product_agent": "optimize",
+        "report_exists": true,
+        "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+        "seed_context_exists": false,
+        "solution_exists": false,
+        "status": "completed",
+        "task_mode": "optimize"
+      },
+      "passed": true,
+      "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+      "task_id": "optimize_runs_start_with_literature_grounding",
+      "trajectory_graph_path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/trajectory_graph.svg",
+      "transcript_path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/outputs/run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure/trace.jsonl",
+      "trial_index": 1
+    }
+  ],
+  "trials_per_task": 1
+}

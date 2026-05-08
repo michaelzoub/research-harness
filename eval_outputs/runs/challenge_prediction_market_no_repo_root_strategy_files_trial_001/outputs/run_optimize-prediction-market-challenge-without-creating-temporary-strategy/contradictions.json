@@ -1,0 +1,18 @@
+[
+  {
+    "claim_a": "claim_1cf3ff28f3ca",
+    "claim_b": "claim_ed0d221fd762",
+    "explanation": "Claims appear directionally opposed and need source-level resolution.",
+    "id": "contra_86c893ba851a",
+    "resolution_status": "unresolved",
+    "severity": "medium"
+  },
+  {
+    "claim_a": "claim_1cf3ff28f3ca",
+    "claim_b": "claim_656ba9d64963",
+    "explanation": "Claims appear directionally opposed and need source-level resolution.",
+    "id": "contra_fb6fd4bc909a",
+    "resolution_status": "unresolved",
+    "severity": "medium"
+  }
+]

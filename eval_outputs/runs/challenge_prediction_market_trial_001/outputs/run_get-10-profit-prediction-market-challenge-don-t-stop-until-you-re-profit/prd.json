@@ -1,7 +1,15 @@
 {
+  "agent_harness": {
+    "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+    "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+    "runtime_mode": "optimize_query"
+  },
   "artifacts": {
     "decision_dag": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/decision_dag.svg",
     "final_report": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/final_report.md",
+    "optimal_code": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimal_code.py",
+    "optimization_result": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimization_result.json",
+    "optimized_candidate": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimized_candidate.txt",
     "optimizer_seed_context": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
     "progress": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/progress.txt",
     "run_benchmark": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/run_benchmark.html",
@@ -14,11 +22,20 @@
     "This file is the run-local PRD/task map.",
     "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
   ],
+  "objective": {
+    "current": 0.111832,
+    "kind": "profit_usd",
+    "met": false,
+    "no_stop_until_target": true,
+    "summary": "profit_usd current=0.111832 target=10.0 met=False",
+    "target": 10.0
+  },
   "organized_tasks": [
     {
       "acceptance_criteria": [
         "Explicit mode or auto-router selected optimization-query exploration",
-        "A task ingestion decision was persisted"
+        "A task ingestion decision was persisted",
+        "The `challenge` product agent was selected"
       ],
       "attempts": 1,
       "dependencies": [],
@@ -26,18 +43,20 @@
       "kind": "debug_harness",
       "last_error": null,
       "params": {
+        "product_agent": "challenge",
         "selected_mode": "optimize_query"
       },
       "passes": true,
       "priority": 1,
-      "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'prediction_market'.",
-      "source_task_id": "task_6eea5b1d04ed",
+      "result_summary": "Selected optimize_query mode. Challenge agent selected optimization-query loop; query exploration will feed the registered evaluator 'prediction_market'.",
+      "source_task_id": "task_8c032343239d",
       "status": "passed",
       "title": "Ingest prompt and select task mode"
     },
     {
       "acceptance_criteria": [
-        "Outer loop proposed query variants about the optimization challenge",
+        "The agent harness ran a query-research loop before optimization",
+        "Outer loop proposed query variants about the optimization target",
         "OptimizationQueryLoop scored query variants for evidence and implementability",
         "Ranked query evaluations were persisted"
       ],
@@ -49,14 +68,15 @@
       "kind": "search",
       "last_error": null,
       "params": {
+        "product_agent": "challenge",
         "selected_mode": "optimize_query"
       },
       "passes": true,
       "priority": 2,
       "result_summary": "Completed 2 evolutionary outer rounds.",
-      "source_task_id": "task_63402f700c67",
+      "source_task_id": "task_866481c51d44",
       "status": "passed",
-      "title": "Generate and evaluate optimization queries"
+      "title": "Generate and evaluate challenge strategy queries"
     },
     {
       "acceptance_criteria": [
@@ -74,14 +94,16 @@
       "passes": true,
       "priority": 3,
       "result_summary": "Compiled optimizer seed context at eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json.",
-      "source_task_id": "task_a38d553b0c71",
+      "source_task_id": "task_5f1dadc43c68",
       "status": "passed",
       "title": "Compile optimizer seed context"
     },
     {
       "acceptance_criteria": [
         "If evaluator exists, optimize/code variants were evaluated",
-        "If evaluator is missing, optimizer phase was explicitly skipped"
+        "If evaluator is missing, optimizer phase was explicitly skipped",
+        "Challenge agents may additionally emit a runnable solution artifact for official grading",
+        "Explicit objective targets from the prompt must be met before this PRD item passes"
       ],
       "attempts": 1,
       "dependencies": [
@@ -89,13 +111,15 @@
       ],
       "id": "prd_task_004",
       "kind": "debug_harness",
-      "last_error": null,
-      "params": {},
-      "passes": true,
+      "last_error": "Ran 4 optimizer variant evaluations using query-derived seed context; emitted optimization_result.json, optimal_code.py, solution.py. Objective incomplete: profit_usd current=0.111832 target=10.0 met=False. Continue the Ralph loop with a larger --max-iterations budget.",
+      "params": {
+        "product_agent": "challenge"
+      },
+      "passes": false,
       "priority": 4,
-      "result_summary": "Ran optimizer variants using query-derived seed context.",
-      "source_task_id": "task_d3609b9e4372",
-      "status": "passed",
+      "result_summary": "Ran 4 optimizer variant evaluations using query-derived seed context; emitted optimization_result.json, optimal_code.py, solution.py. Objective incomplete: profit_usd current=0.111832 target=10.0 met=False. Continue the Ralph loop with a larger --max-iterations budget.",
+      "source_task_id": "task_3b66d4977892",
+      "status": "failed",
       "title": "Run optimizer variants from query seed context"
     },
     {
@@ -112,8 +136,8 @@
       "params": {},
       "passes": true,
       "priority": 5,
-      "result_summary": "Reviewed 24 claims and 0 hypotheses; found 2 contradictions.",
-      "source_task_id": "task_0d42584b527d",
+      "result_summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions.",
+      "source_task_id": "task_c045aecdc60e",
       "status": "passed",
       "title": "Critique ranked query and optimizer results"
     },
@@ -131,8 +155,8 @@
       "params": {},
       "passes": true,
       "priority": 6,
-      "result_summary": "Synthesized final report with 8 sources, 24 claims, and 0 hypotheses.",
-      "source_task_id": "task_19051f70aa6a",
+      "result_summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses.",
+      "source_task_id": "task_a402e915eeeb",
       "status": "passed",
       "title": "Synthesize optimize-query run report"
     }
@@ -140,13 +164,14 @@
   "plan": {
     "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
     "hypothesis_angles": [
-      "mechanism",
-      "research direction"
+      "market-making edge",
+      "adverse-selection mitigation",
+      "entropy-guided exploration"
     ],
     "search_angles": [
-      "foundational literature mechanisms",
-      "recent empirical evidence",
-      "contradictory evidence limitations"
+      "prediction-market microstructure and market-making mechanisms",
+      "AMM LMSR entropy and scoring-rule literature",
+      "adverse selection arbitrage inventory and risk controls"
     ],
     "stopping_signals": [
       "no meaningful new sources after N cycles",
@@ -158,14 +183,72 @@
       "time budget reached",
       "human approval needed"
     ],
-    "strategy": "Allow broad exploration across framings before critic-driven convergence.",
+    "strategy": "Ground the challenge in prediction-market and market-making literature before optimizing strategy code.",
     "task_type": "open_ended"
   },
+  "product_agent": "challenge",
+  "ralph_loop": {
+    "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+    "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+    "max_iterations": 1,
+    "state_files": [
+      "prd.json",
+      "progress.txt",
+      "trace.jsonl"
+    ]
+  },
+  "research_architecture": {
+    "enabled_for_mode": false,
+    "judge_rubric": [
+      {
+        "name": "factual_accuracy",
+        "question": "Do claims match retrieved sources?",
+        "weight": 0.25
+      },
+      {
+        "name": "citation_accuracy",
+        "question": "Do cited sources support the cited claims?",
+        "weight": 0.2
+      },
+      {
+        "name": "completeness",
+        "question": "Are all requested aspects covered?",
+        "weight": 0.2
+      },
+      {
+        "name": "source_quality",
+        "question": "Were primary or authoritative sources preferred?",
+        "weight": 0.2
+      },
+      {
+        "name": "tool_efficiency",
+        "question": "Were the right tools used a reasonable number of times?",
+        "weight": 0.15
+      }
+    ],
+    "lead_agent": {
+      "model": "gpt-5.2",
+      "responsibilities": [
+        "decompose the question into independent directions",
+        "fan out subagent searches in parallel when directions are independent",
+        "start with broad landscape queries before narrowing",
+        "merge evidence and route weak spots to critic or follow-up search"
+      ],
+      "role": "lead_research_orchestrator"
+    },
+    "subagents": {
+      "model": "gpt-5.2",
+      "parallelism": "asyncio.gather over independent search agents or query variants",
+      "role": "parallel_research_subagents",
+      "search_policy": "start wide, evaluate source yield, then progressively narrow"
+    }
+  },
   "run": {
-    "completed_at": "2026-05-06T22:55:41.501466+00:00",
+    "completed_at": "2026-05-07T23:59:25.769142+00:00",
     "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
     "id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
-    "started_at": "2026-05-06T22:55:41.434321+00:00",
+    "product_agent": "challenge",
+    "started_at": "2026-05-07T23:59:25.242892+00:00",
     "status": "completed",
     "task_mode": "optimize_query",
     "task_type": "open_ended",
@@ -178,27 +261,27 @@
     {
       "limit": 8,
       "name": "local_1",
-      "purpose": "foundational literature mechanisms",
+      "purpose": "prediction-market microstructure and market-making mechanisms",
       "queries": [
-        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms"
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms"
       ],
       "retriever": "local"
     },
     {
       "limit": 8,
       "name": "local_2",
-      "purpose": "recent empirical evidence",
+      "purpose": "AMM LMSR entropy and scoring-rule literature",
       "queries": [
-        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence"
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature"
       ],
       "retriever": "local"
     },
     {
       "limit": 8,
       "name": "local_3",
-      "purpose": "contradictory evidence limitations",
+      "purpose": "adverse selection arbitrage inventory and risk controls",
       "queries": [
-        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+        "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls"
       ],
       "retriever": "local"
     }

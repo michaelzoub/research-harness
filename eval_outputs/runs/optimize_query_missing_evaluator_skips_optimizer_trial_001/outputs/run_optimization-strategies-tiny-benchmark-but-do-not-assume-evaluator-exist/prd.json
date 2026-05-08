@@ -1,0 +1,290 @@
+{
+  "agent_harness": {
+    "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+    "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+    "runtime_mode": "optimize_query"
+  },
+  "artifacts": {
+    "decision_dag": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/decision_dag.svg",
+    "final_report": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/final_report.md",
+    "optimal_code": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/optimal_code.py",
+    "optimization_result": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/optimization_result.json",
+    "optimized_candidate": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/optimized_candidate.txt",
+    "optimizer_seed_context": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/optimizer_seed_context.json",
+    "progress": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/progress.txt",
+    "run_benchmark": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/run_benchmark.html",
+    "solution": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/solution.py",
+    "trace": "eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/trace.jsonl"
+  },
+  "execution_mode": "evolutionary",
+  "goal": "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists",
+  "notes": [
+    "This file is the run-local PRD/task map.",
+    "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+  ],
+  "objective": {
+    "current": null,
+    "kind": "score",
+    "met": false,
+    "no_stop_until_target": false,
+    "summary": "score current=None",
+    "target": null
+  },
+  "organized_tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit mode or auto-router selected optimization-query exploration",
+        "A task ingestion decision was persisted",
+        "The `optimize` product agent was selected"
+      ],
+      "attempts": 1,
+      "dependencies": [],
+      "id": "prd_task_001",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "product_agent": "optimize",
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize_query mode. Optimize agent selected optimization-query loop; query exploration will run without an optimizer evaluator.",
+      "source_task_id": "task_d6f1c0f4822f",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "The agent harness ran a query-research loop before optimization",
+        "Outer loop proposed query variants about the optimization target",
+        "OptimizationQueryLoop scored query variants for evidence and implementability",
+        "Ranked query evaluations were persisted"
+      ],
+      "attempts": 2,
+      "dependencies": [
+        "prd_task_001"
+      ],
+      "id": "prd_task_002",
+      "kind": "search",
+      "last_error": null,
+      "params": {
+        "product_agent": "optimize",
+        "selected_mode": "optimize_query"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 1 evolutionary outer rounds.",
+      "source_task_id": "task_0bc1a1b16fd4",
+      "status": "passed",
+      "title": "Generate and evaluate optimization strategy queries"
+    },
+    {
+      "acceptance_criteria": [
+        "Top query findings were summarized",
+        "optimizer_seed_context.json was written"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_002"
+      ],
+      "id": "prd_task_003",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 3,
+      "result_summary": "Compiled optimizer seed context at eval_outputs/runs/optimize_query_missing_evaluator_skips_optimizer_trial_001/outputs/run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist/optimizer_seed_context.json.",
+      "source_task_id": "task_e0a8445e8824",
+      "status": "passed",
+      "title": "Compile optimizer seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "If evaluator exists, optimize/code variants were evaluated",
+        "If evaluator is missing, optimizer phase was explicitly skipped",
+        "Challenge agents may additionally emit a runnable solution artifact for official grading",
+        "Explicit objective targets from the prompt must be met before this PRD item passes"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_003"
+      ],
+      "id": "prd_task_004",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "product_agent": "optimize"
+      },
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Skipped optimizer phase because no evaluator was registered.",
+      "source_task_id": "task_a0833bf2dd8d",
+      "status": "skipped",
+      "title": "Run optimizer variants from query seed context"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_004"
+      ],
+      "id": "prd_task_005",
+      "kind": "critique",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions.",
+      "source_task_id": "task_695010dedaaa",
+      "status": "passed",
+      "title": "Critique ranked query and optimizer results"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report included query findings and optimizer seed context"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_005"
+      ],
+      "id": "prd_task_006",
+      "kind": "synthesize",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 6,
+      "result_summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses.",
+      "source_task_id": "task_14c0cb17bdd2",
+      "status": "passed",
+      "title": "Synthesize optimize-query run report"
+    }
+  ],
+  "plan": {
+    "goal": "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists",
+    "hypothesis_angles": [
+      "optimization path",
+      "risk mitigation"
+    ],
+    "search_angles": [
+      "baseline evidence",
+      "failure modes constraints",
+      "evaluation metrics"
+    ],
+    "stopping_signals": [
+      "no meaningful new sources after N cycles",
+      "no new high-confidence claims",
+      "hypotheses converge",
+      "critic finds no new major objections",
+      "benchmark/evaluation score plateaus",
+      "cost budget reached",
+      "time budget reached",
+      "human approval needed"
+    ],
+    "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
+    "task_type": "bounded"
+  },
+  "product_agent": "optimize",
+  "ralph_loop": {
+    "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+    "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+    "max_iterations": 1,
+    "state_files": [
+      "prd.json",
+      "progress.txt",
+      "trace.jsonl"
+    ]
+  },
+  "research_architecture": {
+    "enabled_for_mode": false,
+    "judge_rubric": [
+      {
+        "name": "factual_accuracy",
+        "question": "Do claims match retrieved sources?",
+        "weight": 0.25
+      },
+      {
+        "name": "citation_accuracy",
+        "question": "Do cited sources support the cited claims?",
+        "weight": 0.2
+      },
+      {
+        "name": "completeness",
+        "question": "Are all requested aspects covered?",
+        "weight": 0.2
+      },
+      {
+        "name": "source_quality",
+        "question": "Were primary or authoritative sources preferred?",
+        "weight": 0.2
+      },
+      {
+        "name": "tool_efficiency",
+        "question": "Were the right tools used a reasonable number of times?",
+        "weight": 0.15
+      }
+    ],
+    "lead_agent": {
+      "model": "gpt-5.2",
+      "responsibilities": [
+        "decompose the question into independent directions",
+        "fan out subagent searches in parallel when directions are independent",
+        "start with broad landscape queries before narrowing",
+        "merge evidence and route weak spots to critic or follow-up search"
+      ],
+      "role": "lead_research_orchestrator"
+    },
+    "subagents": {
+      "model": "gpt-5.2",
+      "parallelism": "asyncio.gather over independent search agents or query variants",
+      "role": "parallel_research_subagents",
+      "search_policy": "start wide, evaluate source yield, then progressively narrow"
+    }
+  },
+  "run": {
+    "completed_at": "2026-05-07T23:59:15.344148+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:15.307685+00:00",
+    "status": "completed",
+    "task_mode": "optimize_query",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists"
+  },
+  "schema_version": "research_harness_prd_v1",
+  "source_strategy": [
+    {
+      "limit": 8,
+      "name": "local_1",
+      "purpose": "baseline evidence",
+      "queries": [
+        "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists baseline evidence"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_2",
+      "purpose": "failure modes constraints",
+      "queries": [
+        "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists failure modes constraints"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_3",
+      "purpose": "evaluation metrics",
+      "queries": [
+        "Research optimization strategies for a tiny benchmark, but do not assume an evaluator exists evaluation metrics"
+      ],
+      "retriever": "local"
+    }
+  ],
+  "stage": "completed",
+  "task_mode": "optimize_query"
+}

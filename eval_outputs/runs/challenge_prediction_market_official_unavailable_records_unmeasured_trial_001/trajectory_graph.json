@@ -1,0 +1,99 @@
+{
+  "edges": [
+    {
+      "from": "prompt",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "outer"
+    },
+    {
+      "from": "outer",
+      "to": "inner"
+    },
+    {
+      "from": "inner",
+      "to": "select"
+    },
+    {
+      "from": "select",
+      "kind": "loop",
+      "to": "outer"
+    },
+    {
+      "from": "select",
+      "to": "agents"
+    },
+    {
+      "from": "agents",
+      "to": "outcome"
+    }
+  ],
+  "evaluation_count": 7,
+  "nodes": [
+    {
+      "id": "prompt",
+      "label": "Prompt"
+    },
+    {
+      "id": "router",
+      "label": "Router: optimize_query"
+    },
+    {
+      "id": "outer",
+      "label": "Outer loop"
+    },
+    {
+      "id": "inner",
+      "label": "Inner evaluator"
+    },
+    {
+      "id": "select",
+      "label": "Selection"
+    },
+    {
+      "id": "agents",
+      "label": "Role agents: 2"
+    },
+    {
+      "id": "outcome",
+      "label": "Outcome"
+    }
+  ],
+  "rounds": [
+    {
+      "best_score": 0.869,
+      "best_variant_id": "variant_8b846bc37334",
+      "completed_at": "2026-05-07T23:59:16.427473+00:00",
+      "id": "round_06b532d7f482",
+      "mode": "optimize_query",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+      "termination_signal": "claim_corroboration_threshold",
+      "variant_ids": [
+        "variant_8b846bc37334",
+        "variant_4daaeeaf2f62",
+        "variant_5ec6e17b1970"
+      ]
+    },
+    {
+      "best_score": 0.502,
+      "best_variant_id": "variant_96c6325a69b4",
+      "completed_at": "2026-05-07T23:59:16.915552+00:00",
+      "id": "round_05974654956b",
+      "mode": "optimize",
+      "outer_iteration": 2,
+      "plateau_count": 0,
+      "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+      "termination_signal": "improved",
+      "variant_ids": [
+        "variant_96c6325a69b4",
+        "variant_a799f519405a",
+        "variant_318de6ede4da",
+        "variant_77dee6dc885d"
+      ]
+    }
+  ]
+}

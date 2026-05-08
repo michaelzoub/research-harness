@@ -1,19 +1,20 @@
 # Run Benchmark
 
 - Run ID: `run_multi-agent-systems-improve-automated-literature-review-quality`
+- Product agent: `research`
 - Mode: `research`
 - Tasks passed: 5 / 5
 - Outer rounds: 1
-- Variants evaluated: 3
-- Best score: 0.957
+- Variants evaluated: 4
+- Best score: 0.970
 
 ## Decision DAG
 
 ```mermaid
 flowchart TD
   prompt["Prompt: Research how multi-agent systems improve automated literature review quality"]
-  route["Route: research"]
-  outer["Outer orchestrator: propose variants"]
+  route["Product agent: research\nLoop mode: research"]
+  outer["Agent harness loop: propose variants"]
   inner["Inner loop: evaluate and rank"]
   select["Tournament selection"]
   stop{"Threshold or plateau?"}
@@ -21,9 +22,9 @@ flowchart TD
   prompt --> route --> outer --> inner --> select --> stop
   stop -- continue --> outer
   stop -- stop --> synth
-  round1["Round 1: best=0.957, claim_corroboration_threshold"]
+  round1["Round 1: best=0.970, claim_corroboration_threshold"]
   inner --> round1 --> select
 ```
 
 ## Round Summary
-- Round 1: best `variant_5c856588b3ca` score 0.957; signal `claim_corroboration_threshold`.
+- Round 1: best `variant_bcd1d0f451f3` score 0.970; signal `claim_corroboration_threshold`.

@@ -1,118 +1,128 @@
 [
   {
-    "id": "variant_640b44099600",
+    "id": "variant_b2cf81241fc8",
     "kind": "query",
     "metadata": {
       "challenge_goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "evaluator_name": "prediction_market",
       "limit": 8,
-      "purpose": "foundational literature mechanisms",
+      "purpose": "prediction-market microstructure and market-making mechanisms",
       "query_intent": "optimization challenge strategy discovery",
-      "retriever": "local"
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],
-    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms",
+    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_d41e044d4bed",
+    "id": "variant_a558bb37125c",
     "kind": "query",
     "metadata": {
       "challenge_goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "evaluator_name": "prediction_market",
       "limit": 8,
-      "purpose": "recent empirical evidence",
+      "purpose": "AMM LMSR entropy and scoring-rule literature",
       "query_intent": "optimization challenge strategy discovery",
-      "retriever": "local"
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],
-    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence",
+    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_3af102d42f75",
+    "id": "variant_28b37a335704",
     "kind": "query",
     "metadata": {
       "challenge_goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "evaluator_name": "prediction_market",
       "limit": 8,
-      "purpose": "contradictory evidence limitations",
+      "purpose": "adverse selection arbitrage inventory and risk controls",
       "query_intent": "optimization challenge strategy discovery",
-      "retriever": "local"
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
     },
     "outer_iteration": 1,
     "parent_ids": [],
-    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations",
+    "payload": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_beb6968cd66d",
+    "id": "variant_a2d346028b37",
     "kind": "code",
     "metadata": {
+      "challenge": "prediction_market",
       "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
-      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls"
     },
     "outer_iteration": 1,
     "parent_ids": [
-      "variant_097c0d722b5d",
-      "variant_0965f8b6fdff",
-      "variant_b083fdd22be9"
+      "variant_f847152a981b",
+      "variant_bf48c64aeb59",
+      "variant_5195a89a4ee9"
     ],
-    "payload": "Prediction-market strategy sketch: adaptive fair value estimate from fills, order flow, and competitor midpoint; CancelAll or widen after stale adverse arbitrageur fills and jump volatility; passive limit orders only; size=5 spread=4 inventory limit=90 with inventory skew. Optimization variant informed by query finding: Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms refined pass 1",
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1 query_seed=Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_64115c18adad",
+    "id": "variant_ba52572ac71a",
     "kind": "code",
     "metadata": {
+      "challenge": "prediction_market",
       "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
-      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls"
     },
     "outer_iteration": 1,
     "parent_ids": [
-      "variant_097c0d722b5d",
-      "variant_0965f8b6fdff",
-      "variant_b083fdd22be9"
+      "variant_f847152a981b",
+      "variant_bf48c64aeb59",
+      "variant_5195a89a4ee9"
     ],
-    "payload": "Prediction-market strategy sketch: adaptive fair value estimate from fills, order flow, and competitor midpoint; CancelAll or widen after stale adverse arbitrageur fills and jump volatility; passive limit orders only; size=5 spread=4 inventory limit=90 with inventory skew. Optimization variant informed by query finding: Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence refined pass 1",
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1 query_seed=Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_79ca12c25e54",
+    "id": "variant_90262b0137f2",
     "kind": "code",
     "metadata": {
+      "challenge": "prediction_market",
       "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
-      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls"
     },
     "outer_iteration": 1,
     "parent_ids": [
-      "variant_097c0d722b5d",
-      "variant_0965f8b6fdff",
-      "variant_b083fdd22be9"
+      "variant_f847152a981b",
+      "variant_bf48c64aeb59",
+      "variant_5195a89a4ee9"
     ],
-    "payload": "Prediction-market strategy sketch: adaptive fair value estimate from fills, order flow, and competitor midpoint; CancelAll or widen after stale adverse arbitrageur fills and jump volatility; passive limit orders only; size=5 spread=4 inventory limit=90 with inventory skew. Optimization variant informed by query finding: Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations refined pass 1",
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=retail_only_extreme_edges size=1 spread=16 inventory=15 skew=12 quote_mode=extreme cancel_all=1 query_seed=Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   },
   {
-    "id": "variant_e90a85b592a3",
+    "id": "variant_0456cbfd6827",
     "kind": "code",
     "metadata": {
+      "challenge": "prediction_market",
       "goal": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters.",
       "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimizer_seed_context.json",
-      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. recent empirical evidence; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. contradictory evidence limitations"
+      "query_seed_summary": "Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. AMM LMSR entropy and scoring-rule literature; Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. adverse selection arbitrage inventory and risk controls"
     },
     "outer_iteration": 1,
     "parent_ids": [
-      "variant_097c0d722b5d",
-      "variant_0965f8b6fdff",
-      "variant_b083fdd22be9"
+      "variant_f847152a981b",
+      "variant_bf48c64aeb59",
+      "variant_5195a89a4ee9"
     ],
-    "payload": "Prediction-market strategy sketch: adaptive fair value estimate from fills, order flow, and competitor midpoint; CancelAll or widen after stale adverse arbitrageur fills and jump volatility; passive limit orders only; size=5 spread=4 inventory limit=90 with inventory skew. Alternative optimization mutation from query finding: Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. foundational literature mechanisms",
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=ask_fade_bid_fade size=0.75 spread=10 inventory=25 skew=9 quote_mode=outside_competitor cancel_all=1 query_seed=Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms",
     "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit"
   }
 ]

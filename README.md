@@ -159,6 +159,10 @@ The core suite includes one prewritten task for each run type:
 | `optimize_query_seeded` | Optimization query | Seed context, query phase, optimizer phase, transcript progress. |
 | `challenge_prediction_market` | Challenge optimization | Prediction-market solution file, local proxy score, seed context, transcript progress. |
 
+All core tasks also run `prd_tasks_executed`, which verifies that each
+`prd.json` organized task maps back to an executed loop task and recorded loop
+iteration.
+
 The edge suite adds regression tasks for behaviors that are easy to get wrong:
 
 | Eval task | Edge case |
@@ -171,13 +175,20 @@ The edge suite adds regression tasks for behaviors that are easy to get wrong:
 | `parallel_trials_do_not_share_tmp_or_outputs` | Multiple trials for one task must have distinct trial, output, and temp directories. |
 | `challenge_prediction_market_no_repo_root_strategy_files` | Prediction-market runs must not leak `pm_strategy*.py` or `tmp_pm*.py` files into the repository root. |
 | `research_should_not_oversearch` | Simple bounded research prompts must stay inside a small search/claim/evolution budget. |
+| `nested_loop_multiple_iterations_no_regression` | Multi-round optimize loops must preserve the best candidate even if later exploratory rounds score worse. |
+| `stuck_loop_triggers_literature_search` | Plateaued or stuck loops must record a literature-refresh source/claim before further tweaking. |
+| `trajectory_match_modes_are_enforced` | Native trajectory evaluators must enforce strict, unordered, subset, superset, and graph-edge matching. |
+| `optimize_runs_start_with_literature_grounding` | Optimize/challenge-style runs must search existing literature before producing optimization outputs. |
 
 The trajectory checks are inspired by
 [`langchain-ai/agentevals`](https://github.com/langchain-ai/agentevals): this
 repo currently uses native loop artifacts rather than adopting the dependency
 directly, because our trajectories are stored as `variant_evaluations.json`,
 `evolution_rounds.json`, progress logs, and outcome files instead of OpenAI-style
-message arrays.
+message arrays. Each eval trial also emits visual trajectory artifacts:
+`trajectory_graph.mmd`, `trajectory_graph.svg`, and `trajectory_graph.json`.
+The native matcher supports `strict`, `unordered`, `subset`, and `superset`
+trajectory modes plus graph-edge matching over the visual trajectory JSON.
 
 Terminology used by the eval runner:
 

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "eval_6df8fcc0e72f",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.3333333333333333
+    ],
+    "metrics": {
+      "deterministic_score": 0.3333333333333333
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.3333333333333333,
+    "summary": "Deterministic evaluator returned 0.333.",
+    "variant_id": "variant_d5aac15eed09"
+  },
+  {
+    "id": "eval_1c7c8e29de7c",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_ffa88afe01ef"
+  },
+  {
+    "id": "eval_3608c3255588",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_194947f74a6a"
+  },
+  {
+    "id": "eval_c33d428ec0fa",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_344ca6b838f3"
+  },
+  {
+    "id": "eval_ed930c1df9b9",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_7b880788b40b"
+  },
+  {
+    "id": "eval_98333db90791",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_864bf1cac0eb"
+  },
+  {
+    "id": "eval_b78854b911f7",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_d37baeaf5dd0"
+  },
+  {
+    "id": "eval_dd53f3c6acf1",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_63197e8b4d04"
+  },
+  {
+    "id": "eval_3d5f0a235f2f",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_27040330f48c"
+  },
+  {
+    "id": "eval_6fe64f4eec7d",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_da81da05025d"
+  },
+  {
+    "id": "eval_17f611627d09",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_1073c1f56aab"
+  },
+  {
+    "id": "eval_215f1e07fcb2",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_174c2093e89f"
+  }
+]

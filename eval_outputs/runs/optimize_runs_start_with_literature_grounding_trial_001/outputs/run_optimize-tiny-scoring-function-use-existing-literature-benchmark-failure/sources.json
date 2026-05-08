@@ -1,0 +1,38 @@
+[
+  {
+    "author": "A. Rivera and S. Chen",
+    "credibility_score": 0.82,
+    "date": "2025-02-14",
+    "id": "src_f2861efca2be",
+    "relevance_score": 0.501,
+    "retrieved_at": "2026-05-07T23:59:18.148862+00:00",
+    "source_type": "paper",
+    "summary": "A controlled evaluation found that assigning separate search framings to parallel agents increased source diversity and evidence recall compared with a single deterministic agent.",
+    "title": "Parallel Agent Review Improves Evidence Recall In Literature Tasks",
+    "url": "https://example.org/multi-agent-review-quality-2025"
+  },
+  {
+    "author": "Dan Robinson",
+    "credibility_score": 0.88,
+    "date": "2026-05-04",
+    "id": "src_1c857af31acc",
+    "relevance_score": 0.471,
+    "retrieved_at": "2026-05-07T23:59:18.149027+00:00",
+    "source_type": "optimization_challenge",
+    "summary": "A binary prediction-market optimization challenge where passive market makers quote a YES contract against retail flow, a static competitor ladder, and an informed arbitrageur that sweeps stale quotes.",
+    "title": "Orderbook Prediction Market Challenge",
+    "url": "https://github.com/danrobinson/prediction-market-challenge"
+  },
+  {
+    "author": "E. Novak",
+    "credibility_score": 0.76,
+    "date": "2025-01-30",
+    "id": "src_00f6002fc4f3",
+    "relevance_score": 0.383,
+    "retrieved_at": "2026-05-07T23:59:18.149166+00:00",
+    "source_type": "technical_report",
+    "summary": "Adaptive harness changes should be proposed as constrained config variants and evaluated before being accepted.",
+    "title": "Risk Controls For Adaptive Agent Harnesses",
+    "url": "https://example.org/adaptive-harness-risk-controls"
+  }
+]

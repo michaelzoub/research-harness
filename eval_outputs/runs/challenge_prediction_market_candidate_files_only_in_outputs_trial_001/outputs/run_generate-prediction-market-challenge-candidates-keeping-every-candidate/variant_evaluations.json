@@ -1,0 +1,203 @@
+[
+  {
+    "id": "eval_29de84a70c66",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.869,
+      1.0,
+      1.0,
+      0.798,
+      1.0,
+      0.948,
+      0.638,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.798,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.869,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.638,
+      "source_quality": 0.798,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.869,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.869, citation=1.000, complete=1.000, source_quality=0.798, tool_efficiency=1.000; median judge score 0.974. novelty=0.638; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_af3f241ebc4d"
+  },
+  {
+    "id": "eval_4c3b75a19895",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.868,
+      1.0,
+      1.0,
+      0.797,
+      1.0,
+      0.949,
+      0.7,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.797,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.868,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.7,
+      "source_quality": 0.797,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.868,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.974. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_513f1848d483"
+  },
+  {
+    "id": "eval_2414ac4446f9",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.867,
+      1.0,
+      1.0,
+      0.795,
+      1.0,
+      0.918,
+      0.7,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.795,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.867,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.7,
+      "source_quality": 0.795,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.867,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.867, citation=1.000, complete=1.000, source_quality=0.795, tool_efficiency=1.000; median judge score 0.959. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_7ec3fcf21eb5"
+  },
+  {
+    "id": "eval_d9dcdc0b9204",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.502
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_f791784ac944.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.111832,
+      "mean_retail_edge": 0.111832,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.502,
+    "summary": "local challenge fallback mean_edge=0.112; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_f791784ac944.py.",
+    "variant_id": "variant_f791784ac944"
+  },
+  {
+    "id": "eval_6944d9a3e806",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.501
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_a654d71c3f96.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.059409,
+      "mean_retail_edge": 0.059409,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.501,
+    "summary": "local challenge fallback mean_edge=0.059; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_a654d71c3f96.py.",
+    "variant_id": "variant_a654d71c3f96"
+  },
+  {
+    "id": "eval_6f0546a396e3",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.502
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_255c4810bb04.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.098829,
+      "mean_retail_edge": 0.098829,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.502,
+    "summary": "local challenge fallback mean_edge=0.099; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_255c4810bb04.py.",
+    "variant_id": "variant_255c4810bb04"
+  },
+  {
+    "id": "eval_61fba7290ccd",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.501
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_89ac56907470.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.086122,
+      "mean_retail_edge": 0.086122,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate",
+    "score": 0.501,
+    "summary": "local challenge fallback mean_edge=0.086; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/candidates/round_01_variant_89ac56907470.py.",
+    "variant_id": "variant_89ac56907470"
+  }
+]

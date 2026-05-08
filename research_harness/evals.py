@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import html
 import json
 import os
 import shutil
@@ -16,6 +17,7 @@ from .store import ArtifactStore
 
 GraderType = Literal["code", "model", "human"]
 AggregationMode = Literal["weighted", "binary", "hybrid"]
+TrajectoryMatchMode = Literal["strict", "unordered", "subset", "superset"]
 
 
 @dataclass
@@ -45,6 +47,7 @@ class EvalTrial:
     trial_index: int
     run_id: str
     transcript_path: str
+    trajectory_graph_path: str
     isolation: dict[str, Any]
     outcome: dict[str, Any]
     grader_results: list[dict[str, Any]]
@@ -184,6 +187,7 @@ class EvaluationHarness:
             os.environ.pop("TMPDIR", None)
         else:
             os.environ["TMPDIR"] = previous_tmpdir
+        graph_paths = write_trajectory_graph_artifacts(store, trial_root)
         grader_results = [
             self.grader_registry[grader_id].grade(task, store)
             for grader_id in task.grader_ids
@@ -195,6 +199,7 @@ class EvaluationHarness:
             trial_index=trial_index,
             run_id=run.id,
             transcript_path=str(store.trace_log_path),
+            trajectory_graph_path=str(graph_paths["svg"]),
             isolation={
                 "trial_root": str(trial_root),
                 "output_root": str(trial_output_root),
@@ -241,6 +246,7 @@ def default_eval_suite() -> EvalSuite:
                 ],
                 grader_ids=[
                     "outcome_completed",
+                    "prd_tasks_executed",
                     "research_groundedness",
                     "artifact_report",
                     "transcript_progress",
@@ -264,6 +270,7 @@ def default_eval_suite() -> EvalSuite:
                 grader_ids=[
                     "outcome_completed",
                     "mode_selected",
+                    "prd_tasks_executed",
                     "optimize_score",
                     "optimization_code_artifact",
                     "transcript_progress",
@@ -285,6 +292,7 @@ def default_eval_suite() -> EvalSuite:
                 grader_ids=[
                     "outcome_completed",
                     "mode_selected",
+                    "prd_tasks_executed",
                     "seed_context",
                     "optimize_query_phases",
                     "optimization_code_artifact",
@@ -311,6 +319,7 @@ def default_eval_suite() -> EvalSuite:
                 grader_ids=[
                     "outcome_completed",
                     "mode_selected",
+                    "prd_tasks_executed",
                     "seed_context",
                     "optimization_code_artifact",
                     "prediction_market_solution",
@@ -513,6 +522,122 @@ def edge_eval_suite() -> EvalSuite:
                     "max_evolution_rounds": 1,
                 },
             ),
+            EvalTask(
+                id="nested_loop_multiple_iterations_no_regression",
+                name="Nested optimization loop runs multiple rounds without score collapse",
+                prompt="Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate",
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=4,
+                success_criteria=[
+                    "The optimizer runs multiple outer loop rounds",
+                    "Round scores do not collapse after iteration",
+                    "The selected output artifact is still emitted",
+                    "A trajectory graph is written for inspection",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "multi_iteration_loop",
+                    "loop_no_score_regression",
+                    "optimization_code_artifact",
+                    "trajectory_graph_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+                metadata={"min_rounds": 3, "max_score_drop": 0.2},
+            ),
+            EvalTask(
+                id="trajectory_match_modes_are_enforced",
+                name="Trajectory evaluators enforce strict, unordered, subset, and superset modes",
+                prompt="Optimize a tiny scoring function across multiple rounds so the harness records a trajectory",
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=4,
+                success_criteria=[
+                    "Normalized trajectory events are extracted from artifacts",
+                    "Strict matching validates the expected canonical loop prefix",
+                    "Unordered, subset, and superset matching all run against the same trajectory",
+                    "Graph trajectory edges match the expected harness flow",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "trajectory_match_modes",
+                    "graph_trajectory_match",
+                    "trajectory_graph_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+                metadata={
+                    "reference_trajectory": [
+                        {"type": "router", "name": "optimize"},
+                        {"type": "outer_loop", "name": "optimize"},
+                        {"type": "inner_loop", "name": "optimize"},
+                        {"type": "selection", "name": "variant"},
+                        {"type": "outcome", "name": "completed"},
+                    ],
+                    "required_graph_edges": [
+                        ["prompt", "router"],
+                        ["router", "outer"],
+                        ["outer", "inner"],
+                        ["inner", "select"],
+                        ["select", "agents"],
+                        ["agents", "outcome"],
+                    ],
+                },
+            ),
+            EvalTask(
+                id="stuck_loop_triggers_literature_search",
+                name="Plateaued optimization triggers literature refresh",
+                prompt=(
+                    "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature "
+                    "before continuing to tweak variants."
+                ),
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=4,
+                success_criteria=[
+                    "The loop reaches a plateau or stuck signal",
+                    "The harness records a literature refresh trigger",
+                    "A literature-refresh source and claim are created",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "multi_iteration_loop",
+                    "literature_refresh_on_stuck",
+                    "trajectory_graph_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+                metadata={"min_rounds": 3},
+            ),
+            EvalTask(
+                id="optimize_runs_start_with_literature_grounding",
+                name="Optimize and challenge-style runs search literature before producing outputs",
+                prompt=(
+                    "Optimize a tiny scoring function. Use existing literature and benchmark failure modes before "
+                    "deciding which variants to try."
+                ),
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=2,
+                success_criteria=[
+                    "The optimize harness records an initial literature-grounding step",
+                    "Retrieved grounding sources and claims are stored",
+                    "The optimize output artifact is still emitted",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "literature_grounding_present",
+                    "optimization_code_artifact",
+                    "trajectory_graph_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+            ),
         ],
     )
 
@@ -532,6 +657,7 @@ def all_eval_suite() -> EvalSuite:
 def default_graders() -> dict[str, Grader]:
     return {
         "outcome_completed": Grader("outcome_completed", "code", "outcome verification", 1.0, 1.0, _grade_outcome_completed),
+        "prd_tasks_executed": Grader("prd_tasks_executed", "code", "prd execution verification", 1.0, 1.0, _grade_prd_tasks_executed),
         "mode_selected": Grader("mode_selected", "code", "tool/output verification", 1.0, 1.0, _grade_mode_selected),
         "artifact_report": Grader("artifact_report", "code", "artifact existence", 0.75, 1.0, _grade_report_artifact),
         "research_groundedness": Grader("research_groundedness", "code", "groundedness assertions", 1.25, 0.8, _grade_research_groundedness),
@@ -550,6 +676,13 @@ def default_graders() -> dict[str, Grader]:
         "optimizer_skipped_without_evaluator": Grader("optimizer_skipped_without_evaluator", "code", "negative-path outcome verification", 1.0, 1.0, _grade_optimizer_skipped_without_evaluator),
         "research_search_budget": Grader("research_search_budget", "code", "search budget verification", 1.0, 1.0, _grade_research_search_budget),
         "trajectory_modes": Grader("trajectory_modes", "code", "trajectory subset/superset match", 1.0, 1.0, _grade_trajectory_modes),
+        "multi_iteration_loop": Grader("multi_iteration_loop", "code", "multi-round trajectory check", 1.0, 1.0, _grade_multi_iteration_loop),
+        "loop_no_score_regression": Grader("loop_no_score_regression", "code", "score regression check", 1.0, 1.0, _grade_loop_no_score_regression),
+        "literature_refresh_on_stuck": Grader("literature_refresh_on_stuck", "code", "stuck-loop literature trigger", 1.0, 1.0, _grade_literature_refresh_on_stuck),
+        "literature_grounding_present": Grader("literature_grounding_present", "code", "initial literature grounding", 1.0, 1.0, _grade_literature_grounding_present),
+        "trajectory_graph_artifact": Grader("trajectory_graph_artifact", "code", "graph trajectory artifact", 1.0, 1.0, _grade_trajectory_graph_artifact),
+        "trajectory_match_modes": Grader("trajectory_match_modes", "code", "trajectory match modes", 1.0, 1.0, _grade_trajectory_match_modes),
+        "graph_trajectory_match": Grader("graph_trajectory_match", "code", "graph trajectory match", 1.0, 1.0, _grade_graph_trajectory_match),
         "parallel_trial_isolation": Grader("parallel_trial_isolation", "code", "cross-trial isolation check", 1.0, 1.0, _grade_parallel_trial_isolation_unavailable),
         "human_spot_check_placeholder": Grader("human_spot_check_placeholder", "human", "spot-check sampling", 0.0, 1.0, _grade_human_placeholder),
         "isolation_clean_trial": Grader("isolation_clean_trial", "code", "environment isolation check", 1.0, 1.0, _grade_isolation_clean_trial),
@@ -592,6 +725,192 @@ def outcome_from_store(store: ArtifactStore) -> dict[str, Any]:
     }
 
 
+def trajectory_graph(store: ArtifactStore) -> dict[str, Any]:
+    decisions = store.list("task_ingestion_decisions")
+    decision = decisions[0] if decisions else {}
+    rounds = store.list("evolution_rounds")
+    evaluations = store.list("variant_evaluations")
+    traces = store.list("agent_traces")
+    return {
+        "nodes": [
+            {"id": "prompt", "label": "Prompt"},
+            {"id": "router", "label": f"Router: {decision.get('selected_mode', 'unknown')}"},
+            {"id": "outer", "label": "Outer loop"},
+            {"id": "inner", "label": "Inner evaluator"},
+            {"id": "select", "label": "Selection"},
+            {"id": "agents", "label": f"Role agents: {len(traces)}"},
+            {"id": "outcome", "label": "Outcome"},
+        ],
+        "edges": [
+            {"from": "prompt", "to": "router"},
+            {"from": "router", "to": "outer"},
+            {"from": "outer", "to": "inner"},
+            {"from": "inner", "to": "select"},
+            {"from": "select", "to": "outer", "kind": "loop"},
+            {"from": "select", "to": "agents"},
+            {"from": "agents", "to": "outcome"},
+        ],
+        "rounds": rounds,
+        "evaluation_count": len(evaluations),
+    }
+
+
+def write_trajectory_graph_artifacts(store: ArtifactStore, trial_root: Path) -> dict[str, Path]:
+    graph = trajectory_graph(store)
+    mmd_path = trial_root / "trajectory_graph.mmd"
+    svg_path = trial_root / "trajectory_graph.svg"
+    json_path = trial_root / "trajectory_graph.json"
+    json_path.write_text(json.dumps(graph, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    lines = ["flowchart TD"]
+    for node in graph["nodes"]:
+        lines.append(f'  {node["id"]}["{_mmd(str(node["label"]))}"]')
+    for edge in graph["edges"]:
+        connector = "-.->" if edge.get("kind") == "loop" else "-->"
+        lines.append(f'  {edge["from"]} {connector} {edge["to"]}')
+    for index, round_record in enumerate(graph["rounds"], start=1):
+        round_id = f"round_{index}"
+        label = (
+            f"Round {round_record.get('outer_iteration')}: "
+            f"{round_record.get('mode')} best={float(round_record.get('best_score', 0.0)):.3f} "
+            f"{round_record.get('termination_signal')}"
+        )
+        lines.append(f'  {round_id}["{_mmd(label)}"]')
+        lines.append(f"  inner --> {round_id} --> select")
+    mmd_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    svg_path.write_text(_trajectory_graph_svg(graph), encoding="utf-8")
+    return {"mmd": mmd_path, "svg": svg_path, "json": json_path}
+
+
+def normalized_trajectory_events(store: ArtifactStore) -> list[dict[str, str]]:
+    runs = store.list("runs")
+    run = runs[0] if runs else {}
+    decisions = store.list("task_ingestion_decisions")
+    decision = decisions[0] if decisions else {}
+    events = [
+        {"type": "router", "name": str(decision.get("selected_mode", run.get("task_mode", "unknown")))},
+    ]
+    for round_record in store.list("evolution_rounds"):
+        mode = str(round_record.get("mode", "unknown"))
+        signal = str(round_record.get("termination_signal", "unknown"))
+        events.extend(
+            [
+                {"type": "outer_loop", "name": mode},
+                {"type": "inner_loop", "name": mode},
+                {"type": "selection", "name": "variant"},
+                {"type": "signal", "name": signal},
+            ]
+        )
+    for trace in store.list("agent_traces"):
+        role = str(trace.get("role", trace.get("agent_name", "agent")))
+        events.append({"type": "role_agent", "name": role})
+    status = str(run.get("status", "unknown"))
+    events.append({"type": "outcome", "name": status})
+    return events
+
+
+def trajectory_match(actual: list[dict[str, str]], reference: list[dict[str, str]], mode: TrajectoryMatchMode) -> dict[str, Any]:
+    if mode == "strict":
+        passed = _trajectory_startswith(actual, reference)
+    elif mode == "unordered":
+        passed = _multiset_contains(actual, reference) and len(actual) >= len(reference)
+    elif mode == "subset":
+        allowed = {_event_key(item) for item in reference}
+        passed = all(_event_key(item) in allowed for item in actual)
+    elif mode == "superset":
+        passed = _ordered_subsequence(actual, reference)
+    else:
+        passed = False
+    return {
+        "mode": mode,
+        "passed": passed,
+        "actual_count": len(actual),
+        "reference_count": len(reference),
+        "actual": actual,
+        "reference": reference,
+    }
+
+
+def graph_trajectory_match(graph: dict[str, Any], required_edges: list[list[str]]) -> dict[str, Any]:
+    actual_edges = {(edge.get("from"), edge.get("to")) for edge in graph.get("edges", [])}
+    missing = [edge for edge in required_edges if tuple(edge) not in actual_edges]
+    return {
+        "passed": not missing,
+        "missing_edges": missing,
+        "actual_edges": sorted([list(edge) for edge in actual_edges]),
+    }
+
+
+def _event_key(event: dict[str, str]) -> tuple[str, str]:
+    return (str(event.get("type", "")), str(event.get("name", "")))
+
+
+def _trajectory_startswith(actual: list[dict[str, str]], reference: list[dict[str, str]]) -> bool:
+    if len(actual) < len(reference):
+        return False
+    return [_event_key(item) for item in actual[: len(reference)]] == [_event_key(item) for item in reference]
+
+
+def _ordered_subsequence(actual: list[dict[str, str]], reference: list[dict[str, str]]) -> bool:
+    actual_keys = [_event_key(item) for item in actual]
+    position = 0
+    for ref in reference:
+        key = _event_key(ref)
+        try:
+            position = actual_keys.index(key, position) + 1
+        except ValueError:
+            return False
+    return True
+
+
+def _multiset_contains(actual: list[dict[str, str]], reference: list[dict[str, str]]) -> bool:
+    remaining = [_event_key(item) for item in actual]
+    for ref in reference:
+        key = _event_key(ref)
+        if key not in remaining:
+            return False
+        remaining.remove(key)
+    return True
+
+
+def _mmd(text: str) -> str:
+    return text.replace('"', "'").replace("\n", " ")
+
+
+def _trajectory_graph_svg(graph: dict[str, Any]) -> str:
+    nodes = graph["nodes"]
+    rounds = graph["rounds"]
+    width = 1180
+    height = 220 + max(0, len(rounds) - 1) * 42
+    box_w = 132
+    x0 = 28
+    y = 42
+    gap = 34
+    parts = [
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>",
+        "<rect width='100%' height='100%' fill='#fbfaf7'/>",
+        "<text x='28' y='26' font-size='18' font-family='Verdana' fill='#102a43'>Eval Trajectory Graph</text>",
+    ]
+    for index, node in enumerate(nodes):
+        x = x0 + index * (box_w + gap)
+        parts.append(f"<rect x='{x}' y='{y}' width='{box_w}' height='66' rx='8' fill='#ffffff' stroke='#52606d'/>")
+        parts.append(f"<text x='{x + 10}' y='{y + 38}' font-size='12' font-family='Verdana' fill='#102a43'>{html.escape(str(node['label']))}</text>")
+        if index < len(nodes) - 1:
+            ax = x + box_w
+            parts.append(f"<path d='M {ax + 3} {y + 33} L {ax + gap - 5} {y + 33}' stroke='#829ab1' stroke-width='2'/>")
+            parts.append(f"<path d='M {ax + gap - 13} {y + 27} L {ax + gap - 4} {y + 33} L {ax + gap - 13} {y + 39}' fill='none' stroke='#829ab1' stroke-width='2'/>")
+    ry = 148
+    for index, round_record in enumerate(rounds, start=1):
+        label = (
+            f"Round {round_record.get('outer_iteration')} | {round_record.get('mode')} | "
+            f"best {float(round_record.get('best_score', 0.0)):.3f} | {round_record.get('termination_signal')}"
+        )
+        parts.append(f"<rect x='198' y='{ry}' width='760' height='30' rx='6' fill='#eef2ff' stroke='#627d98'/>")
+        parts.append(f"<text x='212' y='{ry + 20}' font-size='12' font-family='Verdana' fill='#243b53'>{html.escape(label)}</text>")
+        ry += 42
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
 def _result(
     grader: str,
     grader_type: GraderType,
@@ -609,6 +928,50 @@ def _grade_outcome_completed(task: EvalTask, store: ArtifactStore) -> GraderResu
     status = outcome_from_store(store).get("status")
     passed = status == "completed"
     return _result("outcome_completed", "code", "outcome verification", 1.0 if passed else 0.0, passed, 1.0, f"Run status is {status}.", [{"status": status, "expected": "completed", "passed": passed}])
+
+
+def _grade_prd_tasks_executed(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    prd = json.loads(store.prd_path.read_text(encoding="utf-8")) if store.prd_path.exists() else {}
+    organized_tasks = prd.get("organized_tasks", []) if isinstance(prd, dict) else []
+    loop_tasks = {row.get("id"): row for row in store.list("loop_tasks")}
+    iterations_by_task = {}
+    for iteration in store.list("loop_iterations"):
+        iterations_by_task.setdefault(iteration.get("task_id"), []).append(iteration)
+    task_checks = []
+    for item in organized_tasks:
+        source_task_id = item.get("source_task_id")
+        loop_task = loop_tasks.get(source_task_id)
+        iterations = iterations_by_task.get(source_task_id, [])
+        status_matches = bool(loop_task) and item.get("status") == loop_task.get("status")
+        task_checks.append(
+            {
+                "prd_task_id": item.get("id"),
+                "source_task_id": source_task_id,
+                "has_loop_task": bool(loop_task),
+                "has_iteration": bool(iterations),
+                "status_matches": status_matches,
+                "passed": bool(loop_task) and bool(iterations) and status_matches,
+            }
+        )
+    checks = [
+        ("prd_exists", store.prd_path.exists()),
+        ("prd_has_tasks", bool(organized_tasks)),
+        ("all_prd_tasks_have_loop_tasks", all(check["has_loop_task"] for check in task_checks)),
+        ("all_prd_tasks_have_iterations", all(check["has_iteration"] for check in task_checks)),
+        ("all_prd_task_statuses_match", all(check["status_matches"] for check in task_checks)),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "prd_tasks_executed",
+        "code",
+        "prd execution verification",
+        score,
+        passed,
+        1.0,
+        f"Verified {sum(1 for check in task_checks if check['passed'])}/{len(task_checks)} PRD task(s) against loop tasks and iterations.",
+        [{"check": name, "passed": passed} for name, passed in checks] + task_checks,
+    )
 
 
 def _grade_mode_selected(task: EvalTask, store: ArtifactStore) -> GraderResult:
@@ -652,8 +1015,9 @@ def _grade_transcript_progress(task: EvalTask, store: ArtifactStore) -> GraderRe
     progress = store.progress_path.read_text(encoding="utf-8") if store.progress_path.exists() else ""
     traces = store.list("agent_traces")
     has_complete = "<promise>COMPLETE</promise>" in progress
+    has_incomplete_stop = "Stopped with" in progress and "incomplete loop tasks" in progress
     has_steps = "Task 1:" in progress and len(progress.splitlines()) >= 5
-    passed = has_complete and has_steps
+    passed = (has_complete or has_incomplete_stop) and has_steps
     return _result(
         "transcript_progress",
         "code",
@@ -662,16 +1026,30 @@ def _grade_transcript_progress(task: EvalTask, store: ArtifactStore) -> GraderRe
         passed,
         0.75,
         f"Progress lines={len(progress.splitlines())}; traces={len(traces)}.",
-        [{"check": "complete_marker", "passed": has_complete}, {"check": "step_visibility", "passed": has_steps}],
+        [
+            {"check": "complete_or_incomplete_stop_marker", "passed": has_complete or has_incomplete_stop},
+            {"check": "step_visibility", "passed": has_steps},
+        ],
     )
 
 
 def _grade_report_rubric(task: EvalTask, store: ArtifactStore) -> GraderResult:
     report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
+    evaluations = store.list("variant_evaluations")
+    research_metrics = [
+        row.get("metrics", {})
+        for row in evaluations
+        if row.get("inner_loop") == "research" and isinstance(row.get("metrics"), dict)
+    ]
+    rubric_dimensions = {"factual_accuracy", "citation_accuracy", "completeness", "source_quality", "tool_efficiency"}
+    has_research_rubric_metrics = bool(research_metrics) and all(
+        dimension in research_metrics[0] for dimension in rubric_dimensions
+    )
     rubric_checks = [
         ("has_summary", "summary" in report.lower() or "findings" in report.lower()),
         ("mentions_sources", "source" in report.lower()),
         ("mentions_uncertainty", any(term in report.lower() for term in ["uncertain", "caveat", "contradiction", "limitation"])),
+        ("has_research_rubric_metrics", has_research_rubric_metrics),
         ("substantial_length", len(report.split()) >= 80),
     ]
     score = sum(1 for _, passed in rubric_checks if passed) / len(rubric_checks)
@@ -979,6 +1357,201 @@ def _grade_trajectory_modes(task: EvalTask, store: ArtifactStore) -> GraderResul
             {"check": "required_modes_subset", "missing": missing, "passed": not missing},
             {"check": "forbidden_modes_absent", "forbidden_seen": forbidden_seen, "passed": not forbidden_seen},
         ],
+    )
+
+
+def _grade_multi_iteration_loop(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    min_rounds = int(task.metadata.get("min_rounds", 2))
+    rounds = store.list("evolution_rounds")
+    checks = [
+        ("min_rounds", len(rounds) >= min_rounds),
+        ("all_rounds_have_best_score", all("best_score" in row for row in rounds)),
+        ("all_rounds_have_signal", all(row.get("termination_signal") for row in rounds)),
+        ("variant_evaluations_exist", bool(store.list("variant_evaluations"))),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "multi_iteration_loop",
+        "code",
+        "multi-round trajectory check",
+        score,
+        passed,
+        1.0,
+        f"Observed {len(rounds)} evolution round(s); required at least {min_rounds}.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _grade_loop_no_score_regression(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    max_drop = float(task.metadata.get("max_score_drop", 0.2))
+    rounds = store.list("evolution_rounds")
+    scores = [float(row.get("best_score", 0.0)) for row in rounds]
+    if not scores:
+        return _result("loop_no_score_regression", "code", "score regression check", 0.0, False, 1.0, "No round scores were recorded.", [{"check": "round_scores_exist", "passed": False}])
+    first = scores[0]
+    best = max(scores)
+    final = scores[-1]
+    worst_drop = max(0.0, best - final)
+    result = json.loads(store.optimization_result_path.read_text(encoding="utf-8")) if store.optimization_result_path.exists() else {}
+    selected_score = float(result.get("score", 0.0))
+    checks = [
+        ("selected_score_preserves_best", selected_score >= best - 1e-9),
+        ("final_drop_recorded_within_budget_or_best_preserved", worst_drop <= max_drop or selected_score >= best - 1e-9),
+        ("best_at_least_first", best >= first),
+        ("scores_in_unit_interval", all(0.0 <= score <= 1.0 for score in scores)),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "loop_no_score_regression",
+        "code",
+        "score regression check",
+        score,
+        passed,
+        1.0,
+        f"round_scores={scores}; best={best:.3f}; final={final:.3f}; selected={selected_score:.3f}; worst_drop={worst_drop:.3f}.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _grade_literature_refresh_on_stuck(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    progress = store.progress_path.read_text(encoding="utf-8") if store.progress_path.exists() else ""
+    rounds = store.list("evolution_rounds")
+    sources = store.list("sources")
+    claims = store.list("claims")
+    stuck_signals = {row.get("termination_signal") for row in rounds if row.get("termination_signal") in {"score_plateau", "coverage_plateau"}}
+    refresh_sources = [source for source in sources if str(source.get("url", "")).startswith("memory://literature-refresh/")]
+    refresh_claims = [claim for claim in claims if claim.get("created_by_agent") == "literature_refresh_policy"]
+    checks = [
+        ("stuck_signal_observed", bool(stuck_signals)),
+        ("progress_records_literature_refresh", "Literature refresh triggered" in progress),
+        ("refresh_source_created", bool(refresh_sources)),
+        ("refresh_claim_created", bool(refresh_claims)),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "literature_refresh_on_stuck",
+        "code",
+        "stuck-loop literature trigger",
+        score,
+        passed,
+        1.0,
+        f"stuck_signals={sorted(str(signal) for signal in stuck_signals)}; refresh_sources={len(refresh_sources)}; refresh_claims={len(refresh_claims)}.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _grade_literature_grounding_present(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    progress = store.progress_path.read_text(encoding="utf-8") if store.progress_path.exists() else ""
+    claims = store.list("claims")
+    sources = store.list("sources")
+    grounding_claims = [claim for claim in claims if claim.get("created_by_agent") == "literature_grounding_policy"]
+    grounding_source_ids = {source_id for claim in grounding_claims for source_id in claim.get("source_ids", [])}
+    checks = [
+        ("progress_records_initial_grounding", "Literature grounding (initial)" in progress),
+        ("grounding_claim_created", bool(grounding_claims)),
+        ("grounding_claim_has_source", bool(grounding_source_ids)),
+        ("grounding_source_exists", any(source.get("id") in grounding_source_ids for source in sources)),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "literature_grounding_present",
+        "code",
+        "initial literature grounding",
+        score,
+        passed,
+        1.0,
+        f"grounding_claims={len(grounding_claims)}; grounding_source_ids={len(grounding_source_ids)}.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _grade_trajectory_graph_artifact(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    trial_root = store.root.parent.parent
+    mmd = trial_root / "trajectory_graph.mmd"
+    svg = trial_root / "trajectory_graph.svg"
+    graph_json = trial_root / "trajectory_graph.json"
+    text = mmd.read_text(encoding="utf-8") if mmd.exists() else ""
+    checks = [
+        ("mermaid_graph_exists", mmd.exists()),
+        ("svg_graph_exists", svg.exists()),
+        ("json_graph_exists", graph_json.exists()),
+        ("graph_mentions_outer_loop", "outer" in text.lower()),
+        ("graph_mentions_inner_loop", "inner" in text.lower()),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    return _result(
+        "trajectory_graph_artifact",
+        "code",
+        "graph trajectory artifact",
+        score,
+        passed,
+        1.0,
+        f"Trajectory graph artifacts: {mmd}, {svg}, {graph_json}.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _grade_trajectory_match_modes(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    actual = normalized_trajectory_events(store)
+    reference = [
+        {"type": str(item.get("type", "")), "name": str(item.get("name", ""))}
+        for item in task.metadata.get("reference_trajectory", [])
+        if isinstance(item, dict)
+    ]
+    if not reference:
+        reference = [
+            {"type": "router", "name": task.task_mode},
+            {"type": "outer_loop", "name": task.task_mode},
+            {"type": "inner_loop", "name": task.task_mode},
+            {"type": "selection", "name": "variant"},
+            {"type": "outcome", "name": "completed"},
+        ]
+    strict_reference = reference[:4]
+    minimal_reference = [reference[0], reference[1], reference[2], reference[-1]]
+    allowed_reference = list({(event["type"], event["name"]): event for event in actual}.values())
+    results = {
+        "strict": trajectory_match(actual, strict_reference, "strict"),
+        "unordered": trajectory_match(actual, minimal_reference, "unordered"),
+        "superset": trajectory_match(actual, minimal_reference, "superset"),
+        "subset": trajectory_match(actual, allowed_reference, "subset"),
+    }
+    checks = [(mode, result["passed"]) for mode, result in results.items()]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score == 1.0
+    match_summary = ", ".join(f"{mode}={result['passed']}" for mode, result in results.items())
+    return _result(
+        "trajectory_match_modes",
+        "code",
+        "trajectory match modes",
+        score,
+        passed,
+        1.0,
+        f"Matched normalized trajectory using modes: {match_summary}.",
+        [{"check": mode, "passed": result["passed"], "actual_count": result["actual_count"], "reference_count": result["reference_count"]} for mode, result in results.items()],
+    )
+
+
+def _grade_graph_trajectory_match(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    graph = trajectory_graph(store)
+    required_edges = task.metadata.get("required_graph_edges", [])
+    if not isinstance(required_edges, list) or not required_edges:
+        required_edges = [["prompt", "router"], ["router", "outer"], ["outer", "inner"], ["inner", "select"], ["agents", "outcome"]]
+    result = graph_trajectory_match(graph, required_edges)
+    passed = bool(result["passed"])
+    return _result(
+        "graph_trajectory_match",
+        "code",
+        "graph trajectory match",
+        1.0 if passed else 0.0,
+        passed,
+        1.0,
+        f"Graph trajectory required_edges={len(required_edges)} missing={len(result['missing_edges'])}.",
+        [{"check": "required_graph_edges_present", "missing_edges": result["missing_edges"], "passed": passed}],
     )
 
 

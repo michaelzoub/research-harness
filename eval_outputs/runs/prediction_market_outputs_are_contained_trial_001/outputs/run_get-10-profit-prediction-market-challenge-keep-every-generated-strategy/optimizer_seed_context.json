@@ -1,0 +1,73 @@
+{
+  "goal": "Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file.",
+  "has_evaluator": true,
+  "mode": "optimize_query",
+  "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+  "run_id": "run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy",
+  "summary": "Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. adverse selection arbitrage inventory and risk controls; Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. prediction-market microstructure and market-making mechanisms; Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. AMM LMSR entropy and scoring-rule literature",
+  "top_query_findings": [
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.805,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.873,
+        "fallback_used": 0.0,
+        "implementability": 0.47,
+        "novelty": 0.7,
+        "source_quality": 0.805,
+        "tool_efficiency": 1.0
+      },
+      "query": "Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. adverse selection arbitrage inventory and risk controls",
+      "score": 0.873,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.873, citation=1.000, complete=1.000, source_quality=0.805, tool_efficiency=1.000; median judge score 0.972. novelty=0.700; implementability=0.470; evaluator_relevance=0.850. ",
+      "variant_id": "variant_d351099c8ab9"
+    },
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.798,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.869,
+        "fallback_used": 0.0,
+        "implementability": 0.47,
+        "novelty": 0.642,
+        "source_quality": 0.798,
+        "tool_efficiency": 1.0
+      },
+      "query": "Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. prediction-market microstructure and market-making mechanisms",
+      "score": 0.869,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.869, citation=1.000, complete=1.000, source_quality=0.798, tool_efficiency=1.000; median judge score 0.968. novelty=0.642; implementability=0.470; evaluator_relevance=0.850. ",
+      "variant_id": "variant_047092776ce0"
+    },
+    {
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.797,
+        "evaluator_relevance": 0.85,
+        "evidence_coverage": 1.0,
+        "factual_accuracy": 0.868,
+        "fallback_used": 0.0,
+        "implementability": 0.47,
+        "novelty": 0.7,
+        "source_quality": 0.797,
+        "tool_efficiency": 1.0
+      },
+      "query": "Get to $10 profit in the prediction market challenge. Keep every generated strategy as a run artifact, never as a source file. AMM LMSR entropy and scoring-rule literature",
+      "score": 0.868,
+      "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.972. novelty=0.700; implementability=0.470; evaluator_relevance=0.850. ",
+      "variant_id": "variant_058fb75720ad"
+    }
+  ]
+}

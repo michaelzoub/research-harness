@@ -1,8 +1,9 @@
 [
   {
     "evaluator_name": "length_score",
-    "id": "decision_7d266ff1a231",
-    "reason": "Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+    "id": "decision_57c771b473de",
+    "product_agent": "optimize",
+    "reason": "Optimize agent selected optimization-query loop; query exploration will feed the registered evaluator 'length_score'.",
     "requested_mode": "optimize_query",
     "selected_mode": "optimize_query"
   }

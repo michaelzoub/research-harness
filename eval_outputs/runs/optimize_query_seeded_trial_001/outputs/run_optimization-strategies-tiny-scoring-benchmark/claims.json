@@ -2,11 +2,47 @@
   {
     "confidence": 0.74,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_291a5402155e",
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_dfe5441dddef",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_797107c17425"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Positive edge comes from capturing spread against uninformed retail order flow."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_6e709c79096d",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "source_ids": [
+      "src_4bd6166bda26"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Parallel search agents increase evidence recall when each agent explores a distinct framing."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "literature_grounding_policy",
+    "id": "claim_8943259fabc8",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "source_ids": [
+      "src_32140441ec29"
+    ],
+    "support_level": "retrieved",
+    "text": "Literature grounding (initial) found: Single deterministic agents can match multi-agent systems on narrow bounded research questions."
+  },
+  {
+    "confidence": 0.74,
+    "contradicted_by": [],
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_ff25be31bba9",
+    "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
+    "source_ids": [
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
@@ -14,11 +50,11 @@
   {
     "confidence": 0.74,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_a4bb05412914",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_83fad28b3acd",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "A critic pass increases runtime and may decrease novelty if applied too early."
@@ -26,11 +62,11 @@
   {
     "confidence": 0.74,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_c212611417a2",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_977fc8e667c8",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Contradiction checks are most useful before final synthesis."
@@ -38,11 +74,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_c44a99c26ddc",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_f5db3c0eed10",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
@@ -50,11 +86,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_48a7b3d67c07",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_846fe293ee41",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
@@ -62,11 +98,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_331e94fc7974",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_5852b53e6e38",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
@@ -74,11 +110,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_5d8d991d1728",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_35c00d7649f0",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
@@ -86,11 +122,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_b051636decc8",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_a2e086e7255c",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
@@ -98,11 +134,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_d5f88d0e6470",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_2cbf85c7ece2",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
@@ -110,11 +146,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_dec31dfbb2dd",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_6b6da07df395",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
@@ -122,11 +158,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_095c874ab298",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_b5958ea75d83",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Adaptive evolution without benchmark comparison can worsen reliability."
@@ -134,11 +170,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_a4e387a2644a",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_f81f41793e43",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
@@ -146,11 +182,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_c08d9e397b12",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_d869371fedb9",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
@@ -158,11 +194,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_7735d399091d",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_12aef81fd766",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
@@ -170,11 +206,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_922f6ff8a866",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_2fd970738fb4",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
@@ -182,11 +218,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_bc36bc2ad645",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_d9a95fc05958",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
@@ -194,11 +230,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_468084767df5",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_e2a19163233d",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
@@ -206,11 +242,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_4f282d45d9e6",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_f62827ab11d9",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
@@ -218,11 +254,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_558ebf913aac",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_0bd0f494e33f",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
@@ -230,11 +266,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_5a2dfbdc2844",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_2207bf89236b",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
@@ -242,11 +278,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_248b3163491e",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_994eccbe9b0a",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
@@ -254,11 +290,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_4a7b13dd70ae",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_02d2cd625009",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
@@ -266,11 +302,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_7b33d3ea5c48",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_62d8d420d364",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
@@ -278,11 +314,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_c93f0cd62ada",
-    "id": "claim_4167aab62f02",
+    "created_by_agent": "research_loop:variant_834f7e7a06fa",
+    "id": "claim_fedaba18054d",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."
@@ -290,11 +326,11 @@
   {
     "confidence": 0.76,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_5239dd18afad",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_165542b21c8c",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
@@ -302,11 +338,11 @@
   {
     "confidence": 0.76,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_7aedf135129d",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_eee86a59e1e7",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
@@ -314,11 +350,11 @@
   {
     "confidence": 0.76,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_fd54fefe9152",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_99541836a288",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
@@ -326,11 +362,11 @@
   {
     "confidence": 0.66,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_24772ba3a20e",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_3c9fc4aa3408",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
@@ -338,11 +374,11 @@
   {
     "confidence": 0.66,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_8f97547d08c7",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_dcff073b3df8",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "A critic pass increases runtime and may decrease novelty if applied too early."
@@ -350,11 +386,11 @@
   {
     "confidence": 0.66,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_8fc976e8f5e8",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_2c043394a4ab",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Contradiction checks are most useful before final synthesis."
@@ -362,11 +398,11 @@
   {
     "confidence": 0.62,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_a988dc1d3b51",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_ba30c1194a82",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
@@ -374,11 +410,11 @@
   {
     "confidence": 0.62,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_240d80dee1e8",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_93f786fa5506",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Adaptive evolution without benchmark comparison can worsen reliability."
@@ -386,11 +422,11 @@
   {
     "confidence": 0.62,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_6f7ca67e3d7f",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_625fb28f9ea0",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
@@ -398,11 +434,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_e3d9c8c291ad",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_27fd6ab3bd1d",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
@@ -410,11 +446,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_1e83ff9ece7e",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_71b88ef3bc92",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
@@ -422,11 +458,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_e316b0d77a4e",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_9ac37cbee938",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
@@ -434,11 +470,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_ea28eb865cb6",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_3098677eaad2",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
@@ -446,11 +482,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_9cc89a735422",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_eeb09cec20cc",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
@@ -458,11 +494,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_4aec32dc5606",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_e3c10923aecd",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
@@ -470,11 +506,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_67eb840b4ca2",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_53349325886c",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
@@ -482,11 +518,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_952b210ea59d",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_ec2b5ebef96a",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
@@ -494,11 +530,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_b9417f550c2a",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_0a4dfd660493",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
@@ -506,11 +542,11 @@
   {
     "confidence": 0.54,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_2190243d16f6",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_aad6cefd5e84",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_cf6c5953173e"
+      "src_8f25b7cdb254"
     ],
     "support_level": "weak",
     "text": "Open-ended research benefits from broad early exploration before constraints are tightened."
@@ -518,11 +554,11 @@
   {
     "confidence": 0.54,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_2a72d438e3f3",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_304df7ae4ec3",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_cf6c5953173e"
+      "src_8f25b7cdb254"
     ],
     "support_level": "weak",
     "text": "Entropy injection can reveal overlooked mechanisms and assumptions."
@@ -530,11 +566,11 @@
   {
     "confidence": 0.54,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_0303c94f67eb",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_28e676471969",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_cf6c5953173e"
+      "src_8f25b7cdb254"
     ],
     "support_level": "weak",
     "text": "Too much exploration decreases precision when no critic-driven follow-up is used."
@@ -542,11 +578,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_44d2f91ddbd6",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_dcc4e41a5309",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
@@ -554,11 +590,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_773651f7d8c2",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_c7f3243b3200",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
@@ -566,11 +602,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_40374da99005",
-    "id": "claim_dba0632be59b",
+    "created_by_agent": "research_loop:variant_1e7486bca053",
+    "id": "claim_0a30661e9f39",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
@@ -578,11 +614,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_ccb5daed4057",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_b5aaa72a6c80",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Positive edge comes from capturing spread against uninformed retail order flow."
@@ -590,11 +626,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_d07dfd06cc2c",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_a0f46e1f9ad0",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "Negative edge comes from stale quotes that are swept by an informed arbitrageur after fair-value moves."
@@ -602,11 +638,11 @@
   {
     "confidence": 0.77,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_435ddd7c9c52",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_fb4c7aa777d3",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_dc6da6a97d24"
+      "src_797107c17425"
     ],
     "support_level": "strong",
     "text": "The static competitor does not re-anchor to fair value after jumps, creating an opportunity for adaptive strategies."
@@ -614,11 +650,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_38b9587dc355",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_2e56b9e30679",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Single deterministic agents can match multi-agent systems on narrow bounded research questions."
@@ -626,11 +662,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_0eac830794eb",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_10de574e1b45",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Multi-agent fan-out has less advantage when the task already has clear success criteria."
@@ -638,11 +674,11 @@
   {
     "confidence": 0.71,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_51d12d8ddc0b",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_8c09bd76026f",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_e3434c448ae7"
+      "src_32140441ec29"
     ],
     "support_level": "moderate",
     "text": "Parallel research increases cost and can decrease precision if agents duplicate similar searches."
@@ -650,11 +686,11 @@
   {
     "confidence": 0.67,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_bb96433b6174",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_c490da3ec956",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Critic agents reduce unsupported claims by challenging evidence gaps after extraction."
@@ -662,11 +698,11 @@
   {
     "confidence": 0.67,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_38357181304b",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_35f326478124",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "A critic pass increases runtime and may decrease novelty if applied too early."
@@ -674,11 +710,11 @@
   {
     "confidence": 0.67,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_f3132fa7f864",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_ddecfdcddc62",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_fc4dec8bcba3"
+      "src_7dbf96d21254"
     ],
     "support_level": "moderate",
     "text": "Contradiction checks are most useful before final synthesis."
@@ -686,11 +722,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_0a0ff14b13a9",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_b57f3ec2b75a",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Harness changes should be proposed, evaluated, and gated before modifying execution behavior."
@@ -698,11 +734,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_e46fc13cb890",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_67f4f04899c9",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Adaptive evolution without benchmark comparison can worsen reliability."
@@ -710,11 +746,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_f138ee18ee8a",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_31a19d7348f8",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_06bc90e02ef0"
+      "src_610c5afbb06a"
     ],
     "support_level": "moderate",
     "text": "Pending change schemas improve reviewability and prevent arbitrary self-modification."
@@ -722,11 +758,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_b8526b4749a7",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_7e76f6a6bb8e",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Typed artifact stores make multi-agent research runs easier to audit."
@@ -734,11 +770,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_e237b97f6594",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_6bc2ea8a6388",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "JSONL trace logs are sufficient for early reproducibility when prompts, tools, runtime, and outputs are captured."
@@ -746,11 +782,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_d29af0ad35f8",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_ed39767ebdab",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_d2999c816488"
+      "src_726924400614"
     ],
     "support_level": "moderate",
     "text": "Persistent world models should be introduced after the artifact schema stabilizes."
@@ -758,11 +794,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_fa14d3a96043",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_87a0ea29544d",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Adaptive fair-value estimates should use competitor midpoint, recent fills, and stale-fill signals."
@@ -770,11 +806,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_5381f3bdd779",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_2380ac95667a",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Canceling or widening quotes after jump or adverse-selection signals reduces arbitrageur losses."
@@ -782,11 +818,11 @@
   {
     "confidence": 0.64,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_4b4ddea4def6",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_4605be4895d7",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_2ec41f892708"
+      "src_11af9b9f5a5c"
     ],
     "support_level": "moderate",
     "text": "Inventory skew and moderate size help preserve profitability across randomized regimes."
@@ -794,11 +830,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_d1ac38da6001",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_f1acf9f9e1a6",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Parallel search agents increase evidence recall when each agent explores a distinct framing."
@@ -806,11 +842,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_026be841811a",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_367c8c1536a2",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Fan-in synthesis improves report coherence when claims are deduplicated before ranking."
@@ -818,11 +854,11 @@
   {
     "confidence": 0.63,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_11af872132b7",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_4bacc94f2cea",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_333d21aa077a"
+      "src_4bd6166bda26"
     ],
     "support_level": "moderate",
     "text": "Uncriticized parallel outputs can increase unsupported claims because weak abstracts are repeated."
@@ -830,11 +866,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_3b8ba5d8b016",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_334b065dea2b",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The evaluator rewards adaptive estimation, inventory control, stale-quote protection, and passive liquidity provision."
@@ -842,11 +878,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_14991ab627e8",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_03bd9f5db680",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The evaluator penalizes static ladders, excessive size, and tight quotes without jump guards."
@@ -854,11 +890,11 @@
   {
     "confidence": 0.6,
     "contradicted_by": [],
-    "created_by_agent": "research_loop:variant_02db2c654db8",
-    "id": "claim_ed49f0da5e2a",
+    "created_by_agent": "research_loop:variant_8723eeea626e",
+    "id": "claim_c3eb15551180",
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "source_ids": [
-      "src_ed523946bcb1"
+      "src_1a44475fff77"
     ],
     "support_level": "moderate",
     "text": "The registered evaluator name is prediction_market and can be used with optimize_query mode."

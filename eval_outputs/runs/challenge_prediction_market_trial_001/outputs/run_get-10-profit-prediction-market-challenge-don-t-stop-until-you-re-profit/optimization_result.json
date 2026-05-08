@@ -1,0 +1,43 @@
+{
+  "best_candidate_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimized_candidate.txt",
+  "best_variant_id": "variant_a2d346028b37",
+  "candidate": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1 query_seed=Get to $10 profit in the prediction market challenge, don't stop until you're profitable. Introduce entropy from AMM, prediction-market, and options literature before tweaking hyperparameters. prediction-market microstructure and market-making mechanisms",
+  "evaluator_name": "prediction_market",
+  "metrics": {
+    "candidate_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/candidates/round_01_variant_a2d346028b37.py",
+    "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+    "failure_count": 0,
+    "mean_arb_edge": 0.0,
+    "mean_edge": 0.111832,
+    "mean_retail_edge": 0.111832,
+    "official_measured": false,
+    "score_source": "local_official_semantics_fallback",
+    "simulations": 80,
+    "success_count": 80
+  },
+  "note": "Prediction-market optimization uses upstream mean edge when the orderbook_pm_challenge repo is available. The normalized score is derived from mean edge for harness aggregation.",
+  "objective_direction": "maximize",
+  "objective_name": "prediction_market_mean_edge",
+  "objective_target": {
+    "kind": "profit_usd",
+    "met": false,
+    "no_stop_until_target": true,
+    "target": 10.0
+  },
+  "official_result": {
+    "candidate_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/candidates/round_01_variant_a2d346028b37.py",
+    "failure_count": 0,
+    "measured": false,
+    "profit_usd": 0.111832,
+    "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
+    "score_source": "local_official_semantics_fallback",
+    "success_count": 80,
+    "target_met": false,
+    "target_profit_usd": 10.0
+  },
+  "optimal_code_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/optimal_code.py",
+  "run_id": "run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit",
+  "score": 0.502,
+  "score_variable": "score",
+  "solution_path": "eval_outputs/runs/challenge_prediction_market_trial_001/outputs/run_get-10-profit-prediction-market-challenge-don-t-stop-until-you-re-profit/solution.py"
+}

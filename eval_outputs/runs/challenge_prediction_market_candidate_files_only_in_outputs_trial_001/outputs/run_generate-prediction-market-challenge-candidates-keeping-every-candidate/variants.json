@@ -1,0 +1,128 @@
+[
+  {
+    "id": "variant_af3f241ebc4d",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "prediction-market microstructure and market-making mechanisms",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_513f1848d483",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "AMM LMSR entropy and scoring-rule literature",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_7ec3fcf21eb5",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "adverse selection arbitrage inventory and risk controls",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_f791784ac944",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/optimizer_seed_context.json",
+      "query_seed_summary": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_06805bf296ae",
+      "variant_994f1d46b833",
+      "variant_1d943d5c5bcb"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1 query_seed=Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_a654d71c3f96",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/optimizer_seed_context.json",
+      "query_seed_summary": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_06805bf296ae",
+      "variant_994f1d46b833",
+      "variant_1d943d5c5bcb"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1 query_seed=Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_255c4810bb04",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/optimizer_seed_context.json",
+      "query_seed_summary": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_06805bf296ae",
+      "variant_994f1d46b833",
+      "variant_1d943d5c5bcb"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=retail_only_extreme_edges size=1 spread=16 inventory=15 skew=12 quote_mode=extreme cancel_all=1 query_seed=Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  },
+  {
+    "id": "variant_89ac56907470",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory",
+      "optimizer_seed_context_path": "eval_outputs/runs/challenge_prediction_market_candidate_files_only_in_outputs_trial_001/outputs/run_generate-prediction-market-challenge-candidates-keeping-every-candidate/optimizer_seed_context.json",
+      "query_seed_summary": "Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory AMM LMSR entropy and scoring-rule literature; Generate prediction-market challenge candidates, keeping every candidate inside the run output directory adverse selection arbitrage inventory and risk controls"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_06805bf296ae",
+      "variant_994f1d46b833",
+      "variant_1d943d5c5bcb"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=ask_fade_bid_fade size=0.75 spread=10 inventory=25 skew=9 quote_mode=outside_competitor cancel_all=1 query_seed=Generate prediction-market challenge candidates, keeping every candidate inside the run output directory prediction-market microstructure and market-making mechanisms",
+    "run_id": "run_generate-prediction-market-challenge-candidates-keeping-every-candidate"
+  }
+]

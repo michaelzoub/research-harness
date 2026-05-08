@@ -2,15 +2,17 @@
   {
     "acceptance_criteria": [
       "Explicit flags, evaluator availability, and prompt heuristics were checked",
-      "A task ingestion decision was persisted"
+      "A task ingestion decision was persisted",
+      "The `research` product agent was selected"
     ],
     "action": "debug_harness",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.370168+00:00",
-    "created_at": "2026-05-06T22:55:41.369478+00:00",
-    "id": "task_2a746dda85d1",
+    "completed_at": "2026-05-07T23:59:25.158260+00:00",
+    "created_at": "2026-05-07T23:59:25.157658+00:00",
+    "id": "task_663ca5839d93",
     "last_error": null,
     "params": {
+      "product_agent": "research",
       "selected_mode": "research"
     },
     "passes": true,
@@ -21,24 +23,27 @@
   },
   {
     "acceptance_criteria": [
+      "The agent harness ran model/tool/state loop steps for this product option",
+      "Research mode used breadth-first parallel query variants before narrowing",
       "The outer loop proposed code or query variants",
       "The selected inner loop returned ranked variants with scalar scores",
       "Plateau or threshold stopping signals were evaluated"
     ],
     "action": "debug_harness",
     "attempts": 2,
-    "completed_at": "2026-05-06T22:55:41.387144+00:00",
-    "created_at": "2026-05-06T22:55:41.369488+00:00",
-    "id": "task_00c44fe98bbb",
+    "completed_at": "2026-05-07T23:59:25.185655+00:00",
+    "created_at": "2026-05-07T23:59:25.157666+00:00",
+    "id": "task_fe390d326853",
     "last_error": null,
     "params": {
+      "product_agent": "research",
       "selected_mode": "research"
     },
     "passes": true,
     "priority": 2,
     "result_summary": "Completed 1 evolutionary outer rounds.",
     "status": "passed",
-    "title": "Run outer evolutionary orchestrator"
+    "title": "Run research agent loop"
   },
   {
     "acceptance_criteria": [
@@ -47,9 +52,9 @@
     ],
     "action": "hypothesize",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.388232+00:00",
-    "created_at": "2026-05-06T22:55:41.369494+00:00",
-    "id": "task_d46730a1199a",
+    "completed_at": "2026-05-07T23:59:25.186513+00:00",
+    "created_at": "2026-05-07T23:59:25.157671+00:00",
+    "id": "task_7917c29a4131",
     "last_error": null,
     "params": {},
     "passes": true,
@@ -64,9 +69,9 @@
     ],
     "action": "critique",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.389647+00:00",
-    "created_at": "2026-05-06T22:55:41.369499+00:00",
-    "id": "task_1fd8374318f3",
+    "completed_at": "2026-05-07T23:59:25.187759+00:00",
+    "created_at": "2026-05-07T23:59:25.157676+00:00",
+    "id": "task_4b5db25ff2a2",
     "last_error": null,
     "params": {},
     "passes": true,
@@ -81,9 +86,9 @@
     ],
     "action": "synthesize",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.390978+00:00",
-    "created_at": "2026-05-06T22:55:41.369503+00:00",
-    "id": "task_c6f8f509fd99",
+    "completed_at": "2026-05-07T23:59:25.188676+00:00",
+    "created_at": "2026-05-07T23:59:25.157680+00:00",
+    "id": "task_ff4a090dd5d2",
     "last_error": null,
     "params": {},
     "passes": true,

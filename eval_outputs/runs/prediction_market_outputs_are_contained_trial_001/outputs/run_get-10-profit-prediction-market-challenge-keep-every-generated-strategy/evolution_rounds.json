@@ -1,0 +1,35 @@
+[
+  {
+    "best_score": 0.873,
+    "best_variant_id": "variant_d351099c8ab9",
+    "completed_at": "2026-05-07T23:59:15.381655+00:00",
+    "id": "round_697d35b67abf",
+    "mode": "optimize_query",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_047092776ce0",
+      "variant_058fb75720ad",
+      "variant_d351099c8ab9"
+    ]
+  },
+  {
+    "best_score": 0.502,
+    "best_variant_id": "variant_3b2f58609428",
+    "completed_at": "2026-05-07T23:59:15.861076+00:00",
+    "id": "round_c9fdd0e39bc0",
+    "mode": "optimize",
+    "outer_iteration": 2,
+    "plateau_count": 0,
+    "run_id": "run_get-10-profit-prediction-market-challenge-keep-every-generated-strategy",
+    "termination_signal": "improved",
+    "variant_ids": [
+      "variant_3b2f58609428",
+      "variant_4e9c65150a1d",
+      "variant_c893936c9df1",
+      "variant_b1779eb26bc9"
+    ]
+  }
+]

@@ -20,11 +20,13 @@ from .schemas import (
     EvolutionRound,
     FailedPath,
     ProductAgent,
+    Source,
     SourceStrategyItem,
     TaskIngestionDecision,
     TaskMode,
     Variant,
     VariantEvaluation,
+    now_iso,
 )
 from .search import SearchBackend
 from .store import ArtifactStore
@@ -218,7 +220,7 @@ class ResearchLoop:
     async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
         retriever_name = str(variant.metadata.get("retriever", "local"))
         limit = int(variant.metadata.get("limit", 6))
-        backend, backend_results, retrieval_notes = self._search_with_fallback(retriever_name, variant, limit, store)
+        backend, backend_results, retrieval_notes = await self._search_with_fallback(retriever_name, variant, limit, store)
         sources = []
         claim_count = 0
         for document, relevance in backend_results:
@@ -240,9 +242,11 @@ class ResearchLoop:
         metrics = self._research_metrics(sources, claim_count)
         metrics["fallback_used"] = 1.0 if retrieval_notes else 0.0
         judge_scores = [
-            metrics["coverage"],
-            metrics["corroboration"],
-            metrics["credibility"],
+            metrics["factual_accuracy"],
+            metrics["citation_accuracy"],
+            metrics["completeness"],
+            metrics["source_quality"],
+            metrics["tool_efficiency"],
             _stable_judge_score(variant.payload, metrics),
         ]
         llm_score, llm_summary = self._llm_judge_score(variant, metrics, len(sources), claim_count)
@@ -257,14 +261,17 @@ class ResearchLoop:
             metrics=metrics,
             judge_scores=judge_scores,
             summary=(
-                f"Retrieved {len(sources)} sources and {claim_count} claims; {llm_summary}"
+                f"Retrieved {len(sources)} sources and {claim_count} claims; "
+                f"rubric factual={metrics['factual_accuracy']:.3f}, citation={metrics['citation_accuracy']:.3f}, "
+                f"complete={metrics['completeness']:.3f}, source_quality={metrics['source_quality']:.3f}, "
+                f"tool_efficiency={metrics['tool_efficiency']:.3f}; {llm_summary}"
                 f"median judge score {score:.3f}."
                 + (f" Retrieval notes: {'; '.join(retrieval_notes)}" if retrieval_notes else "")
             ),
             passed=score >= self.pass_threshold,
         )
 
-    def _search_with_fallback(
+    async def _search_with_fallback(
         self,
         retriever_name: str,
         variant: Variant,
@@ -273,8 +280,11 @@ class ResearchLoop:
     ) -> tuple[SearchBackend, list[tuple[object, float]], list[str]]:
         backend = self.search_factory(retriever_name)
         notes: list[str] = []
+        store.append_progress(f"Retriever search: {retriever_name} for {variant.id} (limit={limit})")
         try:
-            return backend, backend.search(variant.payload, limit=limit), notes
+            results = await asyncio.to_thread(backend.search, variant.payload, limit)
+            store.append_progress(f"Retriever done: {retriever_name} for {variant.id} returned {len(results)} result(s)")
+            return backend, results, notes
         except Exception as exc:
             message = f"{type(exc).__name__}: {exc}"
             store.add_failed_path(
@@ -290,8 +300,9 @@ class ResearchLoop:
             if retriever_name == "local":
                 return backend, [], notes
             fallback_backend = self.search_factory("local")
+            store.append_progress(f"Retriever search: local fallback for {variant.id} (limit={limit})")
             try:
-                results = fallback_backend.search(variant.payload, limit=limit)
+                results = await asyncio.to_thread(fallback_backend.search, variant.payload, limit)
             except Exception as fallback_exc:
                 fallback_message = f"{type(fallback_exc).__name__}: {fallback_exc}"
                 store.add_failed_path(
@@ -306,6 +317,7 @@ class ResearchLoop:
                 notes.append(f"local fallback failed ({type(fallback_exc).__name__})")
                 return fallback_backend, [], notes
             notes.append("local fallback used")
+            store.append_progress(f"Retriever done: local fallback for {variant.id} returned {len(results)} result(s)")
             return fallback_backend, results, notes
 
     def _llm_judge_score(
@@ -339,12 +351,31 @@ class ResearchLoop:
 
     def _research_metrics(self, sources: list[object], claim_count: int) -> dict[str, float]:
         if not sources:
-            return {"coverage": 0.0, "corroboration": 0.0, "credibility": 0.0}
+            return {
+                "coverage": 0.0,
+                "corroboration": 0.0,
+                "credibility": 0.0,
+                "factual_accuracy": 0.0,
+                "citation_accuracy": 0.0,
+                "completeness": 0.0,
+                "source_quality": 0.0,
+                "tool_efficiency": 0.0,
+            }
         credibility = sum(float(source.credibility_score) for source in sources) / len(sources)
+        coverage = round(min(1.0, len(sources) / 5), 3)
+        corroboration = round(min(1.0, claim_count / 10), 3)
+        credibility = round(credibility, 3)
+        citation_accuracy = 1.0 if claim_count > 0 else 0.0
+        tool_efficiency = round(max(0.0, min(1.0, 1.15 - (max(0, len(sources) - 8) * 0.08))), 3)
         return {
-            "coverage": round(min(1.0, len(sources) / 5), 3),
-            "corroboration": round(min(1.0, claim_count / 10), 3),
-            "credibility": round(credibility, 3),
+            "coverage": coverage,
+            "corroboration": corroboration,
+            "credibility": credibility,
+            "factual_accuracy": round((credibility * 0.65) + (corroboration * 0.35), 3),
+            "citation_accuracy": citation_accuracy,
+            "completeness": coverage,
+            "source_quality": credibility,
+            "tool_efficiency": tool_efficiency,
         }
 
 
@@ -428,6 +459,17 @@ class PlateauDetector:
         return "continue"
 
 
+@dataclass(frozen=True)
+class LoopObjective:
+    kind: str = "score"
+    target: Optional[float] = None
+    no_stop_until_target: bool = False
+
+    @property
+    def has_explicit_target(self) -> bool:
+        return self.target is not None
+
+
 class EvolutionaryOuterLoop:
     def __init__(
         self,
@@ -452,8 +494,11 @@ class EvolutionaryOuterLoop:
         self.llm = llm or LLMClient()
         self.max_outer_iterations = max_outer_iterations
         self.population_size = population_size
+        self.objective = _loop_objective_from_goal(goal, evaluator_name)
 
     async def run(self, store: ArtifactStore) -> None:
+        if self.task_mode in {"optimize", "optimize_query"}:
+            await self._record_literature_grounding(store, "initial")
         if self.task_mode == "optimize_query":
             await self._run_optimize_query(store)
             return
@@ -462,6 +507,8 @@ class EvolutionaryOuterLoop:
         parents: list[Variant] = []
         last_result: Optional[InnerLoopResult] = None
         last_variants: list[Variant] = []
+        best_eval: Optional[VariantEvaluation] = None
+        best_variants: list[Variant] = []
         for outer_iteration in range(1, self.max_outer_iterations + 1):
             variants = self._propose_variants(outer_iteration, parents)
             last_variants = variants
@@ -472,8 +519,11 @@ class EvolutionaryOuterLoop:
                 store.append_progress(f"  Variant {variant.id}: {_shorten(variant.payload)}")
             result = await inner_loop.evaluate(variants, store)
             last_result = result
-            best_eval = result.ranked_evaluations[0] if result.ranked_evaluations else None
-            plateau_signal = plateau.update(best_eval.score if best_eval else 0.0)
+            round_best = result.ranked_evaluations[0] if result.ranked_evaluations else None
+            if round_best and (best_eval is None or round_best.score > best_eval.score):
+                best_eval = round_best
+                best_variants = variants
+            plateau_signal = plateau.update(round_best.score if round_best else 0.0)
             termination_signal = result.termination_signal
             if termination_signal == "continue":
                 termination_signal = plateau_signal
@@ -483,15 +533,15 @@ class EvolutionaryOuterLoop:
                     outer_iteration=outer_iteration,
                     mode=self.task_mode,
                     variant_ids=[variant.id for variant in variants],
-                    best_variant_id=best_eval.variant_id if best_eval else None,
-                    best_score=best_eval.score if best_eval else 0.0,
+                    best_variant_id=round_best.variant_id if round_best else None,
+                    best_score=round_best.score if round_best else 0.0,
                     termination_signal=termination_signal,
                     plateau_count=plateau.plateau_count,
                 )
             )
             store.append_progress(
                 f"Outer {outer_iteration}: mode={self.task_mode} best_score="
-                f"{best_eval.score if best_eval else 0.0:.3f} signal={termination_signal}"
+                f"{round_best.score if round_best else 0.0:.3f} signal={termination_signal}"
             )
             for evaluation in result.ranked_evaluations[:3]:
                 store.append_progress(
@@ -499,11 +549,12 @@ class EvolutionaryOuterLoop:
                 )
             winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
             parents = [variant for variant in variants if variant.id in winner_ids]
-            if termination_signal in {"score_threshold", "claim_corroboration_threshold", "score_plateau", "coverage_plateau"}:
+            if termination_signal in {"score_plateau", "coverage_plateau"}:
+                self._record_literature_refresh(store, termination_signal, outer_iteration)
+            if self._should_stop_outer_loop(termination_signal, round_best, outer_iteration):
                 break
         if self.task_mode == "optimize" and last_result:
-            best_eval = last_result.ranked_evaluations[0] if last_result.ranked_evaluations else None
-            self._write_optimization_outputs(store, last_variants, best_eval)
+            self._write_optimization_outputs(store, best_variants or last_variants, best_eval)
 
     def _inner_loop(self) -> InnerLoop:
         if self.task_mode == "optimize":
@@ -560,7 +611,7 @@ class EvolutionaryOuterLoop:
                 store.append_progress(f"  Query score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
             parents = [variant for variant in variants if variant.id in winner_ids]
-            if termination_signal in {"claim_corroboration_threshold", "coverage_plateau"}:
+            if self._should_stop_query_loop(termination_signal, outer_iteration):
                 break
 
         seed_context = self._build_optimizer_seed_context(store, last_result)
@@ -619,7 +670,9 @@ class EvolutionaryOuterLoop:
             for evaluation in result.ranked_evaluations[:3]:
                 store.append_progress(f"  Optimize score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}]
-            if termination_signal == "score_threshold":
+            if termination_signal == "score_plateau":
+                self._record_literature_refresh(store, termination_signal, round_index)
+            if self._should_stop_optimizer_loop(termination_signal, round_best, round_index):
                 break
         self._write_optimization_outputs(store, best_round_variants, best_eval)
 
@@ -649,7 +702,11 @@ class EvolutionaryOuterLoop:
                 best_eval = round_best
                 best_round_variants = code_variants
             plateau_signal = plateau.update(round_best.score if round_best else 0.0)
-            termination_signal = "score_threshold" if round_best and round_best.score >= 0.8 else plateau_signal
+            objective_met = self._prediction_market_objective_met(round_best)
+            if self.objective.has_explicit_target:
+                termination_signal = "profit_target" if objective_met else plateau_signal
+            else:
+                termination_signal = "score_threshold" if round_best and round_best.score >= 0.8 else plateau_signal
             store.add_evolution_round(
                 EvolutionRound(
                     run_id=self.run_id,
@@ -670,9 +727,149 @@ class EvolutionaryOuterLoop:
                 source = evaluation.metrics.get("score_source", "unknown")
                 store.append_progress(f"  Prediction-market score {evaluation.score:.3f} via {source} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in ranked[:2]}]
-            if termination_signal == "score_threshold":
+            if termination_signal == "score_plateau":
+                self._record_literature_refresh(store, termination_signal, round_index)
+            if self._should_stop_optimizer_loop(termination_signal, round_best, round_index):
                 break
         self._write_optimization_outputs(store, best_round_variants, best_eval)
+
+    def _should_stop_outer_loop(
+        self,
+        termination_signal: str,
+        best_eval: Optional[VariantEvaluation],
+        outer_iteration: int,
+    ) -> bool:
+        if termination_signal in {"score_plateau", "coverage_plateau"} and self.objective.no_stop_until_target:
+            return outer_iteration >= self.max_outer_iterations
+        if termination_signal == "score_threshold" and self.objective.has_explicit_target:
+            return self._generic_objective_met(best_eval)
+        return termination_signal in {"score_threshold", "claim_corroboration_threshold", "score_plateau", "coverage_plateau"}
+
+    def _should_stop_query_loop(self, termination_signal: str, outer_iteration: int) -> bool:
+        minimum_query_rounds = 2 if self.objective.no_stop_until_target else 1
+        if outer_iteration < min(self.max_outer_iterations, minimum_query_rounds):
+            return False
+        if termination_signal == "coverage_plateau" and self.objective.no_stop_until_target:
+            return outer_iteration >= self.max_outer_iterations
+        return termination_signal in {"claim_corroboration_threshold", "coverage_plateau"}
+
+    def _should_stop_optimizer_loop(
+        self,
+        termination_signal: str,
+        best_eval: Optional[VariantEvaluation],
+        round_index: int,
+    ) -> bool:
+        if self.objective.has_explicit_target:
+            if termination_signal in {"profit_target", "score_threshold"}:
+                return self._objective_met(best_eval)
+            return round_index >= self.max_outer_iterations
+        if termination_signal == "score_plateau" and self.objective.no_stop_until_target:
+            return round_index >= self.max_outer_iterations
+        return termination_signal in {"score_threshold", "profit_target"}
+
+    def _objective_met(self, best_eval: Optional[VariantEvaluation]) -> bool:
+        if self.evaluator_name == "prediction_market":
+            return self._prediction_market_objective_met(best_eval)
+        return self._generic_objective_met(best_eval)
+
+    def _generic_objective_met(self, best_eval: Optional[VariantEvaluation]) -> bool:
+        if not best_eval:
+            return False
+        if self.objective.target is None:
+            return best_eval.score >= 0.8
+        return best_eval.score >= self.objective.target
+
+    def _prediction_market_objective_met(self, best_eval: Optional[VariantEvaluation]) -> bool:
+        if not best_eval:
+            return False
+        edge = _pm_edge_from_eval(best_eval)
+        if self.objective.target is None:
+            return best_eval.score >= 0.8
+        return edge >= self.objective.target
+
+    async def _record_literature_grounding(self, store: ArtifactStore, reason: str) -> None:
+        if any(claim.get("created_by_agent") == "literature_grounding_policy" for claim in store.list("claims")):
+            return
+        query = (
+            f"{self.goal} existing literature benchmarks failure modes evaluation "
+            "optimization strategy agent regressions"
+        )
+        item = self.source_strategy[0] if self.source_strategy else None
+        retriever_name = item.retriever if item else "local"
+        limit = min(3, item.limit if item else 3)
+        notes: list[str] = []
+        store.append_progress(f"Literature grounding ({reason}): searching {retriever_name} for existing evidence")
+        try:
+            backend = self.search_factory(retriever_name)
+            results = await asyncio.to_thread(backend.search, query, limit)
+        except Exception as exc:
+            notes.append(f"{retriever_name} failed ({type(exc).__name__}: {exc})")
+            store.append_progress(f"Retriever fallback: {retriever_name} failed during literature grounding: {type(exc).__name__}: {exc}")
+            backend = self.search_factory("local")
+            results = await asyncio.to_thread(backend.search, query, limit)
+        sources = []
+        for document, relevance in results[:limit]:
+            source = store.add_source(backend.to_source(document, relevance))
+            sources.append((source, document))
+        for source, document in sources:
+            claim_text = document.claims[0] if document.claims else document.summary
+            store.add_claim(
+                Claim(
+                    text=f"Literature grounding ({reason}) found: {claim_text}",
+                    source_ids=[source.id],
+                    confidence=0.74,
+                    support_level="retrieved",
+                    created_by_agent="literature_grounding_policy",
+                    run_id=self.run_id,
+                )
+            )
+        store.append_progress(
+            f"Literature grounding ({reason}): query='{query}' retrieved {len(sources)} source(s)"
+            + (f"; notes={' ; '.join(notes)}" if notes else "")
+        )
+
+    def _record_literature_refresh(self, store: ArtifactStore, reason: str, round_index: int) -> None:
+        existing_refresh = [
+            source
+            for source in store.list("sources")
+            if str(source.get("url", "")).startswith(f"memory://literature-refresh/{self.run_id}/")
+            and str(source.get("url", "")).endswith(f"/{reason}")
+        ]
+        if existing_refresh:
+            return
+        query = (
+            f"{self.goal} literature after {reason} "
+            "failure modes benchmark regressions optimization strategy"
+        )
+        source = store.add_source(
+            Source(
+                url=f"memory://literature-refresh/{self.run_id}/{round_index}/{reason}",
+                title=f"Literature refresh for {reason}",
+                author="research-harness",
+                date=now_iso().split("T")[0],
+                source_type="memory",
+                summary=(
+                    "Triggered because the agent loop plateaued or regressed. "
+                    "Use external literature, challenge references, and eval failure cases before further hyperparameter changes."
+                ),
+                relevance_score=0.82,
+                credibility_score=0.72,
+            )
+        )
+        store.add_claim(
+            Claim(
+                text=(
+                    f"Loop round {round_index} emitted {reason}; the harness triggered a literature-refresh query "
+                    f"before further optimization: {query}."
+                ),
+                source_ids=[source.id],
+                confidence=0.78,
+                support_level="instrumented",
+                created_by_agent="literature_refresh_policy",
+                run_id=self.run_id,
+            )
+        )
+        store.append_progress(f"Literature refresh triggered by {reason} at optimizer round {round_index}: {query}")
 
     async def _evaluate_prediction_market_variant(
         self,
@@ -683,10 +880,12 @@ class EvolutionaryOuterLoop:
         code = self._render_optimal_code(variant.payload)
         candidate_path = store.candidates_dir / f"round_{round_index:02d}_{variant.id}.py"
         candidate_path.write_text(code, encoding="utf-8")
+        store.append_progress(f"  Candidate eval start {variant.id}: {candidate_path}")
         result = await asyncio.to_thread(_run_prediction_market_official, candidate_path)
         edge = float(result.get("mean_edge", 0.0))
         score = _normalize_prediction_market_edge(edge)
         result["candidate_path"] = str(candidate_path)
+        store.append_progress(f"  Candidate eval done {variant.id}: mean_edge={edge:.3f} score={score:.3f}")
         score_source = str(result.get("score_source", "unknown"))
         measured_label = "upstream orderbook-pm" if result.get("official_measured") else "local challenge fallback"
         return VariantEvaluation(
@@ -731,6 +930,8 @@ class EvolutionaryOuterLoop:
             official_result = {
                 "measured": bool(best_eval.metrics.get("official_measured", False)),
                 "profit_usd": best_eval.metrics.get("mean_edge"),
+                "target_profit_usd": self.objective.target,
+                "target_met": self._prediction_market_objective_met(best_eval),
                 "score_source": best_eval.metrics.get("score_source", "unknown"),
                 "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
                 "candidate_path": best_eval.metrics.get("candidate_path"),
@@ -751,6 +952,12 @@ class EvolutionaryOuterLoop:
             "solution_path": solution_path,
             "candidate": candidate,
             "official_result": official_result,
+            "objective_target": {
+                "kind": self.objective.kind,
+                "target": self.objective.target,
+                "no_stop_until_target": self.objective.no_stop_until_target,
+                "met": self._objective_met(best_eval),
+            },
             "note": objective["note"],
         }
         store.write_optimization_result(payload)
@@ -813,12 +1020,18 @@ class EvolutionaryOuterLoop:
                     Variant(
                         run_id=self.run_id,
                         outer_iteration=outer_iteration,
-                        kind="query",
-                        payload=item.queries[0],
-                        parent_ids=[],
-                        metadata={"retriever": item.retriever, "purpose": item.purpose, "limit": item.limit},
-                    )
+                    kind="query",
+                    payload=item.queries[0],
+                    parent_ids=[],
+                    metadata={
+                        "retriever": item.retriever,
+                        "purpose": item.purpose,
+                        "limit": item.limit,
+                        "research_role": "parallel_research_subagent",
+                        "search_phase": "broad" if outer_iteration == 1 else "narrow",
+                    },
                 )
+            )
             return variants
         suffixes = ["survey benchmark", "limitations contradictory evidence", "recent empirical results", "implementation signals"]
         variants = []
@@ -831,7 +1044,7 @@ class EvolutionaryOuterLoop:
                     kind="query",
                     payload=f"{parent.payload} {suffix}",
                     parent_ids=[parent.id],
-                    metadata=parent.metadata,
+                    metadata={**parent.metadata, "search_phase": "narrow", "narrowing_suffix": suffix},
                 )
             )
         return variants
@@ -930,6 +1143,8 @@ class EvolutionaryOuterLoop:
         ]
         system = (
             "You are the outer orchestrator in an evolutionary research harness. "
+            "Start wide with short broad queries, then narrow only after observing source yield. "
+            "Fan out independent directions to parallel subagents. "
             "Propose query variants as JSON only: {\"variants\": [{\"query\": str, \"retriever\": str, \"purpose\": str}]}."
         )
         user = json.dumps(
@@ -965,7 +1180,13 @@ class EvolutionaryOuterLoop:
                     kind="query",
                     payload=query,
                     parent_ids=[parent.id for parent in parents],
-                    metadata={"retriever": retriever, "purpose": str(row.get("purpose") or "llm-proposed query"), "limit": 8},
+                    metadata={
+                        "retriever": retriever,
+                        "purpose": str(row.get("purpose") or "llm-proposed query"),
+                        "limit": 8,
+                        "research_role": "parallel_research_subagent",
+                        "search_phase": "broad" if outer_iteration == 1 else "narrow",
+                    },
                 )
             )
         return variants
@@ -1042,6 +1263,31 @@ def _product_agent_for(selected_mode: TaskMode, goal: str, evaluator_name: Optio
     if selected_mode == "research":
         return "research"
     return "optimize"
+
+
+def _loop_objective_from_goal(goal: str, evaluator_name: Optional[str]) -> LoopObjective:
+    normalized = goal.lower()
+    no_stop = bool(re.search(r"\bdo\s*not\s*stop\b|\bdon't\s*stop\b|\bdont\s*stop\b|until\s+you", normalized))
+    if evaluator_name == "prediction_market":
+        target = _profit_target_from_goal(goal)
+        return LoopObjective(kind="profit_usd", target=target, no_stop_until_target=no_stop and target is not None)
+    return LoopObjective(kind="score", target=None, no_stop_until_target=no_stop)
+
+
+def _profit_target_from_goal(goal: str) -> Optional[float]:
+    normalized = goal.lower()
+    patterns = [
+        r"(?:get\s+to|reach|hit|achieve|make|earn)\s*\$?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:\$|usd|dollars?)?\s*(?:profit|edge)?",
+        r"\$+\s*([0-9]+(?:\.[0-9]+)?)\s*(?:profit|edge|usd|dollars?)",
+        r"([0-9]+(?:\.[0-9]+)?)\s*(?:\$|usd|dollars?)\s*(?:profit|edge)",
+    ]
+    if not any(term in normalized for term in ["profit", "profitable", "edge", "$", "usd", "dollar"]):
+        return None
+    for pattern in patterns:
+        match = re.search(pattern, normalized)
+        if match:
+            return float(match.group(1))
+    return None
 
 
 def _implementability_score(text: str) -> float:

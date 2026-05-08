@@ -1,17 +1,17 @@
 [
   {
-    "claim_a": "claim_5241c1cc754b",
-    "claim_b": "claim_b1dedb958686",
+    "claim_a": "claim_0d48ed932ee0",
+    "claim_b": "claim_98a0717fe6cc",
     "explanation": "Claims appear directionally opposed and need source-level resolution.",
-    "id": "contra_05ebb2655cac",
+    "id": "contra_e047ed1753de",
     "resolution_status": "unresolved",
     "severity": "medium"
   },
   {
-    "claim_a": "claim_5241c1cc754b",
-    "claim_b": "claim_7a98ee603005",
+    "claim_a": "claim_02b921c83022",
+    "claim_b": "claim_98a0717fe6cc",
     "explanation": "Claims appear directionally opposed and need source-level resolution.",
-    "id": "contra_face9557b0ab",
+    "id": "contra_334cf6ec187a",
     "resolution_status": "unresolved",
     "severity": "medium"
   }

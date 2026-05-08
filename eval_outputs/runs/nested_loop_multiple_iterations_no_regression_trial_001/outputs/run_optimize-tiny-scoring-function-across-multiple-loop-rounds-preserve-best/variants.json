@@ -1,0 +1,158 @@
+[
+  {
+    "id": "variant_5d4c0304032d",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "baseline direct implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_063c9a489558",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "vectorized implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_957777a8a8b4",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "cached implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_d72dde40b216",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "branch-reduced implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_fc9dc56f661d",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_063c9a489558",
+      "variant_957777a8a8b4"
+    ],
+    "payload": "vectorized implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_ec182df3da70",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_063c9a489558",
+      "variant_957777a8a8b4"
+    ],
+    "payload": "cached implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_78645fb617e2",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_063c9a489558",
+      "variant_957777a8a8b4"
+    ],
+    "payload": "vectorized implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_ae357c408cdc",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_063c9a489558",
+      "variant_957777a8a8b4"
+    ],
+    "payload": "cached implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_75a7b5cea9e0",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_fc9dc56f661d",
+      "variant_ec182df3da70"
+    ],
+    "payload": "vectorized implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_542397c8b018",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_fc9dc56f661d",
+      "variant_ec182df3da70"
+    ],
+    "payload": "cached implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_d98630bc0bec",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_fc9dc56f661d",
+      "variant_ec182df3da70"
+    ],
+    "payload": "vectorized implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  },
+  {
+    "id": "variant_6291e9d88996",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_fc9dc56f661d",
+      "variant_ec182df3da70"
+    ],
+    "payload": "cached implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best"
+  }
+]

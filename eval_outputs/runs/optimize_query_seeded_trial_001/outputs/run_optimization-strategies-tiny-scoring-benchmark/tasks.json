@@ -2,43 +2,47 @@
   {
     "acceptance_criteria": [
       "Explicit mode or auto-router selected optimization-query exploration",
-      "A task ingestion decision was persisted"
+      "A task ingestion decision was persisted",
+      "The `optimize` product agent was selected"
     ],
     "action": "debug_harness",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.402480+00:00",
-    "created_at": "2026-05-06T22:55:41.401714+00:00",
-    "id": "task_c38e7a4b6bd7",
+    "completed_at": "2026-05-07T23:59:25.206826+00:00",
+    "created_at": "2026-05-07T23:59:25.205996+00:00",
+    "id": "task_6a17be14197a",
     "last_error": null,
     "params": {
+      "product_agent": "optimize",
       "selected_mode": "optimize_query"
     },
     "passes": true,
     "priority": 1,
-    "result_summary": "Selected optimize_query mode. Optimization-query mode was explicitly requested; query exploration will feed the registered evaluator 'length_score'.",
+    "result_summary": "Selected optimize_query mode. Optimize agent selected optimization-query loop; query exploration will feed the registered evaluator 'length_score'.",
     "status": "passed",
     "title": "Ingest prompt and select task mode"
   },
   {
     "acceptance_criteria": [
-      "Outer loop proposed query variants about the optimization challenge",
+      "The agent harness ran a query-research loop before optimization",
+      "Outer loop proposed query variants about the optimization target",
       "OptimizationQueryLoop scored query variants for evidence and implementability",
       "Ranked query evaluations were persisted"
     ],
     "action": "search",
     "attempts": 2,
-    "completed_at": "2026-05-06T22:55:41.429132+00:00",
-    "created_at": "2026-05-06T22:55:41.401722+00:00",
-    "id": "task_2da1e1c9d7c5",
+    "completed_at": "2026-05-07T23:59:25.234866+00:00",
+    "created_at": "2026-05-07T23:59:25.206003+00:00",
+    "id": "task_63e2f42aeb6f",
     "last_error": null,
     "params": {
+      "product_agent": "optimize",
       "selected_mode": "optimize_query"
     },
     "passes": true,
     "priority": 2,
     "result_summary": "Completed 2 evolutionary outer rounds.",
     "status": "passed",
-    "title": "Generate and evaluate optimization queries"
+    "title": "Generate and evaluate optimization strategy queries"
   },
   {
     "acceptance_criteria": [
@@ -47,9 +51,9 @@
     ],
     "action": "debug_harness",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.429377+00:00",
-    "created_at": "2026-05-06T22:55:41.401726+00:00",
-    "id": "task_9ce593044604",
+    "completed_at": "2026-05-07T23:59:25.235117+00:00",
+    "created_at": "2026-05-07T23:59:25.206008+00:00",
+    "id": "task_4a80e4a1bbd2",
     "last_error": null,
     "params": {},
     "passes": true,
@@ -61,18 +65,22 @@
   {
     "acceptance_criteria": [
       "If evaluator exists, optimize/code variants were evaluated",
-      "If evaluator is missing, optimizer phase was explicitly skipped"
+      "If evaluator is missing, optimizer phase was explicitly skipped",
+      "Challenge agents may additionally emit a runnable solution artifact for official grading",
+      "Explicit objective targets from the prompt must be met before this PRD item passes"
     ],
     "action": "debug_harness",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.429644+00:00",
-    "created_at": "2026-05-06T22:55:41.401731+00:00",
-    "id": "task_1a7872ab2e9d",
+    "completed_at": "2026-05-07T23:59:25.235542+00:00",
+    "created_at": "2026-05-07T23:59:25.206012+00:00",
+    "id": "task_b7c4d27b5627",
     "last_error": null,
-    "params": {},
+    "params": {
+      "product_agent": "optimize"
+    },
     "passes": true,
     "priority": 4,
-    "result_summary": "Ran optimizer variants using query-derived seed context.",
+    "result_summary": "Ran 4 optimizer variant evaluations using query-derived seed context; emitted optimization_result.json, optimal_code.py.",
     "status": "passed",
     "title": "Run optimizer variants from query seed context"
   },
@@ -82,14 +90,14 @@
     ],
     "action": "critique",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.431148+00:00",
-    "created_at": "2026-05-06T22:55:41.401734+00:00",
-    "id": "task_b937221fe0fa",
+    "completed_at": "2026-05-07T23:59:25.237163+00:00",
+    "created_at": "2026-05-07T23:59:25.206017+00:00",
+    "id": "task_ebb2d9ad137b",
     "last_error": null,
     "params": {},
     "passes": true,
     "priority": 5,
-    "result_summary": "Reviewed 27 claims and 0 hypotheses; found 2 contradictions.",
+    "result_summary": "Reviewed 30 claims and 0 hypotheses; found 2 contradictions.",
     "status": "passed",
     "title": "Critique ranked query and optimizer results"
   },
@@ -99,14 +107,14 @@
     ],
     "action": "synthesize",
     "attempts": 1,
-    "completed_at": "2026-05-06T22:55:41.432042+00:00",
-    "created_at": "2026-05-06T22:55:41.401738+00:00",
-    "id": "task_7bc38bd9d091",
+    "completed_at": "2026-05-07T23:59:25.238079+00:00",
+    "created_at": "2026-05-07T23:59:25.206021+00:00",
+    "id": "task_e3976ad82c03",
     "last_error": null,
     "params": {},
     "passes": true,
     "priority": 6,
-    "result_summary": "Synthesized final report with 9 sources, 27 claims, and 0 hypotheses.",
+    "result_summary": "Synthesized final report with 9 sources, 30 claims, and 0 hypotheses.",
     "status": "passed",
     "title": "Synthesize optimize-query run report"
   }

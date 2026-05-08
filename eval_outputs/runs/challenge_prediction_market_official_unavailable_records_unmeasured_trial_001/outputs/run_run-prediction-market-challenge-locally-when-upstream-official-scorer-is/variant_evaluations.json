@@ -1,0 +1,203 @@
+[
+  {
+    "id": "eval_00af87c6e029",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.869,
+      1.0,
+      1.0,
+      0.798,
+      1.0,
+      0.918,
+      0.63,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.798,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.869,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.63,
+      "source_quality": 0.798,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.869,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.869, citation=1.000, complete=1.000, source_quality=0.798, tool_efficiency=1.000; median judge score 0.959. novelty=0.630; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_8b846bc37334"
+  },
+  {
+    "id": "eval_dc775d11bc72",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.868,
+      1.0,
+      1.0,
+      0.797,
+      1.0,
+      0.948,
+      0.7,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.797,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.868,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.7,
+      "source_quality": 0.797,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.868,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.868, citation=1.000, complete=1.000, source_quality=0.797, tool_efficiency=1.000; median judge score 0.974. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_4daaeeaf2f62"
+  },
+  {
+    "id": "eval_143f7399236f",
+    "inner_loop": "optimize_query",
+    "judge_scores": [
+      0.867,
+      1.0,
+      1.0,
+      0.795,
+      1.0,
+      0.937,
+      0.7,
+      0.35,
+      0.85
+    ],
+    "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
+      "corroboration": 1.0,
+      "coverage": 1.0,
+      "credibility": 0.795,
+      "evaluator_relevance": 0.85,
+      "evidence_coverage": 1.0,
+      "factual_accuracy": 0.867,
+      "fallback_used": 0.0,
+      "implementability": 0.35,
+      "novelty": 0.7,
+      "source_quality": 0.795,
+      "tool_efficiency": 1.0
+    },
+    "passed": true,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.867,
+    "summary": "Retrieved 8 sources and 24 claims; rubric factual=0.867, citation=1.000, complete=1.000, source_quality=0.795, tool_efficiency=1.000; median judge score 0.969. novelty=0.700; implementability=0.350; evaluator_relevance=0.850. ",
+    "variant_id": "variant_5ec6e17b1970"
+  },
+  {
+    "id": "eval_2da08981fed7",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.502
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_96c6325a69b4.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.111832,
+      "mean_retail_edge": 0.111832,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.502,
+    "summary": "local challenge fallback mean_edge=0.112; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_96c6325a69b4.py.",
+    "variant_id": "variant_96c6325a69b4"
+  },
+  {
+    "id": "eval_09d2e4ed2b6b",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.501
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_a799f519405a.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.059409,
+      "mean_retail_edge": 0.059409,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.501,
+    "summary": "local challenge fallback mean_edge=0.059; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_a799f519405a.py.",
+    "variant_id": "variant_a799f519405a"
+  },
+  {
+    "id": "eval_84bb2fac5733",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.502
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_318de6ede4da.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.098829,
+      "mean_retail_edge": 0.098829,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.502,
+    "summary": "local challenge fallback mean_edge=0.099; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_318de6ede4da.py.",
+    "variant_id": "variant_318de6ede4da"
+  },
+  {
+    "id": "eval_417b878a16a3",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.501
+    ],
+    "metrics": {
+      "candidate_path": "eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_77dee6dc885d.py",
+      "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+      "failure_count": 0,
+      "mean_arb_edge": 0.0,
+      "mean_edge": 0.086122,
+      "mean_retail_edge": 0.086122,
+      "official_measured": false,
+      "score_source": "local_official_semantics_fallback",
+      "simulations": 80,
+      "success_count": 80
+    },
+    "passed": false,
+    "run_id": "run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is",
+    "score": 0.501,
+    "summary": "local challenge fallback mean_edge=0.086; score_source=local_official_semantics_fallback; successes=80; failures=0; candidate=eval_outputs/runs/challenge_prediction_market_official_unavailable_records_unmeasured_trial_001/outputs/run_run-prediction-market-challenge-locally-when-upstream-official-scorer-is/candidates/round_01_variant_77dee6dc885d.py.",
+    "variant_id": "variant_77dee6dc885d"
+  }
+]

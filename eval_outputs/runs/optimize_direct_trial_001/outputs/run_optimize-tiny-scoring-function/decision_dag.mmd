@@ -1,7 +1,7 @@
 flowchart TD
   prompt["Prompt: Optimize a tiny scoring function"]
-  route["Route: optimize"]
-  outer["Outer orchestrator: propose variants"]
+  route["Product agent: optimize\nLoop mode: optimize"]
+  outer["Agent harness loop: propose variants"]
   inner["Inner loop: evaluate and rank"]
   select["Tournament selection"]
   stop{"Threshold or plateau?"}

@@ -1,0 +1,27 @@
+{
+  "best_candidate_path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records/optimized_candidate.txt",
+  "best_variant_id": "variant_e012f50aedc8",
+  "candidate": "vectorized implementation",
+  "evaluator_name": "length_score",
+  "metrics": {
+    "deterministic_score": 0.5
+  },
+  "note": "This evaluator maximizes 1 / token_count for smoke-test optimization.",
+  "objective_direction": "maximize",
+  "objective_name": "length_score",
+  "objective_target": {
+    "kind": "score",
+    "met": false,
+    "no_stop_until_target": false,
+    "target": null
+  },
+  "official_result": {
+    "measured": true,
+    "score_source": "local_deterministic_evaluator"
+  },
+  "optimal_code_path": "eval_outputs/runs/trajectory_match_modes_are_enforced_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records/optimal_code.py",
+  "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records",
+  "score": 0.5,
+  "score_variable": "score",
+  "solution_path": null
+}

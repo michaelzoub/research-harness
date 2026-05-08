@@ -1,0 +1,122 @@
+[
+  {
+    "id": "eval_5a17db8632fd",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.3333333333333333
+    ],
+    "metrics": {
+      "deterministic_score": 0.3333333333333333
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.3333333333333333,
+    "summary": "Deterministic evaluator returned 0.333.",
+    "variant_id": "variant_97e058e7c6ac"
+  },
+  {
+    "id": "eval_20b9d7bb7673",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_0a2559debc9c"
+  },
+  {
+    "id": "eval_a73df8f53557",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_2690be1839d2"
+  },
+  {
+    "id": "eval_41eb354f5ffd",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_9427007d6abe"
+  },
+  {
+    "id": "eval_d44dc831a7f3",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_629fc858b1c4"
+  },
+  {
+    "id": "eval_ebbe1d1b156d",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_bf81c5903df8"
+  },
+  {
+    "id": "eval_8e1ca8c7ae1a",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_c28340311bf0"
+  },
+  {
+    "id": "eval_e47a4667ee3e",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_a214daf25e52"
+  }
+]

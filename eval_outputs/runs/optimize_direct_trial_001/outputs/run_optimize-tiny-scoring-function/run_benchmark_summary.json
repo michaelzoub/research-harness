@@ -1,6 +1,6 @@
 {
   "best_evaluation": {
-    "id": "eval_138916c63911",
+    "id": "eval_6d70ecc89f36",
     "inner_loop": "optimize",
     "judge_scores": [
       0.5
@@ -12,24 +12,24 @@
     "run_id": "run_optimize-tiny-scoring-function",
     "score": 0.5,
     "summary": "Deterministic evaluator returned 0.500.",
-    "variant_id": "variant_c3b316b78abc"
+    "variant_id": "variant_03feb757a615"
   },
   "counts": {
     "agent_traces": 2,
-    "claims": 0,
+    "claims": 3,
     "contradictions": 0,
     "evaluations": 4,
     "failed_agents": 0,
     "hypotheses": 0,
     "outer_rounds": 1,
     "passed_tasks": 4,
-    "sources": 0,
+    "sources": 3,
     "tasks": 4,
     "variants": 4
   },
   "evaluations": [
     {
-      "id": "eval_182f0c836e3f",
+      "id": "eval_ebd117c38b77",
       "inner_loop": "optimize",
       "judge_scores": [
         0.3333333333333333
@@ -41,10 +41,10 @@
       "run_id": "run_optimize-tiny-scoring-function",
       "score": 0.3333333333333333,
       "summary": "Deterministic evaluator returned 0.333.",
-      "variant_id": "variant_8b3592b2c173"
+      "variant_id": "variant_86d51652ea09"
     },
     {
-      "id": "eval_138916c63911",
+      "id": "eval_6d70ecc89f36",
       "inner_loop": "optimize",
       "judge_scores": [
         0.5
@@ -56,10 +56,10 @@
       "run_id": "run_optimize-tiny-scoring-function",
       "score": 0.5,
       "summary": "Deterministic evaluator returned 0.500.",
-      "variant_id": "variant_c3b316b78abc"
+      "variant_id": "variant_03feb757a615"
     },
     {
-      "id": "eval_19df5ec5e20b",
+      "id": "eval_206375f4eddc",
       "inner_loop": "optimize",
       "judge_scores": [
         0.5
@@ -71,10 +71,10 @@
       "run_id": "run_optimize-tiny-scoring-function",
       "score": 0.5,
       "summary": "Deterministic evaluator returned 0.500.",
-      "variant_id": "variant_59f767f225ab"
+      "variant_id": "variant_76479524c5c0"
     },
     {
-      "id": "eval_7cffc11e6665",
+      "id": "eval_f15269540d9c",
       "inner_loop": "optimize",
       "judge_scores": [
         0.5
@@ -86,17 +86,54 @@
       "run_id": "run_optimize-tiny-scoring-function",
       "score": 0.5,
       "summary": "Deterministic evaluator returned 0.500.",
-      "variant_id": "variant_ceee2e45d1e6"
+      "variant_id": "variant_16d3b1be4405"
     }
   ],
   "models": {
     "local-deterministic-fallback": 2
   },
+  "optimal_code": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimal_code.py",
+  "optimization_result": {
+    "best_candidate_path": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimized_candidate.txt",
+    "best_variant_id": "variant_03feb757a615",
+    "candidate": "vectorized implementation",
+    "evaluator_name": "length_score",
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "note": "This evaluator maximizes 1 / token_count for smoke-test optimization.",
+    "objective_direction": "maximize",
+    "objective_name": "length_score",
+    "objective_target": {
+      "kind": "score",
+      "met": false,
+      "no_stop_until_target": false,
+      "target": null
+    },
+    "official_result": {
+      "measured": true,
+      "score_source": "local_deterministic_evaluator"
+    },
+    "optimal_code_path": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimal_code.py",
+    "run_id": "run_optimize-tiny-scoring-function",
+    "score": 0.5,
+    "score_variable": "score",
+    "solution_path": null
+  },
+  "optimized_candidate": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimized_candidate.txt",
   "optimizer_seed_context": {},
   "prd": {
+    "agent_harness": {
+      "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+      "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+      "runtime_mode": "optimize"
+    },
     "artifacts": {
       "decision_dag": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/decision_dag.svg",
       "final_report": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/final_report.md",
+      "optimal_code": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimal_code.py",
+      "optimization_result": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimization_result.json",
+      "optimized_candidate": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimized_candidate.txt",
       "optimizer_seed_context": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/optimizer_seed_context.json",
       "progress": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/progress.txt",
       "run_benchmark": "eval_outputs/runs/optimize_direct_trial_001/outputs/run_optimize-tiny-scoring-function/run_benchmark.html",
@@ -109,11 +146,20 @@
       "This file is the run-local PRD/task map.",
       "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
     ],
+    "objective": {
+      "current": 0.5,
+      "kind": "score",
+      "met": true,
+      "no_stop_until_target": false,
+      "summary": "score current=0.5",
+      "target": null
+    },
     "organized_tasks": [
       {
         "acceptance_criteria": [
           "Explicit flags, evaluator availability, and prompt heuristics were checked",
-          "A task ingestion decision was persisted"
+          "A task ingestion decision was persisted",
+          "The `optimize` product agent was selected"
         ],
         "attempts": 1,
         "dependencies": [],
@@ -121,17 +167,20 @@
         "kind": "debug_harness",
         "last_error": null,
         "params": {
+          "product_agent": "optimize",
           "selected_mode": "optimize"
         },
         "passes": true,
         "priority": 1,
-        "result_summary": "Selected optimize mode. Optimize mode was explicitly requested with evaluator 'length_score'.",
-        "source_task_id": "task_5e8e7c86b8bb",
+        "result_summary": "Selected optimize mode. Optimize agent selected optimize loop with evaluator 'length_score'.",
+        "source_task_id": "task_025c993fac20",
         "status": "passed",
         "title": "Ingest prompt and select task mode"
       },
       {
         "acceptance_criteria": [
+          "The agent harness ran model/tool/state loop steps for this product option",
+          "Research mode used breadth-first parallel query variants before narrowing",
           "The outer loop proposed code or query variants",
           "The selected inner loop returned ranked variants with scalar scores",
           "Plateau or threshold stopping signals were evaluated"
@@ -144,14 +193,15 @@
         "kind": "debug_harness",
         "last_error": null,
         "params": {
+          "product_agent": "optimize",
           "selected_mode": "optimize"
         },
         "passes": true,
         "priority": 2,
         "result_summary": "Completed 1 evolutionary outer rounds.",
-        "source_task_id": "task_dbfc829ac6f4",
+        "source_task_id": "task_591214123e4e",
         "status": "passed",
-        "title": "Run outer evolutionary orchestrator"
+        "title": "Run optimize agent loop"
       },
       {
         "acceptance_criteria": [
@@ -167,8 +217,8 @@
         "params": {},
         "passes": true,
         "priority": 4,
-        "result_summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions.",
-        "source_task_id": "task_919bb89a5e3e",
+        "result_summary": "Reviewed 3 claims and 0 hypotheses; found 0 contradictions.",
+        "source_task_id": "task_9a6564cf9488",
         "status": "passed",
         "title": "Critique ranked variants and claims"
       },
@@ -186,8 +236,8 @@
         "params": {},
         "passes": true,
         "priority": 5,
-        "result_summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses.",
-        "source_task_id": "task_d33f7a915c14",
+        "result_summary": "Synthesized final report with 3 sources, 3 claims, and 0 hypotheses.",
+        "source_task_id": "task_577392519e69",
         "status": "passed",
         "title": "Synthesize evolutionary run report"
       }
@@ -216,11 +266,69 @@
       "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
       "task_type": "bounded"
     },
+    "product_agent": "optimize",
+    "ralph_loop": {
+      "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+      "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+      "max_iterations": 1,
+      "state_files": [
+        "prd.json",
+        "progress.txt",
+        "trace.jsonl"
+      ]
+    },
+    "research_architecture": {
+      "enabled_for_mode": false,
+      "judge_rubric": [
+        {
+          "name": "factual_accuracy",
+          "question": "Do claims match retrieved sources?",
+          "weight": 0.25
+        },
+        {
+          "name": "citation_accuracy",
+          "question": "Do cited sources support the cited claims?",
+          "weight": 0.2
+        },
+        {
+          "name": "completeness",
+          "question": "Are all requested aspects covered?",
+          "weight": 0.2
+        },
+        {
+          "name": "source_quality",
+          "question": "Were primary or authoritative sources preferred?",
+          "weight": 0.2
+        },
+        {
+          "name": "tool_efficiency",
+          "question": "Were the right tools used a reasonable number of times?",
+          "weight": 0.15
+        }
+      ],
+      "lead_agent": {
+        "model": "gpt-5.2",
+        "responsibilities": [
+          "decompose the question into independent directions",
+          "fan out subagent searches in parallel when directions are independent",
+          "start with broad landscape queries before narrowing",
+          "merge evidence and route weak spots to critic or follow-up search"
+        ],
+        "role": "lead_research_orchestrator"
+      },
+      "subagents": {
+        "model": "gpt-5.2",
+        "parallelism": "asyncio.gather over independent search agents or query variants",
+        "role": "parallel_research_subagents",
+        "search_policy": "start wide, evaluate source yield, then progressively narrow"
+      }
+    },
     "run": {
-      "completed_at": "2026-05-06T22:55:41.398506+00:00",
+      "completed_at": "2026-05-07T23:59:25.199902+00:00",
       "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
       "id": "run_optimize-tiny-scoring-function",
-      "started_at": "2026-05-06T22:55:41.393165+00:00",
+      "product_agent": "optimize",
+      "started_at": "2026-05-07T23:59:25.193062+00:00",
       "status": "completed",
       "task_mode": "optimize",
       "task_type": "bounded",
@@ -264,27 +372,28 @@
   "rounds": [
     {
       "best_score": 0.5,
-      "best_variant_id": "variant_c3b316b78abc",
-      "completed_at": "2026-05-06T22:55:41.396518+00:00",
-      "id": "round_c44ad700fb1f",
+      "best_variant_id": "variant_03feb757a615",
+      "completed_at": "2026-05-07T23:59:25.197638+00:00",
+      "id": "round_46b87e40deb8",
       "mode": "optimize",
       "outer_iteration": 1,
       "plateau_count": 0,
       "run_id": "run_optimize-tiny-scoring-function",
       "termination_signal": "improved",
       "variant_ids": [
-        "variant_8b3592b2c173",
-        "variant_c3b316b78abc",
-        "variant_59f767f225ab",
-        "variant_ceee2e45d1e6"
+        "variant_86d51652ea09",
+        "variant_03feb757a615",
+        "variant_76479524c5c0",
+        "variant_16d3b1be4405"
       ]
     }
   ],
   "run": {
-    "completed_at": "2026-05-06T22:55:41.398506+00:00",
+    "completed_at": "2026-05-07T23:59:25.199902+00:00",
     "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
     "id": "run_optimize-tiny-scoring-function",
-    "started_at": "2026-05-06T22:55:41.393165+00:00",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:25.193062+00:00",
     "status": "completed",
     "task_mode": "optimize",
     "task_type": "bounded",
@@ -295,8 +404,9 @@
   "solution": null,
   "task_ingestion": {
     "evaluator_name": "length_score",
-    "id": "decision_eae9f30b2dc0",
-    "reason": "Optimize mode was explicitly requested with evaluator 'length_score'.",
+    "id": "decision_290a7b4696a8",
+    "product_agent": "optimize",
+    "reason": "Optimize agent selected optimize loop with evaluator 'length_score'.",
     "requested_mode": "optimize",
     "selected_mode": "optimize"
   },
@@ -304,43 +414,48 @@
     {
       "acceptance_criteria": [
         "Explicit flags, evaluator availability, and prompt heuristics were checked",
-        "A task ingestion decision was persisted"
+        "A task ingestion decision was persisted",
+        "The `optimize` product agent was selected"
       ],
       "action": "debug_harness",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.395254+00:00",
-      "created_at": "2026-05-06T22:55:41.394752+00:00",
-      "id": "task_5e8e7c86b8bb",
+      "completed_at": "2026-05-07T23:59:25.195371+00:00",
+      "created_at": "2026-05-07T23:59:25.194894+00:00",
+      "id": "task_025c993fac20",
       "last_error": null,
       "params": {
+        "product_agent": "optimize",
         "selected_mode": "optimize"
       },
       "passes": true,
       "priority": 1,
-      "result_summary": "Selected optimize mode. Optimize mode was explicitly requested with evaluator 'length_score'.",
+      "result_summary": "Selected optimize mode. Optimize agent selected optimize loop with evaluator 'length_score'.",
       "status": "passed",
       "title": "Ingest prompt and select task mode"
     },
     {
       "acceptance_criteria": [
+        "The agent harness ran model/tool/state loop steps for this product option",
+        "Research mode used breadth-first parallel query variants before narrowing",
         "The outer loop proposed code or query variants",
         "The selected inner loop returned ranked variants with scalar scores",
         "Plateau or threshold stopping signals were evaluated"
       ],
       "action": "debug_harness",
       "attempts": 2,
-      "completed_at": "2026-05-06T22:55:41.396760+00:00",
-      "created_at": "2026-05-06T22:55:41.394758+00:00",
-      "id": "task_dbfc829ac6f4",
+      "completed_at": "2026-05-07T23:59:25.198083+00:00",
+      "created_at": "2026-05-07T23:59:25.194900+00:00",
+      "id": "task_591214123e4e",
       "last_error": null,
       "params": {
+        "product_agent": "optimize",
         "selected_mode": "optimize"
       },
       "passes": true,
       "priority": 2,
       "result_summary": "Completed 1 evolutionary outer rounds.",
       "status": "passed",
-      "title": "Run outer evolutionary orchestrator"
+      "title": "Run optimize agent loop"
     },
     {
       "acceptance_criteria": [
@@ -348,14 +463,14 @@
       ],
       "action": "critique",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.397497+00:00",
-      "created_at": "2026-05-06T22:55:41.394763+00:00",
-      "id": "task_919bb89a5e3e",
+      "completed_at": "2026-05-07T23:59:25.198812+00:00",
+      "created_at": "2026-05-07T23:59:25.194905+00:00",
+      "id": "task_9a6564cf9488",
       "last_error": null,
       "params": {},
       "passes": true,
       "priority": 4,
-      "result_summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions.",
+      "result_summary": "Reviewed 3 claims and 0 hypotheses; found 0 contradictions.",
       "status": "passed",
       "title": "Critique ranked variants and claims"
     },
@@ -365,14 +480,14 @@
       ],
       "action": "synthesize",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.398180+00:00",
-      "created_at": "2026-05-06T22:55:41.394768+00:00",
-      "id": "task_d33f7a915c14",
+      "completed_at": "2026-05-07T23:59:25.199579+00:00",
+      "created_at": "2026-05-07T23:59:25.194909+00:00",
+      "id": "task_577392519e69",
       "last_error": null,
       "params": {},
       "passes": true,
       "priority": 5,
-      "result_summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses.",
+      "result_summary": "Synthesized final report with 3 sources, 3 claims, and 0 hypotheses.",
       "status": "passed",
       "title": "Synthesize evolutionary run report"
     }
@@ -384,7 +499,7 @@
       "role": "critic_reviewer",
       "runtime_ms": 0,
       "status": "completed",
-      "summary": "Reviewed 0 claims and 0 hypotheses; found 0 contradictions."
+      "summary": "Reviewed 3 claims and 0 hypotheses; found 0 contradictions."
     },
     {
       "agent_name": "loop_evolution_synthesis",
@@ -392,12 +507,12 @@
       "role": "synthesis_agent",
       "runtime_ms": 0,
       "status": "completed",
-      "summary": "Synthesized final report with 0 sources, 0 claims, and 0 hypotheses."
+      "summary": "Synthesized final report with 3 sources, 3 claims, and 0 hypotheses."
     }
   ],
   "variants": [
     {
-      "id": "variant_8b3592b2c173",
+      "id": "variant_86d51652ea09",
       "kind": "code",
       "metadata": {
         "goal": "Optimize a tiny scoring function"
@@ -408,7 +523,7 @@
       "run_id": "run_optimize-tiny-scoring-function"
     },
     {
-      "id": "variant_c3b316b78abc",
+      "id": "variant_03feb757a615",
       "kind": "code",
       "metadata": {
         "goal": "Optimize a tiny scoring function"
@@ -419,7 +534,7 @@
       "run_id": "run_optimize-tiny-scoring-function"
     },
     {
-      "id": "variant_59f767f225ab",
+      "id": "variant_76479524c5c0",
       "kind": "code",
       "metadata": {
         "goal": "Optimize a tiny scoring function"
@@ -430,7 +545,7 @@
       "run_id": "run_optimize-tiny-scoring-function"
     },
     {
-      "id": "variant_ceee2e45d1e6",
+      "id": "variant_16d3b1be4405",
       "kind": "code",
       "metadata": {
         "goal": "Optimize a tiny scoring function"

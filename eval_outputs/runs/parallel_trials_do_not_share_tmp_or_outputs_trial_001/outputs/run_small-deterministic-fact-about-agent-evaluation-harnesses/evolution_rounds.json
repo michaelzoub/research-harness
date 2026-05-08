@@ -1,0 +1,19 @@
+[
+  {
+    "best_score": 0.967,
+    "best_variant_id": "variant_6f58a233ba22",
+    "completed_at": "2026-05-07T23:59:17.494529+00:00",
+    "id": "round_d93b7f38eccd",
+    "mode": "research",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_small-deterministic-fact-about-agent-evaluation-harnesses",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_4b267cf61241",
+      "variant_6f58a233ba22",
+      "variant_65f9512703bc",
+      "variant_7d141fb16199"
+    ]
+  }
+]

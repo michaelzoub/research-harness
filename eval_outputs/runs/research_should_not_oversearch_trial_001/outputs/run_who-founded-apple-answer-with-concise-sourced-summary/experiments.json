@@ -1,0 +1,30 @@
+[
+  {
+    "description": "Search for direct evaluations of: optimization path.",
+    "expected_signal": "Evidence that increases or decreases claim confidence.",
+    "hypothesis_id": "hyp_ec2f634a04e6",
+    "id": "exp_4b37cc9b4781",
+    "priority": 3
+  },
+  {
+    "description": "Search for direct evaluations of: optimization path.",
+    "expected_signal": "Evidence that increases or decreases claim confidence.",
+    "hypothesis_id": "hyp_a365586ceac5",
+    "id": "exp_ac4d243f9f20",
+    "priority": 2
+  },
+  {
+    "description": "Search for direct evaluations of: optimization path.",
+    "expected_signal": "Evidence that increases or decreases claim confidence.",
+    "hypothesis_id": "hyp_482b4d12acd0",
+    "id": "exp_fd30463cf8a2",
+    "priority": 1
+  },
+  {
+    "description": "Search for direct evaluations of: optimization path.",
+    "expected_signal": "Evidence that increases or decreases claim confidence.",
+    "hypothesis_id": "hyp_0c251d50d69e",
+    "id": "exp_474447b196f4",
+    "priority": 1
+  }
+]

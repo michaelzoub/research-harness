@@ -1,0 +1,128 @@
+[
+  {
+    "id": "variant_7ca5ca99aa90",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "prediction-market microstructure and market-making mechanisms",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_efeec47c3fe3",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "AMM LMSR entropy and scoring-rule literature",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_12143b699a4a",
+    "kind": "query",
+    "metadata": {
+      "challenge_goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "evaluator_name": "prediction_market",
+      "limit": 8,
+      "purpose": "adverse selection arbitrage inventory and risk controls",
+      "query_intent": "optimization challenge strategy discovery",
+      "research_role": "parallel_research_subagent",
+      "retriever": "local",
+      "search_phase": "broad"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_70ca75105289",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "optimizer_seed_context_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimizer_seed_context.json",
+      "query_seed_summary": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls; Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms; Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_dd368ecfbe15",
+      "variant_40597d7f3413",
+      "variant_c12b3a5e1c02"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1 query_seed=Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_1037779337f8",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "optimizer_seed_context_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimizer_seed_context.json",
+      "query_seed_summary": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls; Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms; Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_dd368ecfbe15",
+      "variant_40597d7f3413",
+      "variant_c12b3a5e1c02"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1 query_seed=Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_b58639d727e2",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "optimizer_seed_context_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimizer_seed_context.json",
+      "query_seed_summary": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls; Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms; Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_dd368ecfbe15",
+      "variant_40597d7f3413",
+      "variant_c12b3a5e1c02"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=retail_only_extreme_edges size=1 spread=16 inventory=15 skew=12 quote_mode=extreme cancel_all=1 query_seed=Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  },
+  {
+    "id": "variant_8ca1dc545175",
+    "kind": "code",
+    "metadata": {
+      "challenge": "prediction_market",
+      "goal": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer",
+      "optimizer_seed_context_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimizer_seed_context.json",
+      "query_seed_summary": "Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls; Evaluate a prediction-market challenge strategy without requiring the upstream scorer prediction-market microstructure and market-making mechanisms; Evaluate a prediction-market challenge strategy without requiring the upstream scorer AMM LMSR entropy and scoring-rule literature"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [
+      "variant_dd368ecfbe15",
+      "variant_40597d7f3413",
+      "variant_c12b3a5e1c02"
+    ],
+    "payload": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=ask_fade_bid_fade size=0.75 spread=10 inventory=25 skew=9 quote_mode=outside_competitor cancel_all=1 query_seed=Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls",
+    "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream"
+  }
+]

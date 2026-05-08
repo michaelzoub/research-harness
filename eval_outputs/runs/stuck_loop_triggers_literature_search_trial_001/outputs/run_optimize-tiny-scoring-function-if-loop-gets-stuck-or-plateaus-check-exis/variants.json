@@ -1,0 +1,158 @@
+[
+  {
+    "id": "variant_d5aac15eed09",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "baseline direct implementation",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_ffa88afe01ef",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "vectorized implementation",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_194947f74a6a",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "cached implementation",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_344ca6b838f3",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "branch-reduced implementation",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_7b880788b40b",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_ffa88afe01ef",
+      "variant_194947f74a6a"
+    ],
+    "payload": "vectorized implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_864bf1cac0eb",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_ffa88afe01ef",
+      "variant_194947f74a6a"
+    ],
+    "payload": "cached implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_d37baeaf5dd0",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_ffa88afe01ef",
+      "variant_194947f74a6a"
+    ],
+    "payload": "vectorized implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_63197e8b4d04",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_ffa88afe01ef",
+      "variant_194947f74a6a"
+    ],
+    "payload": "cached implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_27040330f48c",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_7b880788b40b",
+      "variant_864bf1cac0eb"
+    ],
+    "payload": "vectorized implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_da81da05025d",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_7b880788b40b",
+      "variant_864bf1cac0eb"
+    ],
+    "payload": "cached implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_1073c1f56aab",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_7b880788b40b",
+      "variant_864bf1cac0eb"
+    ],
+    "payload": "vectorized implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  },
+  {
+    "id": "variant_174c2093e89f",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function. If the loop gets stuck or plateaus, check existing literature before continuing to tweak variants."
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_7b880788b40b",
+      "variant_864bf1cac0eb"
+    ],
+    "payload": "cached implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-if-loop-gets-stuck-or-plateaus-check-exis"
+  }
+]

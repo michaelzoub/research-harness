@@ -1,0 +1,27 @@
+{
+  "best_candidate_path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/outputs/run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure/optimized_candidate.txt",
+  "best_variant_id": "variant_0a2559debc9c",
+  "candidate": "vectorized implementation",
+  "evaluator_name": "length_score",
+  "metrics": {
+    "deterministic_score": 0.5
+  },
+  "note": "This evaluator maximizes 1 / token_count for smoke-test optimization.",
+  "objective_direction": "maximize",
+  "objective_name": "length_score",
+  "objective_target": {
+    "kind": "score",
+    "met": false,
+    "no_stop_until_target": false,
+    "target": null
+  },
+  "official_result": {
+    "measured": true,
+    "score_source": "local_deterministic_evaluator"
+  },
+  "optimal_code_path": "eval_outputs/runs/optimize_runs_start_with_literature_grounding_trial_001/outputs/run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure/optimal_code.py",
+  "run_id": "run_optimize-tiny-scoring-function-use-existing-literature-benchmark-failure",
+  "score": 0.5,
+  "score_variable": "score",
+  "solution_path": null
+}

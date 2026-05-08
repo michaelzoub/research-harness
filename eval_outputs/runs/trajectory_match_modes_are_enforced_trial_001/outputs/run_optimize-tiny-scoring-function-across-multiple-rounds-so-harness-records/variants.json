@@ -1,0 +1,158 @@
+[
+  {
+    "id": "variant_f752d76082b9",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "baseline direct implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_e012f50aedc8",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "vectorized implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_d1ae07a887e9",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "cached implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_be6fba9d30e2",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 1,
+    "parent_ids": [],
+    "payload": "branch-reduced implementation",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_d14bfb3a2106",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_e012f50aedc8",
+      "variant_d1ae07a887e9"
+    ],
+    "payload": "vectorized implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_73b0d5aaa2a3",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_e012f50aedc8",
+      "variant_d1ae07a887e9"
+    ],
+    "payload": "cached implementation refined pass 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_c31e089ea213",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_e012f50aedc8",
+      "variant_d1ae07a887e9"
+    ],
+    "payload": "vectorized implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_293b41079ae1",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 2,
+    "parent_ids": [
+      "variant_e012f50aedc8",
+      "variant_d1ae07a887e9"
+    ],
+    "payload": "cached implementation alternative mutation 2",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_1f84d0f21521",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_d14bfb3a2106",
+      "variant_73b0d5aaa2a3"
+    ],
+    "payload": "vectorized implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_a9ae941fb7d2",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_d14bfb3a2106",
+      "variant_73b0d5aaa2a3"
+    ],
+    "payload": "cached implementation refined pass 2 refined pass 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_d87ef9e6142e",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_d14bfb3a2106",
+      "variant_73b0d5aaa2a3"
+    ],
+    "payload": "vectorized implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  },
+  {
+    "id": "variant_e8338fc13bde",
+    "kind": "code",
+    "metadata": {
+      "goal": "Optimize a tiny scoring function across multiple rounds so the harness records a trajectory"
+    },
+    "outer_iteration": 3,
+    "parent_ids": [
+      "variant_d14bfb3a2106",
+      "variant_73b0d5aaa2a3"
+    ],
+    "payload": "cached implementation refined pass 2 alternative mutation 3",
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-rounds-so-harness-records"
+  }
+]

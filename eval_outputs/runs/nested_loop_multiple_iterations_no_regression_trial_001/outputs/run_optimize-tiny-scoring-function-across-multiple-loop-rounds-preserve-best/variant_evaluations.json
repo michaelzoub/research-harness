@@ -1,0 +1,182 @@
+[
+  {
+    "id": "eval_2e97c2bd8e74",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.3333333333333333
+    ],
+    "metrics": {
+      "deterministic_score": 0.3333333333333333
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.3333333333333333,
+    "summary": "Deterministic evaluator returned 0.333.",
+    "variant_id": "variant_5d4c0304032d"
+  },
+  {
+    "id": "eval_7158b57bfccd",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_063c9a489558"
+  },
+  {
+    "id": "eval_0045c40ffef4",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_957777a8a8b4"
+  },
+  {
+    "id": "eval_861da835dc07",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.5
+    ],
+    "metrics": {
+      "deterministic_score": 0.5
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.5,
+    "summary": "Deterministic evaluator returned 0.500.",
+    "variant_id": "variant_d72dde40b216"
+  },
+  {
+    "id": "eval_8a402aa333f1",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_fc9dc56f661d"
+  },
+  {
+    "id": "eval_cfe8c711c33d",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_ec182df3da70"
+  },
+  {
+    "id": "eval_c72c40f1fc21",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_78645fb617e2"
+  },
+  {
+    "id": "eval_c747954c3771",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.2
+    ],
+    "metrics": {
+      "deterministic_score": 0.2
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.2,
+    "summary": "Deterministic evaluator returned 0.200.",
+    "variant_id": "variant_ae357c408cdc"
+  },
+  {
+    "id": "eval_6c9273d76441",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_75a7b5cea9e0"
+  },
+  {
+    "id": "eval_3a9e28e7df14",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_542397c8b018"
+  },
+  {
+    "id": "eval_9c3408a28841",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_d98630bc0bec"
+  },
+  {
+    "id": "eval_eb5b68b6eadb",
+    "inner_loop": "optimize",
+    "judge_scores": [
+      0.125
+    ],
+    "metrics": {
+      "deterministic_score": 0.125
+    },
+    "passed": false,
+    "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "score": 0.125,
+    "summary": "Deterministic evaluator returned 0.125.",
+    "variant_id": "variant_6291e9d88996"
+  }
+]

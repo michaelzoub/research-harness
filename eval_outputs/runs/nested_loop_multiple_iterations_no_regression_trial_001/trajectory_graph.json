@@ -1,0 +1,117 @@
+{
+  "edges": [
+    {
+      "from": "prompt",
+      "to": "router"
+    },
+    {
+      "from": "router",
+      "to": "outer"
+    },
+    {
+      "from": "outer",
+      "to": "inner"
+    },
+    {
+      "from": "inner",
+      "to": "select"
+    },
+    {
+      "from": "select",
+      "kind": "loop",
+      "to": "outer"
+    },
+    {
+      "from": "select",
+      "to": "agents"
+    },
+    {
+      "from": "agents",
+      "to": "outcome"
+    }
+  ],
+  "evaluation_count": 12,
+  "nodes": [
+    {
+      "id": "prompt",
+      "label": "Prompt"
+    },
+    {
+      "id": "router",
+      "label": "Router: optimize"
+    },
+    {
+      "id": "outer",
+      "label": "Outer loop"
+    },
+    {
+      "id": "inner",
+      "label": "Inner evaluator"
+    },
+    {
+      "id": "select",
+      "label": "Selection"
+    },
+    {
+      "id": "agents",
+      "label": "Role agents: 2"
+    },
+    {
+      "id": "outcome",
+      "label": "Outcome"
+    }
+  ],
+  "rounds": [
+    {
+      "best_score": 0.5,
+      "best_variant_id": "variant_063c9a489558",
+      "completed_at": "2026-05-07T23:59:18.105433+00:00",
+      "id": "round_a4584b9d8cb1",
+      "mode": "optimize",
+      "outer_iteration": 1,
+      "plateau_count": 0,
+      "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+      "termination_signal": "improved",
+      "variant_ids": [
+        "variant_5d4c0304032d",
+        "variant_063c9a489558",
+        "variant_957777a8a8b4",
+        "variant_d72dde40b216"
+      ]
+    },
+    {
+      "best_score": 0.2,
+      "best_variant_id": "variant_fc9dc56f661d",
+      "completed_at": "2026-05-07T23:59:18.106870+00:00",
+      "id": "round_6b3c9ece3106",
+      "mode": "optimize",
+      "outer_iteration": 2,
+      "plateau_count": 1,
+      "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+      "termination_signal": "continue",
+      "variant_ids": [
+        "variant_fc9dc56f661d",
+        "variant_ec182df3da70",
+        "variant_78645fb617e2",
+        "variant_ae357c408cdc"
+      ]
+    },
+    {
+      "best_score": 0.125,
+      "best_variant_id": "variant_75a7b5cea9e0",
+      "completed_at": "2026-05-07T23:59:18.108585+00:00",
+      "id": "round_a3400e1331c3",
+      "mode": "optimize",
+      "outer_iteration": 3,
+      "plateau_count": 2,
+      "run_id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+      "termination_signal": "score_plateau",
+      "variant_ids": [
+        "variant_75a7b5cea9e0",
+        "variant_542397c8b018",
+        "variant_d98630bc0bec",
+        "variant_6291e9d88996"
+      ]
+    }
+  ]
+}

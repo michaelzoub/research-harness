@@ -1,0 +1,43 @@
+{
+  "best_candidate_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimized_candidate.txt",
+  "best_variant_id": "variant_70ca75105289",
+  "candidate": "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift from fills and competitor best quotes, cancel all each step, small size, wide spread, inventory limits, and skip quoting near unstable midpoints. pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1 query_seed=Evaluate a prediction-market challenge strategy without requiring the upstream scorer adverse selection arbitrage inventory and risk controls",
+  "evaluator_name": "prediction_market",
+  "metrics": {
+    "candidate_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/candidates/round_01_variant_70ca75105289.py",
+    "error": "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader.",
+    "failure_count": 0,
+    "mean_arb_edge": 0.0,
+    "mean_edge": 0.111832,
+    "mean_retail_edge": 0.111832,
+    "official_measured": false,
+    "score_source": "local_official_semantics_fallback",
+    "simulations": 80,
+    "success_count": 80
+  },
+  "note": "Prediction-market optimization uses upstream mean edge when the orderbook_pm_challenge repo is available. The normalized score is derived from mean edge for harness aggregation.",
+  "objective_direction": "maximize",
+  "objective_name": "prediction_market_mean_edge",
+  "objective_target": {
+    "kind": "profit_usd",
+    "met": false,
+    "no_stop_until_target": false,
+    "target": null
+  },
+  "official_result": {
+    "candidate_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/candidates/round_01_variant_70ca75105289.py",
+    "failure_count": 0,
+    "measured": false,
+    "profit_usd": 0.111832,
+    "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
+    "score_source": "local_official_semantics_fallback",
+    "success_count": 80,
+    "target_met": false,
+    "target_profit_usd": null
+  },
+  "optimal_code_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/optimal_code.py",
+  "run_id": "run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream",
+  "score": 0.502,
+  "score_variable": "score",
+  "solution_path": "eval_outputs/runs/prediction_market_unmeasured_official_status_trial_001/outputs/run_evaluate-prediction-market-challenge-strategy-without-requiring-upstream/solution.py"
+}

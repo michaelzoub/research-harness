@@ -1,35 +1,35 @@
 [
   {
-    "best_score": 0.805,
-    "best_variant_id": "variant_c93f0cd62ada",
-    "completed_at": "2026-05-06T22:55:41.427258+00:00",
-    "id": "round_f21093ac76f2",
+    "best_score": 0.873,
+    "best_variant_id": "variant_834f7e7a06fa",
+    "completed_at": "2026-05-07T23:59:25.232712+00:00",
+    "id": "round_77d43fe6d5b6",
     "mode": "optimize_query",
     "outer_iteration": 1,
     "plateau_count": 0,
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
     "termination_signal": "claim_corroboration_threshold",
     "variant_ids": [
-      "variant_c93f0cd62ada",
-      "variant_40374da99005",
-      "variant_02db2c654db8"
+      "variant_834f7e7a06fa",
+      "variant_1e7486bca053",
+      "variant_8723eeea626e"
     ]
   },
   {
     "best_score": 0.05263157894736842,
-    "best_variant_id": "variant_8b1d117657c2",
-    "completed_at": "2026-05-06T22:55:41.428934+00:00",
-    "id": "round_cbecbd45ae57",
+    "best_variant_id": "variant_366423cf8ad7",
+    "completed_at": "2026-05-07T23:59:25.234429+00:00",
+    "id": "round_3e8685d0ebfe",
     "mode": "optimize",
     "outer_iteration": 2,
     "plateau_count": 0,
     "run_id": "run_optimization-strategies-tiny-scoring-benchmark",
-    "termination_signal": "continue",
+    "termination_signal": "improved",
     "variant_ids": [
-      "variant_9f6850b260cc",
-      "variant_35b77a691117",
-      "variant_750b4358d534",
-      "variant_8b1d117657c2"
+      "variant_399063ca585a",
+      "variant_e1e7fae95af3",
+      "variant_9176984fe818",
+      "variant_366423cf8ad7"
     ]
   }
 ]

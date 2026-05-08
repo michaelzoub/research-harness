@@ -1,0 +1,247 @@
+{
+  "agent_harness": {
+    "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+    "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+    "runtime_mode": "optimize"
+  },
+  "artifacts": {
+    "decision_dag": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/decision_dag.svg",
+    "final_report": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/final_report.md",
+    "optimal_code": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/optimal_code.py",
+    "optimization_result": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/optimization_result.json",
+    "optimized_candidate": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/optimized_candidate.txt",
+    "optimizer_seed_context": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/optimizer_seed_context.json",
+    "progress": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/progress.txt",
+    "run_benchmark": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/run_benchmark.html",
+    "solution": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/solution.py",
+    "trace": "eval_outputs/runs/nested_loop_multiple_iterations_no_regression_trial_001/outputs/run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best/trace.jsonl"
+  },
+  "execution_mode": "evolutionary",
+  "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate",
+  "notes": [
+    "This file is the run-local PRD/task map.",
+    "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
+  ],
+  "objective": {
+    "current": 0.5,
+    "kind": "score",
+    "met": true,
+    "no_stop_until_target": false,
+    "summary": "score current=0.5",
+    "target": null
+  },
+  "organized_tasks": [
+    {
+      "acceptance_criteria": [
+        "Explicit flags, evaluator availability, and prompt heuristics were checked",
+        "A task ingestion decision was persisted",
+        "The `optimize` product agent was selected"
+      ],
+      "attempts": 1,
+      "dependencies": [],
+      "id": "prd_task_001",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "product_agent": "optimize",
+        "selected_mode": "optimize"
+      },
+      "passes": true,
+      "priority": 1,
+      "result_summary": "Selected optimize mode. Optimize agent selected optimize loop with evaluator 'length_score'.",
+      "source_task_id": "task_84f08f1f83c0",
+      "status": "passed",
+      "title": "Ingest prompt and select task mode"
+    },
+    {
+      "acceptance_criteria": [
+        "The agent harness ran model/tool/state loop steps for this product option",
+        "Research mode used breadth-first parallel query variants before narrowing",
+        "The outer loop proposed code or query variants",
+        "The selected inner loop returned ranked variants with scalar scores",
+        "Plateau or threshold stopping signals were evaluated"
+      ],
+      "attempts": 2,
+      "dependencies": [
+        "prd_task_001"
+      ],
+      "id": "prd_task_002",
+      "kind": "debug_harness",
+      "last_error": null,
+      "params": {
+        "product_agent": "optimize",
+        "selected_mode": "optimize"
+      },
+      "passes": true,
+      "priority": 2,
+      "result_summary": "Completed 3 evolutionary outer rounds.",
+      "source_task_id": "task_39ced9588246",
+      "status": "passed",
+      "title": "Run optimize agent loop"
+    },
+    {
+      "acceptance_criteria": [
+        "Artifacts were reviewed for contradictions, weak evidence, or missing checks"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_003"
+      ],
+      "id": "prd_task_004",
+      "kind": "critique",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 4,
+      "result_summary": "Reviewed 4 claims and 0 hypotheses; found 0 contradictions.",
+      "source_task_id": "task_bb9a68f1329b",
+      "status": "passed",
+      "title": "Critique ranked variants and claims"
+    },
+    {
+      "acceptance_criteria": [
+        "Final report was written from run artifacts"
+      ],
+      "attempts": 1,
+      "dependencies": [
+        "prd_task_004"
+      ],
+      "id": "prd_task_005",
+      "kind": "synthesize",
+      "last_error": null,
+      "params": {},
+      "passes": true,
+      "priority": 5,
+      "result_summary": "Synthesized final report with 4 sources, 4 claims, and 0 hypotheses.",
+      "source_task_id": "task_46a5deb67372",
+      "status": "passed",
+      "title": "Synthesize evolutionary run report"
+    }
+  ],
+  "plan": {
+    "goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate",
+    "hypothesis_angles": [
+      "optimization path",
+      "risk mitigation"
+    ],
+    "search_angles": [
+      "baseline evidence",
+      "failure modes constraints",
+      "evaluation metrics"
+    ],
+    "stopping_signals": [
+      "no meaningful new sources after N cycles",
+      "no new high-confidence claims",
+      "hypotheses converge",
+      "critic finds no new major objections",
+      "benchmark/evaluation score plateaus",
+      "cost budget reached",
+      "time budget reached",
+      "human approval needed"
+    ],
+    "strategy": "Assign bounded roles and collect evidence against explicit success criteria.",
+    "task_type": "bounded"
+  },
+  "product_agent": "optimize",
+  "ralph_loop": {
+    "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+    "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+    "max_iterations": 4,
+    "state_files": [
+      "prd.json",
+      "progress.txt",
+      "trace.jsonl"
+    ]
+  },
+  "research_architecture": {
+    "enabled_for_mode": false,
+    "judge_rubric": [
+      {
+        "name": "factual_accuracy",
+        "question": "Do claims match retrieved sources?",
+        "weight": 0.25
+      },
+      {
+        "name": "citation_accuracy",
+        "question": "Do cited sources support the cited claims?",
+        "weight": 0.2
+      },
+      {
+        "name": "completeness",
+        "question": "Are all requested aspects covered?",
+        "weight": 0.2
+      },
+      {
+        "name": "source_quality",
+        "question": "Were primary or authoritative sources preferred?",
+        "weight": 0.2
+      },
+      {
+        "name": "tool_efficiency",
+        "question": "Were the right tools used a reasonable number of times?",
+        "weight": 0.15
+      }
+    ],
+    "lead_agent": {
+      "model": "gpt-5.2",
+      "responsibilities": [
+        "decompose the question into independent directions",
+        "fan out subagent searches in parallel when directions are independent",
+        "start with broad landscape queries before narrowing",
+        "merge evidence and route weak spots to critic or follow-up search"
+      ],
+      "role": "lead_research_orchestrator"
+    },
+    "subagents": {
+      "model": "gpt-5.2",
+      "parallelism": "asyncio.gather over independent search agents or query variants",
+      "role": "parallel_research_subagents",
+      "search_policy": "start wide, evaluate source yield, then progressively narrow"
+    }
+  },
+  "run": {
+    "completed_at": "2026-05-07T23:59:18.111329+00:00",
+    "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
+    "id": "run_optimize-tiny-scoring-function-across-multiple-loop-rounds-preserve-best",
+    "product_agent": "optimize",
+    "started_at": "2026-05-07T23:59:18.100339+00:00",
+    "status": "completed",
+    "task_mode": "optimize",
+    "task_type": "bounded",
+    "total_cost": 0.0,
+    "total_tokens": 107,
+    "user_goal": "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate"
+  },
+  "schema_version": "research_harness_prd_v1",
+  "source_strategy": [
+    {
+      "limit": 8,
+      "name": "local_1",
+      "purpose": "baseline evidence",
+      "queries": [
+        "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate baseline evidence"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_2",
+      "purpose": "failure modes constraints",
+      "queries": [
+        "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate failure modes constraints"
+      ],
+      "retriever": "local"
+    },
+    {
+      "limit": 8,
+      "name": "local_3",
+      "purpose": "evaluation metrics",
+      "queries": [
+        "Optimize a tiny scoring function across multiple loop rounds and preserve the best candidate evaluation metrics"
+      ],
+      "retriever": "local"
+    }
+  ],
+  "stage": "completed",
+  "task_mode": "optimize"
+}

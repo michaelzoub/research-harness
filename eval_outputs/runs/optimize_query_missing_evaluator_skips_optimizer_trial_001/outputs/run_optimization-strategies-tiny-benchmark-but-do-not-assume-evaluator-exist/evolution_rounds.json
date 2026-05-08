@@ -1,0 +1,18 @@
+[
+  {
+    "best_score": 0.873,
+    "best_variant_id": "variant_a053a99ffd25",
+    "completed_at": "2026-05-07T23:59:15.339205+00:00",
+    "id": "round_08d3565e39b4",
+    "mode": "optimize_query",
+    "outer_iteration": 1,
+    "plateau_count": 0,
+    "run_id": "run_optimization-strategies-tiny-benchmark-but-do-not-assume-evaluator-exist",
+    "termination_signal": "claim_corroboration_threshold",
+    "variant_ids": [
+      "variant_a053a99ffd25",
+      "variant_85fc7f3009aa",
+      "variant_5419b630fd31"
+    ]
+  }
+]

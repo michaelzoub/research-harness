@@ -1,107 +1,178 @@
 {
   "best_evaluation": {
-    "id": "eval_9a8aab9d7320",
+    "id": "eval_75f2d6907329",
     "inner_loop": "research",
     "judge_scores": [
+      0.849,
       1.0,
       1.0,
       0.767,
-      0.913
+      1.0,
+      0.939
     ],
     "metrics": {
+      "citation_accuracy": 1.0,
+      "completeness": 1.0,
       "corroboration": 1.0,
       "coverage": 1.0,
-      "credibility": 0.767
+      "credibility": 0.767,
+      "factual_accuracy": 0.849,
+      "fallback_used": 0.0,
+      "source_quality": 0.767,
+      "tool_efficiency": 1.0
     },
     "passed": true,
     "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
-    "score": 0.957,
-    "summary": "Retrieved 6 sources and 18 claims; median judge score 0.957.",
-    "variant_id": "variant_5c856588b3ca"
+    "score": 0.97,
+    "summary": "Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; median judge score 0.970.",
+    "variant_id": "variant_bcd1d0f451f3"
   },
   "counts": {
     "agent_traces": 3,
-    "claims": 57,
+    "claims": 75,
     "contradictions": 2,
-    "evaluations": 3,
+    "evaluations": 4,
     "failed_agents": 0,
     "hypotheses": 1,
     "outer_rounds": 1,
     "passed_tasks": 5,
     "sources": 7,
     "tasks": 5,
-    "variants": 3
+    "variants": 4
   },
   "evaluations": [
     {
-      "id": "eval_9a8aab9d7320",
+      "id": "eval_866faec425c7",
       "inner_loop": "research",
       "judge_scores": [
+        0.849,
         1.0,
         1.0,
         0.767,
-        0.913
+        1.0,
+        0.938
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
-        "credibility": 0.767
+        "credibility": 0.767,
+        "factual_accuracy": 0.849,
+        "fallback_used": 0.0,
+        "source_quality": 0.767,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
-      "score": 0.957,
-      "summary": "Retrieved 6 sources and 18 claims; median judge score 0.957.",
-      "variant_id": "variant_5c856588b3ca"
+      "score": 0.969,
+      "summary": "Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; median judge score 0.969.",
+      "variant_id": "variant_a152dfa6b7fd"
     },
     {
-      "id": "eval_da040b3f77d2",
+      "id": "eval_75f2d6907329",
       "inner_loop": "research",
       "judge_scores": [
+        0.849,
+        1.0,
+        1.0,
+        0.767,
+        1.0,
+        0.939
+      ],
+      "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
+        "corroboration": 1.0,
+        "coverage": 1.0,
+        "credibility": 0.767,
+        "factual_accuracy": 0.849,
+        "fallback_used": 0.0,
+        "source_quality": 0.767,
+        "tool_efficiency": 1.0
+      },
+      "passed": true,
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
+      "score": 0.97,
+      "summary": "Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; median judge score 0.970.",
+      "variant_id": "variant_bcd1d0f451f3"
+    },
+    {
+      "id": "eval_b28fc0d4348e",
+      "inner_loop": "research",
+      "judge_scores": [
+        0.855,
         1.0,
         1.0,
         0.777,
+        1.0,
         0.904
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
-        "credibility": 0.777
+        "credibility": 0.777,
+        "factual_accuracy": 0.855,
+        "fallback_used": 0.0,
+        "source_quality": 0.777,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
       "score": 0.952,
-      "summary": "Retrieved 7 sources and 21 claims; median judge score 0.952.",
-      "variant_id": "variant_93b99766df6d"
+      "summary": "Retrieved 7 sources and 21 claims; rubric factual=0.855, citation=1.000, complete=1.000, source_quality=0.777, tool_efficiency=1.000; median judge score 0.952.",
+      "variant_id": "variant_6fbe956b05da"
     },
     {
-      "id": "eval_88ef1dbe73ea",
+      "id": "eval_9c8ebc9ddde3",
       "inner_loop": "research",
       "judge_scores": [
+        0.849,
         1.0,
         1.0,
         0.767,
+        1.0,
         0.909
       ],
       "metrics": {
+        "citation_accuracy": 1.0,
+        "completeness": 1.0,
         "corroboration": 1.0,
         "coverage": 1.0,
-        "credibility": 0.767
+        "credibility": 0.767,
+        "factual_accuracy": 0.849,
+        "fallback_used": 0.0,
+        "source_quality": 0.767,
+        "tool_efficiency": 1.0
       },
       "passed": true,
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
       "score": 0.955,
-      "summary": "Retrieved 6 sources and 18 claims; median judge score 0.955.",
-      "variant_id": "variant_2d8663b20342"
+      "summary": "Retrieved 6 sources and 18 claims; rubric factual=0.849, citation=1.000, complete=1.000, source_quality=0.767, tool_efficiency=1.000; median judge score 0.955.",
+      "variant_id": "variant_fe63301298f8"
     }
   ],
   "models": {
     "local-deterministic-fallback": 3
   },
+  "optimal_code": null,
+  "optimization_result": {},
+  "optimized_candidate": null,
   "optimizer_seed_context": {},
   "prd": {
+    "agent_harness": {
+      "definition": "A product agent is model + harness: model client, loop policy, tools/evaluators, artifact store, budgets, traces, and stopping rules.",
+      "parallelism_policy": "The orchestrator may fan out role agents or variant evaluations with asyncio.gather when task dependencies allow it.",
+      "runtime_mode": "research"
+    },
     "artifacts": {
       "decision_dag": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/decision_dag.svg",
       "final_report": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/final_report.md",
+      "optimal_code": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/optimal_code.py",
+      "optimization_result": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/optimization_result.json",
+      "optimized_candidate": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/optimized_candidate.txt",
       "optimizer_seed_context": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/optimizer_seed_context.json",
       "progress": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/progress.txt",
       "run_benchmark": "eval_outputs/runs/research_open_ended_trial_001/outputs/run_multi-agent-systems-improve-automated-literature-review-quality/run_benchmark.html",
@@ -114,11 +185,20 @@
       "This file is the run-local PRD/task map.",
       "Use organized_tasks for the ordered work plan, status, dependencies, and acceptance criteria."
     ],
+    "objective": {
+      "current": null,
+      "kind": "score",
+      "met": false,
+      "no_stop_until_target": false,
+      "summary": "score current=None",
+      "target": null
+    },
     "organized_tasks": [
       {
         "acceptance_criteria": [
           "Explicit flags, evaluator availability, and prompt heuristics were checked",
-          "A task ingestion decision was persisted"
+          "A task ingestion decision was persisted",
+          "The `research` product agent was selected"
         ],
         "attempts": 1,
         "dependencies": [],
@@ -126,17 +206,20 @@
         "kind": "debug_harness",
         "last_error": null,
         "params": {
+          "product_agent": "research",
           "selected_mode": "research"
         },
         "passes": true,
         "priority": 1,
         "result_summary": "Selected research mode. Research mode was explicitly requested.",
-        "source_task_id": "task_2a746dda85d1",
+        "source_task_id": "task_663ca5839d93",
         "status": "passed",
         "title": "Ingest prompt and select task mode"
       },
       {
         "acceptance_criteria": [
+          "The agent harness ran model/tool/state loop steps for this product option",
+          "Research mode used breadth-first parallel query variants before narrowing",
           "The outer loop proposed code or query variants",
           "The selected inner loop returned ranked variants with scalar scores",
           "Plateau or threshold stopping signals were evaluated"
@@ -149,14 +232,15 @@
         "kind": "debug_harness",
         "last_error": null,
         "params": {
+          "product_agent": "research",
           "selected_mode": "research"
         },
         "passes": true,
         "priority": 2,
         "result_summary": "Completed 1 evolutionary outer rounds.",
-        "source_task_id": "task_00c44fe98bbb",
+        "source_task_id": "task_fe390d326853",
         "status": "passed",
-        "title": "Run outer evolutionary orchestrator"
+        "title": "Run research agent loop"
       },
       {
         "acceptance_criteria": [
@@ -174,7 +258,7 @@
         "passes": true,
         "priority": 3,
         "result_summary": "Generated 1 hypotheses for angle 'mechanism'.",
-        "source_task_id": "task_d46730a1199a",
+        "source_task_id": "task_7917c29a4131",
         "status": "passed",
         "title": "Generate hypotheses from winning evidence"
       },
@@ -193,7 +277,7 @@
         "passes": true,
         "priority": 4,
         "result_summary": "Reviewed 21 claims and 1 hypotheses; found 2 contradictions.",
-        "source_task_id": "task_1fd8374318f3",
+        "source_task_id": "task_4b5db25ff2a2",
         "status": "passed",
         "title": "Critique ranked variants and claims"
       },
@@ -212,7 +296,7 @@
         "passes": true,
         "priority": 5,
         "result_summary": "Synthesized final report with 7 sources, 21 claims, and 1 hypotheses.",
-        "source_task_id": "task_c6f8f509fd99",
+        "source_task_id": "task_ff4a090dd5d2",
         "status": "passed",
         "title": "Synthesize evolutionary run report"
       }
@@ -224,7 +308,8 @@
         "research direction"
       ],
       "search_angles": [
-        "foundational literature mechanisms",
+        "breadth-first landscape scan",
+        "primary-source mechanisms",
         "recent empirical evidence",
         "contradictory evidence limitations"
       ],
@@ -238,14 +323,72 @@
         "time budget reached",
         "human approval needed"
       ],
-      "strategy": "Allow broad exploration across framings before critic-driven convergence.",
+      "strategy": "Use a lead research agent to start wide across independent subagent searches, then narrow with critic-driven convergence.",
       "task_type": "open_ended"
     },
+    "product_agent": "research",
+    "ralph_loop": {
+      "completion_rule": "All organized_tasks must have passes=true. Explicit objective targets, such as profit_usd, keep optimizer tasks incomplete until reached.",
+      "definition": "PRD-driven long-running loop: persist tasks in prd.json, append progress.txt, run fresh loop iterations, and stop only when PRD items pass or the iteration budget is reached.",
+      "max_iterations": 1,
+      "state_files": [
+        "prd.json",
+        "progress.txt",
+        "trace.jsonl"
+      ]
+    },
+    "research_architecture": {
+      "enabled_for_mode": true,
+      "judge_rubric": [
+        {
+          "name": "factual_accuracy",
+          "question": "Do claims match retrieved sources?",
+          "weight": 0.25
+        },
+        {
+          "name": "citation_accuracy",
+          "question": "Do cited sources support the cited claims?",
+          "weight": 0.2
+        },
+        {
+          "name": "completeness",
+          "question": "Are all requested aspects covered?",
+          "weight": 0.2
+        },
+        {
+          "name": "source_quality",
+          "question": "Were primary or authoritative sources preferred?",
+          "weight": 0.2
+        },
+        {
+          "name": "tool_efficiency",
+          "question": "Were the right tools used a reasonable number of times?",
+          "weight": 0.15
+        }
+      ],
+      "lead_agent": {
+        "model": "gpt-5.2",
+        "responsibilities": [
+          "decompose the question into independent directions",
+          "fan out subagent searches in parallel when directions are independent",
+          "start with broad landscape queries before narrowing",
+          "merge evidence and route weak spots to critic or follow-up search"
+        ],
+        "role": "lead_research_orchestrator"
+      },
+      "subagents": {
+        "model": "gpt-5.2",
+        "parallelism": "asyncio.gather over independent search agents or query variants",
+        "role": "parallel_research_subagents",
+        "search_policy": "start wide, evaluate source yield, then progressively narrow"
+      }
+    },
     "run": {
-      "completed_at": "2026-05-06T22:55:41.391296+00:00",
+      "completed_at": "2026-05-07T23:59:25.189012+00:00",
       "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
       "id": "run_multi-agent-systems-improve-automated-literature-review-quality",
-      "started_at": "2026-05-06T22:55:41.367765+00:00",
+      "product_agent": "research",
+      "started_at": "2026-05-07T23:59:25.155317+00:00",
       "status": "completed",
       "task_mode": "research",
       "task_type": "open_ended",
@@ -258,15 +401,24 @@
       {
         "limit": 8,
         "name": "local_1",
-        "purpose": "foundational literature mechanisms",
+        "purpose": "breadth-first landscape scan",
         "queries": [
-          "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms"
+          "Research how multi-agent systems improve automated literature review quality breadth-first landscape scan"
         ],
         "retriever": "local"
       },
       {
         "limit": 8,
         "name": "local_2",
+        "purpose": "primary-source mechanisms",
+        "queries": [
+          "Research how multi-agent systems improve automated literature review quality primary-source mechanisms"
+        ],
+        "retriever": "local"
+      },
+      {
+        "limit": 8,
+        "name": "local_3",
         "purpose": "recent empirical evidence",
         "queries": [
           "Research how multi-agent systems improve automated literature review quality recent empirical evidence"
@@ -275,7 +427,7 @@
       },
       {
         "limit": 8,
-        "name": "local_3",
+        "name": "local_4",
         "purpose": "contradictory evidence limitations",
         "queries": [
           "Research how multi-agent systems improve automated literature review quality contradictory evidence limitations"
@@ -288,27 +440,29 @@
   },
   "rounds": [
     {
-      "best_score": 0.957,
-      "best_variant_id": "variant_5c856588b3ca",
-      "completed_at": "2026-05-06T22:55:41.386943+00:00",
-      "id": "round_0bcab5d2a8ad",
+      "best_score": 0.97,
+      "best_variant_id": "variant_bcd1d0f451f3",
+      "completed_at": "2026-05-07T23:59:25.185442+00:00",
+      "id": "round_1aee6900ad37",
       "mode": "research",
       "outer_iteration": 1,
       "plateau_count": 0,
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality",
       "termination_signal": "claim_corroboration_threshold",
       "variant_ids": [
-        "variant_5c856588b3ca",
-        "variant_93b99766df6d",
-        "variant_2d8663b20342"
+        "variant_a152dfa6b7fd",
+        "variant_bcd1d0f451f3",
+        "variant_6fbe956b05da",
+        "variant_fe63301298f8"
       ]
     }
   ],
   "run": {
-    "completed_at": "2026-05-06T22:55:41.391296+00:00",
+    "completed_at": "2026-05-07T23:59:25.189012+00:00",
     "harness_config_id": "phase2-research-harness-v1:evolutionary:local_corpus_search:source_strategy_v1",
     "id": "run_multi-agent-systems-improve-automated-literature-review-quality",
-    "started_at": "2026-05-06T22:55:41.367765+00:00",
+    "product_agent": "research",
+    "started_at": "2026-05-07T23:59:25.155317+00:00",
     "status": "completed",
     "task_mode": "research",
     "task_type": "open_ended",
@@ -319,7 +473,8 @@
   "solution": null,
   "task_ingestion": {
     "evaluator_name": null,
-    "id": "decision_98b3d5eb3974",
+    "id": "decision_37112d9d134e",
+    "product_agent": "research",
     "reason": "Research mode was explicitly requested.",
     "requested_mode": "research",
     "selected_mode": "research"
@@ -328,15 +483,17 @@
     {
       "acceptance_criteria": [
         "Explicit flags, evaluator availability, and prompt heuristics were checked",
-        "A task ingestion decision was persisted"
+        "A task ingestion decision was persisted",
+        "The `research` product agent was selected"
       ],
       "action": "debug_harness",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.370168+00:00",
-      "created_at": "2026-05-06T22:55:41.369478+00:00",
-      "id": "task_2a746dda85d1",
+      "completed_at": "2026-05-07T23:59:25.158260+00:00",
+      "created_at": "2026-05-07T23:59:25.157658+00:00",
+      "id": "task_663ca5839d93",
       "last_error": null,
       "params": {
+        "product_agent": "research",
         "selected_mode": "research"
       },
       "passes": true,
@@ -347,24 +504,27 @@
     },
     {
       "acceptance_criteria": [
+        "The agent harness ran model/tool/state loop steps for this product option",
+        "Research mode used breadth-first parallel query variants before narrowing",
         "The outer loop proposed code or query variants",
         "The selected inner loop returned ranked variants with scalar scores",
         "Plateau or threshold stopping signals were evaluated"
       ],
       "action": "debug_harness",
       "attempts": 2,
-      "completed_at": "2026-05-06T22:55:41.387144+00:00",
-      "created_at": "2026-05-06T22:55:41.369488+00:00",
-      "id": "task_00c44fe98bbb",
+      "completed_at": "2026-05-07T23:59:25.185655+00:00",
+      "created_at": "2026-05-07T23:59:25.157666+00:00",
+      "id": "task_fe390d326853",
       "last_error": null,
       "params": {
+        "product_agent": "research",
         "selected_mode": "research"
       },
       "passes": true,
       "priority": 2,
       "result_summary": "Completed 1 evolutionary outer rounds.",
       "status": "passed",
-      "title": "Run outer evolutionary orchestrator"
+      "title": "Run research agent loop"
     },
     {
       "acceptance_criteria": [
@@ -373,9 +533,9 @@
       ],
       "action": "hypothesize",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.388232+00:00",
-      "created_at": "2026-05-06T22:55:41.369494+00:00",
-      "id": "task_d46730a1199a",
+      "completed_at": "2026-05-07T23:59:25.186513+00:00",
+      "created_at": "2026-05-07T23:59:25.157671+00:00",
+      "id": "task_7917c29a4131",
       "last_error": null,
       "params": {},
       "passes": true,
@@ -390,9 +550,9 @@
       ],
       "action": "critique",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.389647+00:00",
-      "created_at": "2026-05-06T22:55:41.369499+00:00",
-      "id": "task_1fd8374318f3",
+      "completed_at": "2026-05-07T23:59:25.187759+00:00",
+      "created_at": "2026-05-07T23:59:25.157676+00:00",
+      "id": "task_4b5db25ff2a2",
       "last_error": null,
       "params": {},
       "passes": true,
@@ -407,9 +567,9 @@
       ],
       "action": "synthesize",
       "attempts": 1,
-      "completed_at": "2026-05-06T22:55:41.390978+00:00",
-      "created_at": "2026-05-06T22:55:41.369503+00:00",
-      "id": "task_c6f8f509fd99",
+      "completed_at": "2026-05-07T23:59:25.188676+00:00",
+      "created_at": "2026-05-07T23:59:25.157680+00:00",
+      "id": "task_ff4a090dd5d2",
       "last_error": null,
       "params": {},
       "passes": true,
@@ -447,25 +607,44 @@
   ],
   "variants": [
     {
-      "id": "variant_5c856588b3ca",
+      "id": "variant_a152dfa6b7fd",
       "kind": "query",
       "metadata": {
         "limit": 8,
-        "purpose": "foundational literature mechanisms",
-        "retriever": "local"
+        "purpose": "breadth-first landscape scan",
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],
-      "payload": "Research how multi-agent systems improve automated literature review quality foundational literature mechanisms",
+      "payload": "Research how multi-agent systems improve automated literature review quality breadth-first landscape scan",
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
     },
     {
-      "id": "variant_93b99766df6d",
+      "id": "variant_bcd1d0f451f3",
+      "kind": "query",
+      "metadata": {
+        "limit": 8,
+        "purpose": "primary-source mechanisms",
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
+      },
+      "outer_iteration": 1,
+      "parent_ids": [],
+      "payload": "Research how multi-agent systems improve automated literature review quality primary-source mechanisms",
+      "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
+    },
+    {
+      "id": "variant_6fbe956b05da",
       "kind": "query",
       "metadata": {
         "limit": 8,
         "purpose": "recent empirical evidence",
-        "retriever": "local"
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],
@@ -473,12 +652,14 @@
       "run_id": "run_multi-agent-systems-improve-automated-literature-review-quality"
     },
     {
-      "id": "variant_2d8663b20342",
+      "id": "variant_fe63301298f8",
       "kind": "query",
       "metadata": {
         "limit": 8,
         "purpose": "contradictory evidence limitations",
-        "retriever": "local"
+        "research_role": "parallel_research_subagent",
+        "retriever": "local",
+        "search_phase": "broad"
       },
       "outer_iteration": 1,
       "parent_ids": [],

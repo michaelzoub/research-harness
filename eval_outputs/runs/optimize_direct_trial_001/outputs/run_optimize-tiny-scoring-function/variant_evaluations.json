@@ -1,6 +1,6 @@
 [
   {
-    "id": "eval_182f0c836e3f",
+    "id": "eval_ebd117c38b77",
     "inner_loop": "optimize",
     "judge_scores": [
       0.3333333333333333
@@ -12,10 +12,10 @@
     "run_id": "run_optimize-tiny-scoring-function",
     "score": 0.3333333333333333,
     "summary": "Deterministic evaluator returned 0.333.",
-    "variant_id": "variant_8b3592b2c173"
+    "variant_id": "variant_86d51652ea09"
   },
   {
-    "id": "eval_138916c63911",
+    "id": "eval_6d70ecc89f36",
     "inner_loop": "optimize",
     "judge_scores": [
       0.5
@@ -27,10 +27,10 @@
     "run_id": "run_optimize-tiny-scoring-function",
     "score": 0.5,
     "summary": "Deterministic evaluator returned 0.500.",
-    "variant_id": "variant_c3b316b78abc"
+    "variant_id": "variant_03feb757a615"
   },
   {
-    "id": "eval_19df5ec5e20b",
+    "id": "eval_206375f4eddc",
     "inner_loop": "optimize",
     "judge_scores": [
       0.5
@@ -42,10 +42,10 @@
     "run_id": "run_optimize-tiny-scoring-function",
     "score": 0.5,
     "summary": "Deterministic evaluator returned 0.500.",
-    "variant_id": "variant_59f767f225ab"
+    "variant_id": "variant_76479524c5c0"
   },
   {
-    "id": "eval_7cffc11e6665",
+    "id": "eval_f15269540d9c",
     "inner_loop": "optimize",
     "judge_scores": [
       0.5
@@ -57,6 +57,6 @@
     "run_id": "run_optimize-tiny-scoring-function",
     "score": 0.5,
     "summary": "Deterministic evaluator returned 0.500.",
-    "variant_id": "variant_ceee2e45d1e6"
+    "variant_id": "variant_16d3b1be4405"
   }
 ]
