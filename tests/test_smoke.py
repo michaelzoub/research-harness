@@ -21,6 +21,7 @@ from research_harness.loops import ResearchLoop
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
 from research_harness.schemas import Variant
 from research_harness.search import LocalCorpusSearch, OpenAlexSearch, _parse_arxiv_feed
+from research_harness.sessions import SessionStore
 from research_harness.store import ArtifactStore
 
 
@@ -46,7 +47,7 @@ class SmokeTest(unittest.TestCase):
             self.assertGreaterEqual(len(store.list("hypotheses")), 1)
             self.assertGreaterEqual(len(store.list("agent_traces")), 6)
             self.assertEqual(len(store.list("harness_changes")), 1)
-            self.assertTrue(run.id.startswith("run_multi-agent-systems-improve-automated-literature-review-quality"))
+            self.assertTrue(run.id.startswith("001_run_multi-agent-systems-improve-automated-literature-review-quality"))
             self.assertTrue(store.prd_path.exists())
             self.assertGreaterEqual(len(json.loads(store.prd_path.read_text(encoding="utf-8"))["organized_tasks"]), 1)
 
@@ -60,8 +61,56 @@ class SmokeTest(unittest.TestCase):
             first_run, _ = asyncio.run(orchestrator.run("Research agent memory systems", mode="deterministic"))
             second_run, _ = asyncio.run(orchestrator.run("Research agent memory systems", mode="deterministic"))
 
-            self.assertEqual(first_run.id, "run_agent-memory-systems")
-            self.assertEqual(second_run.id, "run_agent-memory-systems-02")
+            self.assertEqual(first_run.id, "001_run_agent-memory-systems")
+            self.assertEqual(second_run.id, "002_run_agent-memory-systems")
+
+    def test_sessions_are_plaintext_jsonl_and_snapshot_previous_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=root / "outputs",
+                config=HarnessConfig(
+                    mode="deterministic",
+                    retriever="local",
+                    session_projects_dir=root / "autore" / "projects",
+                    echo_progress=False,
+                ),
+            )
+            run, store = asyncio.run(orchestrator.run("Research agent session memory", mode="deterministic"))
+
+            self.assertIsNotNone(run.session_id)
+            self.assertIsNotNone(run.session_jsonl_path)
+            session_jsonl = Path(run.session_jsonl_path or "")
+            self.assertTrue(session_jsonl.exists())
+            rows = [json.loads(line) for line in session_jsonl.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(rows[0]["event"], "session_start")
+            self.assertTrue(any(row["event"] == "progress" for row in rows))
+            self.assertTrue(any(row["event"] == "agent_trace" for row in rows))
+            self.assertTrue(any(row["event"] == "artifact_write" for row in rows))
+            self.assertTrue(any(row["event"] == "snapshot" for row in rows))
+            prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
+            self.assertEqual(prd["artifacts"]["session_jsonl"], str(session_jsonl))
+
+    def test_session_store_records_resume_and_fork_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = SessionStore(root / "workspace", root / "autore" / "projects")
+            record = store.start_session(
+                goal="Optimize from prior artifacts",
+                run_id="001_run_optimize",
+                output_dir=root / "outputs" / "001_run_optimize",
+                resume_from="session_old",
+                fork_from="session_branch",
+            )
+            store.complete_session(status="completed", summary="ok")
+
+            metadata = json.loads(record.metadata_path.read_text(encoding="utf-8"))
+            self.assertEqual(metadata["resume_from"], "session_old")
+            self.assertEqual(metadata["fork_from"], "session_branch")
+            self.assertEqual(metadata["status"], "completed")
+            events = [json.loads(line)["event"] for line in record.jsonl_path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(events, ["session_start", "session_complete"])
 
     def test_loop_mode_runs_nested_research_evolution(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -89,6 +138,8 @@ class SmokeTest(unittest.TestCase):
             self.assertGreaterEqual(len(store.list("variants")), 1)
             self.assertGreaterEqual(len(store.list("variant_evaluations")), 1)
             self.assertGreaterEqual(len(store.list("evolution_rounds")), 1)
+            self.assertEqual(len(store.list("loop_continuation_decisions")), len(store.list("evolution_rounds")))
+            self.assertTrue(all(row["decision"] in {"continue", "exit"} for row in store.list("loop_continuation_decisions")))
             self.assertTrue(store.report_path.exists())
             self.assertTrue(store.prd_path.exists())
             prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
@@ -107,6 +158,7 @@ class SmokeTest(unittest.TestCase):
                 self.assertIn(metric, research_evaluations[0]["metrics"])
             self.assertTrue(store.run_benchmark_path.exists())
             self.assertTrue(store.decision_dag_path.exists())
+            self.assertTrue(store.agent_timeline_path.exists())
             self.assertTrue((store.root / "run_benchmark_summary.json").exists())
             self.assertIn("<promise>COMPLETE</promise>", store.progress_path.read_text(encoding="utf-8"))
 
@@ -278,11 +330,17 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(optimization_result["objective_direction"], "maximize")
             self.assertEqual(optimization_result["objective_name"], "prediction_market_mean_edge")
             self.assertEqual(optimization_result["optimal_code_path"], str(store.optimal_code_path))
-            self.assertFalse(optimization_result["official_result"]["measured"])
-            self.assertIn(
-                optimization_result["official_result"]["score_source"],
-                {"local_official_semantics_fallback", "upstream_orderbook_pm_challenge"},
-            )
+            score_source = optimization_result["official_result"]["score_source"]
+            measured = optimization_result["official_result"]["measured"]
+            self.assertIn(score_source, {"local_sandbox_strategy_execution", "local_official_semantics_fallback", "upstream_orderbook_pm_challenge"})
+            if score_source == "local_sandbox_strategy_execution":
+                self.assertTrue(optimization_result["official_result"]["sandbox_executed"])
+            self.assertEqual(optimization_result["official_result"]["simulations"], 200)
+            # measured must be truthful: True iff the upstream runner was used.
+            if score_source == "upstream_orderbook_pm_challenge":
+                self.assertTrue(measured)
+            else:
+                self.assertFalse(measured)
             self.assertTrue(Path(optimization_result["official_result"]["candidate_path"]).exists())
             self.assertTrue(any("Prediction Market" in source["title"] for source in store.list("sources")))
             prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
@@ -371,6 +429,15 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertTrue(all(task.success_criteria for task in suite.tasks))
         self.assertTrue(all(task.grader_ids for task in suite.tasks))
         self.assertTrue(all("prd_tasks_executed" in task.grader_ids for task in suite.tasks))
+        research_task = next(task for task in suite.tasks if task.id == "research_open_ended")
+        self.assertIn("prd_tasks_executed_deterministic", research_task.grader_ids)
+        self.assertIn("llm_research_quality_challenger", research_task.grader_ids)
+        self.assertIn("llm_hypothesis_novelty_challenger", research_task.grader_ids)
+        self.assertIn("llm_open_ended_judgment_challenger", research_task.grader_ids)
+        with tempfile.TemporaryDirectory() as directory:
+            registry = EvaluationHarness(output_root=Path(directory)).grader_registry
+            self.assertEqual(registry["prd_tasks_executed_deterministic"].grader_type, "code")
+            self.assertEqual(registry["llm_research_quality_challenger"].grader_type, "model")
 
     def test_edge_eval_suite_defines_failure_prone_cases(self) -> None:
         suite = edge_eval_suite()

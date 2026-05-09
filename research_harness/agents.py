@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,10 +63,14 @@ class BaseAgent:
 
     async def execute(self, run: RunRecord, store: ArtifactStore) -> AgentResult:
         started = time.perf_counter()
+        started_at = now_iso()
         errors: list[str] = []
         status = "completed"
         summary = ""
         store.append_progress(f"Agent start: {self.name} ({self.role}) using {self.llm.model_label}")
+        # Snapshot LLM token counters before this agent runs so we can compute
+        # the delta for this specific agent call.
+        tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         try:
             if self.budget.cancelled:
                 status = "cancelled"
@@ -80,7 +85,9 @@ class BaseAgent:
             errors.append(f"{type(exc).__name__}: {exc}")
             summary = "Agent failed; see errors."
         runtime_ms = int((time.perf_counter() - started) * 1000)
-        store.append_progress(f"Agent {status}: {self.name} in {runtime_ms}ms - {summary}")
+        tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+        agent_tokens = tokens_after - tokens_before
+        store.append_progress(f"Agent {status}: {self.name} in {runtime_ms}ms tokens={agent_tokens} - {summary}")
         store.add_trace(
             AgentTrace(
                 id=self.budget.trace_id,
@@ -91,11 +98,12 @@ class BaseAgent:
                 model=self.model,
                 tools_used=self.tools_used,
                 tool_calls=self.tool_calls,
-                token_usage=_estimate_tokens(self.prompt_template + summary),
+                token_usage=agent_tokens,
                 runtime_ms=runtime_ms,
                 status=status,
                 errors=errors,
                 output_summary=summary,
+                started_at=started_at,
             )
         )
         return AgentResult(self.name, summary, errors)
@@ -479,6 +487,14 @@ def _build_report_with_llm(
         return deterministic_report + fallback_note
     if not response.text.strip():
         return deterministic_report + "\n\n## LLM Synthesis Fallback\n- Live synthesis returned no text.\n"
+    fabricated = _fabricated_source_urls(response.text.strip(), sources)
+    if fabricated:
+        fallback_note = (
+            f"\n\n## LLM Synthesis Fallback\n"
+            f"- Live synthesis contained {len(fabricated)} fabricated source URL(s) not present in sources.json; "
+            f"reverted to deterministic report. Fabricated: {fabricated[:5]}\n"
+        )
+        return deterministic_report + fallback_note + seed_section
     return response.text.strip() + "\n" + seed_section
 
 
@@ -504,6 +520,18 @@ def _optimizer_seed_section(seed_context: dict[str, object]) -> str:
         if isinstance(item, dict):
             lines.append(f"- Query seed {item.get('variant_id')}: score {item.get('score')}; {item.get('query')}")
     return "\n".join(lines) + "\n"
+
+
+def _fabricated_source_urls(report: str, sources: list[dict[str, object]]) -> list[str]:
+    """Return URLs cited in the report that are not in the known sources list."""
+    known_urls = {str(s.get("url", "")) for s in sources}
+    fabricated = []
+    for url in re.findall(r"\]\((https?://[^)]+)\)", report):
+        if "example.org" in url or "example.com" in url:
+            fabricated.append(url)
+        elif url not in known_urls:
+            fabricated.append(url)
+    return fabricated
 
 
 def _executive_summary(

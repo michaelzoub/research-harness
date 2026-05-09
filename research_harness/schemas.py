@@ -117,6 +117,22 @@ class EvolutionRound:
 
 
 @dataclass
+class LoopContinuationDecision:
+    run_id: str
+    loop_name: str
+    iteration: int
+    mode: TaskMode
+    decision: Literal["continue", "exit"]
+    reason: str
+    termination_signal: str
+    best_score: float
+    plateau_count: int
+    next_action: str
+    decided_at: str = field(default_factory=now_iso)
+    id: str = field(default_factory=lambda: new_id("continue"))
+
+
+@dataclass
 class Source:
     url: str
     title: str
@@ -218,6 +234,9 @@ class RunRecord:
     started_at: str = field(default_factory=now_iso)
     completed_at: Optional[str] = None
     id: str = field(default_factory=lambda: new_id("run"))
+    session_id: Optional[str] = None
+    session_jsonl_path: Optional[str] = None
+    session_metadata_path: Optional[str] = None
 
 
 @dataclass
@@ -235,6 +254,7 @@ class AgentTrace:
     errors: list[str]
     output_summary: str
     id: str = field(default_factory=lambda: new_id("trace"))
+    started_at: str = ""  # ISO timestamp when agent execution began (wall clock)
 
 
 @dataclass

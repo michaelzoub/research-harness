@@ -18,6 +18,7 @@ from .schemas import (
     Hypothesis,
     LoopIteration,
     LoopTask,
+    LoopContinuationDecision,
     OpenQuestion,
     RunRecord,
     Source,
@@ -46,6 +47,7 @@ ENTITY_FILES = {
     "variants": "variants.json",
     "variant_evaluations": "variant_evaluations.json",
     "evolution_rounds": "evolution_rounds.json",
+    "loop_continuation_decisions": "loop_continuation_decisions.json",
 }
 
 
@@ -56,15 +58,17 @@ class ArtifactStore:
     intentionally small, deterministic, and easy to inspect.
     """
 
-    def __init__(self, root: Path, echo_progress: bool = False):
+    def __init__(self, root: Path, echo_progress: bool = False, session_store: Optional[Any] = None):
         self.root = root
         self.echo_progress = echo_progress
+        self.session_store = session_store
         self.root.mkdir(parents=True, exist_ok=True)
         for filename in ENTITY_FILES.values():
             path = self.root / filename
             if not path.exists():
                 path.write_text("[]\n", encoding="utf-8")
         self.trace_log_path = self.root / "trace.jsonl"
+        self.cost_path = self.root / "cost.json"
         self.report_path = self.root / "final_report.md"
         self.prd_path = self.root / "prd.json"
         self.optimizer_seed_context_path = self.root / "optimizer_seed_context.json"
@@ -75,15 +79,25 @@ class ArtifactStore:
         self.optimization_result_path = self.root / "optimization_result.json"
         self.solution_path = self.root / "solution.py"
         self.run_benchmark_path = self.root / "run_benchmark.html"
-        self.decision_dag_path = self.root / "decision_dag.svg"
+        self.decision_dag_path = self.root / "decision_dag.png"
+        self.agent_timeline_path = self.root / "agent_timeline.png"
+        self.loop_continuation_path = self.root / "loop_continuation_decisions.json"
         self.progress_path = self.root / "progress.txt"
         if not self.progress_path.exists():
             self.progress_path.write_text("", encoding="utf-8")
 
     def add_source(self, source: Source) -> Source:
+        # Primary dedup: exact URL match.
         existing = self.find_by("sources", "url", source.url)
         if existing:
             return Source(**existing)
+        # Secondary dedup: normalized title match catches the same paper returned
+        # by different retrievers with different URLs (e.g. arXiv vs OpenAlex).
+        normalized = _normalize_title(source.title)
+        if normalized:
+            for row in self.list("sources"):
+                if _normalize_title(str(row.get("title", ""))) == normalized:
+                    return Source(**row)
         self._append("sources", source)
         return source
 
@@ -152,11 +166,17 @@ class ArtifactStore:
         self._append("evolution_rounds", round_record)
         return round_record
 
+    def add_loop_continuation_decision(self, decision: LoopContinuationDecision) -> LoopContinuationDecision:
+        self._append("loop_continuation_decisions", decision)
+        return decision
+
     def append_progress(self, text: str) -> None:
         if self.echo_progress:
             print(_format_progress_for_terminal(text), flush=True)
         with self.progress_path.open("a", encoding="utf-8") as handle:
             handle.write(text.rstrip() + "\n")
+        if self.session_store is not None:
+            self.session_store.append_event("progress", {"text": text.rstrip()})
 
     def update_run(self, run: RunRecord) -> None:
         rows = self.list("runs")
@@ -172,6 +192,8 @@ class ArtifactStore:
         payload = to_dict(trace)
         with self.trace_log_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload, sort_keys=True) + "\n")
+        if self.session_store is not None:
+            self.session_store.append_event("agent_trace", payload)
         return trace
 
     def list(self, entity: str) -> list[dict[str, Any]]:
@@ -182,32 +204,52 @@ class ArtifactStore:
         return {entity: self.list(entity) for entity in ENTITY_FILES}
 
     def write_report(self, text: str) -> Path:
+        self._snapshot_before_write(self.report_path, "before writing final report")
         self.report_path.write_text(text, encoding="utf-8")
+        self._record_artifact_write(self.report_path, "report")
         return self.report_path
 
     def write_prd(self, payload: dict[str, Any]) -> Path:
+        self._snapshot_before_write(self.prd_path, "before writing PRD")
         self.prd_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.prd_path, "prd")
         return self.prd_path
 
     def write_optimizer_seed_context(self, payload: dict[str, Any]) -> Path:
+        self._snapshot_before_write(self.optimizer_seed_context_path, "before writing optimizer seed context")
         self.optimizer_seed_context_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.optimizer_seed_context_path, "optimizer_seed_context")
         return self.optimizer_seed_context_path
 
     def write_solution(self, text: str) -> Path:
+        self._snapshot_before_write(self.solution_path, "before writing solution code")
         self.solution_path.write_text(text, encoding="utf-8")
+        self._record_artifact_write(self.solution_path, "solution")
         return self.solution_path
 
     def write_optimized_candidate(self, text: str) -> Path:
+        self._snapshot_before_write(self.optimized_candidate_path, "before writing optimized candidate")
         self.optimized_candidate_path.write_text(text, encoding="utf-8")
+        self._record_artifact_write(self.optimized_candidate_path, "optimized_candidate")
         return self.optimized_candidate_path
 
     def write_optimal_code(self, text: str) -> Path:
+        self._snapshot_before_write(self.optimal_code_path, "before writing optimal code")
         self.optimal_code_path.write_text(text, encoding="utf-8")
+        self._record_artifact_write(self.optimal_code_path, "optimal_code")
         return self.optimal_code_path
 
     def write_optimization_result(self, payload: dict[str, Any]) -> Path:
+        self._snapshot_before_write(self.optimization_result_path, "before writing optimization result")
         self.optimization_result_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.optimization_result_path, "optimization_result")
         return self.optimization_result_path
+
+    def write_cost(self, payload: dict[str, Any]) -> Path:
+        self._snapshot_before_write(self.cost_path, "before writing cost summary")
+        self.cost_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.cost_path, "cost")
+        return self.cost_path
 
     def find_by(self, entity: str, key: str, value: Any) -> Optional[dict[str, Any]]:
         return next((row for row in self.list(entity) if row.get(key) == value), None)
@@ -220,6 +262,20 @@ class ArtifactStore:
     def _write(self, entity: str, rows: list[dict[str, Any]]) -> None:
         path = self.root / ENTITY_FILES[entity]
         path.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    def _snapshot_before_write(self, path: Path, reason: str) -> None:
+        if self.session_store is not None and path.exists():
+            self.session_store.snapshot_files([path], reason=reason)
+
+    def _record_artifact_write(self, path: Path, kind: str) -> None:
+        if self.session_store is not None:
+            self.session_store.append_event("artifact_write", {"kind": kind, "path": str(path)})
+
+
+def _normalize_title(title: str) -> str:
+    """Return a lowercase, punctuation-stripped title prefix for dedup comparison."""
+    normalized = re.sub(r"[^a-z0-9]", "", title.lower())
+    return normalized[:80]
 
 
 def _format_progress_for_terminal(text: str) -> str:

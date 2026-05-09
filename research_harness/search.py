@@ -278,7 +278,7 @@ class PriorArtifactMemorySearch:
 
     def search(self, query: str, limit: int = 4) -> list[tuple[CorpusDocument, float]]:
         documents = []
-        for run_dir in sorted(self.output_root.glob("run_*")):
+        for run_dir in sorted(path for path in self.output_root.iterdir() if _is_run_dir(path.name)):
             if not run_dir.is_dir():
                 continue
             run_record = _first_json_row(run_dir / "runs.json")
@@ -410,6 +410,10 @@ def _read_json(path: Path, default):
 def _first_json_row(path: Path) -> dict:
     rows = _read_json(path, [])
     return rows[0] if rows else {}
+
+
+def _is_run_dir(name: str) -> bool:
+    return name.startswith("run_") or bool(re.match(r"^\d+_run_", name))
 
 
 def _arxiv_query(text: str) -> str:

@@ -4,6 +4,7 @@ import argparse
 import csv
 import html
 import json
+import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -109,7 +110,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def collect_runs(outputs_dir: Path) -> list[RunMetrics]:
-    run_dirs = sorted(path for path in outputs_dir.iterdir() if path.is_dir() and path.name.startswith("run_"))
+    run_dirs = sorted(path for path in outputs_dir.iterdir() if path.is_dir() and is_run_dir(path.name))
     return [collect_run(path) for path in run_dirs]
 
 
@@ -444,10 +445,18 @@ def aggregate_counters(counters: Iterable[dict[str, int]]) -> dict[str, int]:
 
 
 def short_run(run_id: str) -> str:
-    label = run_id.replace("run_", "", 1)
+    label = run_id
+    if "_run_" in label and label.split("_run_", 1)[0].isdigit():
+        label = label.split("_run_", 1)[1]
+    elif label.startswith("run_"):
+        label = label.replace("run_", "", 1)
     if len(label) <= 30:
         return label
     return f"{label[:27]}..."
+
+
+def is_run_dir(name: str) -> bool:
+    return name.startswith("run_") or bool(re.match(r"^\d+_run_", name))
 
 
 def timestamp_slug() -> str:

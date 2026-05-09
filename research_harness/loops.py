@@ -7,6 +7,9 @@ import os
 import random
 import re
 import subprocess
+import sys
+import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
@@ -16,9 +19,11 @@ from challenges.prediction_market import prediction_market_score
 
 from .llm import LLMClient
 from .schemas import (
+    AgentTrace,
     Claim,
     EvolutionRound,
     FailedPath,
+    LoopContinuationDecision,
     ProductAgent,
     Source,
     SourceStrategyItem,
@@ -34,7 +39,30 @@ from .store import ArtifactStore
 
 EvaluatorFn = Callable[[str], float]
 SearchFactory = Callable[[str], SearchBackend]
-PM_UPSTREAM_PATH = Path(os.environ.get("PREDICTION_MARKET_CHALLENGE_PATH", "/private/tmp/prediction-market-challenge-src"))
+
+
+def _find_pm_upstream_path() -> Optional[Path]:
+    """Auto-detect the prediction-market-challenge repo at common locations.
+
+    Set PREDICTION_MARKET_CHALLENGE_PATH to override. Set
+    PREDICTION_MARKET_USE_UPSTREAM=0 to force the local fallback regardless.
+    """
+    if os.environ.get("PREDICTION_MARKET_USE_UPSTREAM") == "0":
+        return None
+    candidates: list[Optional[str]] = [
+        os.environ.get("PREDICTION_MARKET_CHALLENGE_PATH"),
+        "/private/tmp/prediction-market-challenge-src",
+        str(Path.home() / "prediction-market-challenge"),
+        str(Path.home() / "src" / "prediction-market-challenge"),
+        str(Path.cwd() / "prediction-market-challenge"),
+    ]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        p = Path(candidate)
+        if p.is_dir() and (p / "pyproject.toml").exists():
+            return p
+    return None
 
 
 OPTIMIZE_HINTS = {
@@ -75,52 +103,129 @@ class EvaluatorRegistry:
 
 
 class TaskRouter:
-    def __init__(self, evaluator_registry: EvaluatorRegistry):
+    def __init__(self, evaluator_registry: EvaluatorRegistry, llm: Optional[LLMClient] = None):
         self.evaluator_registry = evaluator_registry
+        self.llm = llm
 
     def decide(self, goal: str, requested_mode: str = "auto", evaluator_name: Optional[str] = None) -> TaskIngestionDecision:
         requested = requested_mode.lower()
         evaluator = self.evaluator_registry.get(evaluator_name)
+
+        # Explicit mode flags bypass LLM routing — the user already decided.
+        if requested != "auto":
+            return self._decide_explicit(goal, requested, evaluator_name, evaluator)
+
+        # Try LLM-based classification for auto mode.
+        if self.llm and self.llm.is_live:
+            try:
+                return self._llm_decide(goal, evaluator_name, evaluator)
+            except Exception:
+                pass
+
+        # Heuristic fallback when LLM is unavailable.
+        return self._heuristic_decide(goal, requested_mode, evaluator_name, evaluator)
+
+    def _decide_explicit(
+        self,
+        goal: str,
+        requested: str,
+        evaluator_name: Optional[str],
+        evaluator: Optional[object],
+    ) -> TaskIngestionDecision:
         if requested == "research":
             return TaskIngestionDecision(
-                requested_mode=requested_mode,
+                requested_mode=requested,
                 selected_mode="research",
-                reason="Research mode was explicitly requested.",
+                reason="Research mode was explicitly requested via --task-mode.",
                 product_agent="research",
             )
         if requested == "optimize_query":
             product_agent = _product_agent_for("optimize_query", goal, evaluator_name)
             return TaskIngestionDecision(
-                requested_mode=requested_mode,
+                requested_mode=requested,
                 selected_mode="optimize_query",
                 evaluator_name=evaluator_name if evaluator else None,
                 product_agent=product_agent,
                 reason=(
-                    f"{product_agent.title()} agent selected optimization-query loop; query exploration will "
-                    + (
-                        f"feed the registered evaluator '{evaluator_name}'."
-                        if evaluator
-                        else "run without an optimizer evaluator."
-                    )
+                    f"{product_agent.title()} agent selected optimization-query loop (explicit --task-mode); "
+                    + (f"evaluator '{evaluator_name}' is registered." if evaluator else "no evaluator registered.")
                 ),
             )
         if requested == "optimize" and evaluator:
             product_agent = _product_agent_for("optimize", goal, evaluator_name)
             return TaskIngestionDecision(
-                requested_mode=requested_mode,
+                requested_mode=requested,
                 selected_mode="optimize",
                 evaluator_name=evaluator_name,
                 product_agent=product_agent,
-                reason=f"{product_agent.title()} agent selected optimize loop with evaluator '{evaluator_name}'.",
+                reason=f"{product_agent.title()} agent selected optimize loop (explicit --task-mode) with evaluator '{evaluator_name}'.",
             )
         if requested == "optimize" and not evaluator:
             return TaskIngestionDecision(
-                requested_mode=requested_mode,
+                requested_mode=requested,
                 selected_mode="research",
                 evaluator_name=evaluator_name,
                 product_agent="research",
-                reason="Optimize mode requested, but register_evaluator failed to resolve a deterministic evaluator; falling back to research mode.",
+                reason="Optimize mode requested explicitly but no deterministic evaluator was registered; falling back to research mode.",
             )
+        return self._heuristic_decide(goal, requested, evaluator_name, evaluator)
+
+    def _llm_decide(
+        self,
+        goal: str,
+        evaluator_name: Optional[str],
+        evaluator: Optional[object],
+    ) -> TaskIngestionDecision:
+        """Classify the task mode using an LLM call, with full reasoning logged."""
+        assert self.llm is not None
+        system = (
+            "You are the task router in a research-and-optimization harness. "
+            "Classify the user's goal into exactly one of three modes and explain your reasoning.\n\n"
+            "Modes:\n"
+            "- research: open-ended literature review or knowledge synthesis with no deterministic score.\n"
+            "- optimize: direct optimization against a registered deterministic evaluator (no research phase needed).\n"
+            "- optimize_query: research-then-optimize; the agent first explores literature to build strategy context, "
+            "then runs an optimizer. Use this when the goal mentions researching before optimizing, or when the task "
+            "is a challenge that benefits from domain grounding.\n\n"
+            "Return JSON only: {\"selected_mode\": str, \"product_agent\": str, \"confidence\": float, \"reason\": str}\n"
+            "product_agent must be one of: research, optimize, challenge.\n"
+            "Use 'challenge' when the goal references a specific scored competition or external evaluator."
+        )
+        user = json.dumps(
+            {
+                "goal": goal,
+                "evaluator_registered": evaluator_name if evaluator else None,
+                "available_modes": ["research", "optimize", "optimize_query"],
+            },
+            indent=2,
+        )
+        payload = self.llm.complete_json(system, user, max_output_tokens=400)
+        selected_mode = str(payload.get("selected_mode", "research")).lower()
+        product_agent = str(payload.get("product_agent", "research")).lower()
+        reason = str(payload.get("reason", "LLM router selected this mode."))
+        confidence = float(payload.get("confidence", 0.8))
+
+        if selected_mode not in {"research", "optimize", "optimize_query"}:
+            selected_mode = "research"
+        if product_agent not in {"research", "optimize", "challenge"}:
+            product_agent = "research"
+
+        return TaskIngestionDecision(
+            requested_mode="auto",
+            selected_mode=selected_mode,  # type: ignore[arg-type]
+            evaluator_name=evaluator_name if evaluator else None,
+            product_agent=product_agent,  # type: ignore[arg-type]
+            reason=f"[LLM router, confidence={confidence:.2f}] {reason}",
+        )
+
+    def _heuristic_decide(
+        self,
+        goal: str,
+        requested_mode: str,
+        evaluator_name: Optional[str],
+        evaluator: Optional[object],
+    ) -> TaskIngestionDecision:
+        """Keyword/pattern-based fallback routing when no LLM is available."""
         if _looks_like_optimization_query(goal):
             product_agent = _product_agent_for("optimize_query", goal, evaluator_name)
             return TaskIngestionDecision(
@@ -129,8 +234,9 @@ class TaskRouter:
                 evaluator_name=evaluator_name if evaluator else None,
                 product_agent=product_agent,
                 reason=(
-                    f"The prompt maps to the {product_agent} agent and asks for research/query exploration around an optimization-style task"
-                    + (" and an evaluator is available." if evaluator else ".")
+                    f"[heuristic router] Prompt contains research+optimization signals; "
+                    f"routed to optimize_query for {product_agent} agent"
+                    + (" with registered evaluator." if evaluator else ".")
                 ),
             )
         if evaluator:
@@ -140,20 +246,20 @@ class TaskRouter:
                 selected_mode="optimize",
                 evaluator_name=evaluator_name,
                 product_agent=product_agent,
-                reason=f"{product_agent.title()} agent selected because deterministic evaluator '{evaluator_name}' is registered.",
+                reason=f"[heuristic router] Deterministic evaluator '{evaluator_name}' is registered; selected optimize mode.",
             )
         if any(hint in goal.lower() for hint in OPTIMIZE_HINTS):
             return TaskIngestionDecision(
                 requested_mode=requested_mode,
                 selected_mode="research",
                 product_agent="research",
-                reason="The prompt looks optimization-shaped, but no deterministic evaluator was registered; using research mode.",
+                reason="[heuristic router] Prompt looks optimization-shaped but no evaluator is registered; using research mode.",
             )
         return TaskIngestionDecision(
             requested_mode=requested_mode,
             selected_mode="research",
             product_agent="research",
-            reason="No deterministic evaluator is available, so the task is routed to research mode.",
+            reason="[heuristic router] No evaluator registered and no optimization signal found; defaulting to research mode.",
         )
 
 
@@ -178,26 +284,57 @@ class OptimizeLoop:
         self.pass_threshold = pass_threshold
 
     async def evaluate(self, variants: list[Variant], store: ArtifactStore) -> InnerLoopResult:
-        evaluations = await asyncio.gather(*(self._evaluate_variant(variant) for variant in variants))
+        evaluations = await asyncio.gather(*(self._evaluate_variant(variant, store) for variant in variants))
         for evaluation in evaluations:
             store.add_variant_evaluation(evaluation)
         ranked = sorted(evaluations, key=lambda item: item.score, reverse=True)
         signal = "score_threshold" if ranked and ranked[0].score >= self.pass_threshold else "continue"
         return InnerLoopResult(ranked_evaluations=ranked, termination_signal=signal)
 
-    async def _evaluate_variant(self, variant: Variant) -> VariantEvaluation:
-        raw_score = float(self.evaluator(variant.payload))
-        score = max(0.0, min(1.0, raw_score))
-        return VariantEvaluation(
-            run_id=self.run_id,
-            variant_id=variant.id,
-            inner_loop="optimize",
-            score=score,
-            metrics={"deterministic_score": score},
-            judge_scores=[score],
-            summary=f"Deterministic evaluator returned {score:.3f}.",
-            passed=score >= self.pass_threshold,
-        )
+    async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
+        started = time.perf_counter()
+        started_at = now_iso()
+        try:
+            raw_score = float(self.evaluator(variant.payload))
+            score = max(0.0, min(1.0, raw_score))
+            evaluation = VariantEvaluation(
+                run_id=self.run_id,
+                variant_id=variant.id,
+                inner_loop="optimize",
+                score=score,
+                metrics={"deterministic_score": score},
+                judge_scores=[score],
+                summary=f"Deterministic evaluator returned {score:.3f}.",
+                passed=score >= self.pass_threshold,
+            )
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"optimize_eval:{variant.id}",
+                role="optimize_evaluator",
+                prompt=variant.payload,
+                model="deterministic-evaluator",
+                started_at=started_at,
+                started=started,
+                status="completed",
+                output_summary=evaluation.summary,
+            )
+            return evaluation
+        except Exception as exc:
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"optimize_eval:{variant.id}",
+                role="optimize_evaluator",
+                prompt=variant.payload,
+                model="deterministic-evaluator",
+                started_at=started_at,
+                started=started,
+                status="failed",
+                output_summary="Deterministic evaluator failed.",
+                errors=[f"{type(exc).__name__}: {exc}"],
+            )
+            raise
 
 
 class ResearchLoop:
@@ -218,58 +355,97 @@ class ResearchLoop:
         return InnerLoopResult(ranked_evaluations=ranked, termination_signal=signal)
 
     async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
+        started = time.perf_counter()
+        started_at = now_iso()
+        tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         retriever_name = str(variant.metadata.get("retriever", "local"))
         limit = int(variant.metadata.get("limit", 6))
-        backend, backend_results, retrieval_notes = await self._search_with_fallback(retriever_name, variant, limit, store)
-        sources = []
-        claim_count = 0
-        for document, relevance in backend_results:
-            source = store.add_source(backend.to_source(document, relevance))
-            sources.append(source)
-            for claim_text in document.claims[:3]:
-                confidence = round((source.credibility_score * 0.7) + (relevance * 0.3), 2)
-                store.add_claim(
-                    Claim(
-                        text=claim_text,
-                        source_ids=[source.id],
-                        confidence=confidence,
-                        support_level=_support_level(confidence),
-                        created_by_agent=f"research_loop:{variant.id}",
-                        run_id=self.run_id,
+        try:
+            backend, backend_results, retrieval_notes = await self._search_with_fallback(retriever_name, variant, limit, store)
+            sources = []
+            claim_count = 0
+            for document, relevance in backend_results:
+                source = store.add_source(backend.to_source(document, relevance))
+                sources.append(source)
+                for claim_text in document.claims[:3]:
+                    confidence = round((source.credibility_score * 0.7) + (relevance * 0.3), 2)
+                    store.add_claim(
+                        Claim(
+                            text=claim_text,
+                            source_ids=[source.id],
+                            confidence=confidence,
+                            support_level=_support_level(confidence),
+                            created_by_agent=f"research_loop:{variant.id}",
+                            run_id=self.run_id,
+                        )
                     )
-                )
-                claim_count += 1
-        metrics = self._research_metrics(sources, claim_count)
-        metrics["fallback_used"] = 1.0 if retrieval_notes else 0.0
-        judge_scores = [
-            metrics["factual_accuracy"],
-            metrics["citation_accuracy"],
-            metrics["completeness"],
-            metrics["source_quality"],
-            metrics["tool_efficiency"],
-            _stable_judge_score(variant.payload, metrics),
-        ]
-        llm_score, llm_summary = self._llm_judge_score(variant, metrics, len(sources), claim_count)
-        if llm_score is not None:
-            judge_scores.append(llm_score)
-        score = round(median(judge_scores), 3)
-        return VariantEvaluation(
-            run_id=self.run_id,
-            variant_id=variant.id,
-            inner_loop="research",
-            score=score,
-            metrics=metrics,
-            judge_scores=judge_scores,
-            summary=(
-                f"Retrieved {len(sources)} sources and {claim_count} claims; "
-                f"rubric factual={metrics['factual_accuracy']:.3f}, citation={metrics['citation_accuracy']:.3f}, "
-                f"complete={metrics['completeness']:.3f}, source_quality={metrics['source_quality']:.3f}, "
-                f"tool_efficiency={metrics['tool_efficiency']:.3f}; {llm_summary}"
-                f"median judge score {score:.3f}."
-                + (f" Retrieval notes: {'; '.join(retrieval_notes)}" if retrieval_notes else "")
-            ),
-            passed=score >= self.pass_threshold,
-        )
+                    claim_count += 1
+            metrics = self._research_metrics(sources, claim_count)
+            metrics["fallback_used"] = 1.0 if retrieval_notes else 0.0
+            judge_scores = [
+                metrics["factual_accuracy"],
+                metrics["citation_accuracy"],
+                metrics["completeness"],
+                metrics["source_quality"],
+                metrics["tool_efficiency"],
+                _stable_judge_score(variant.payload, metrics),
+            ]
+            llm_score, llm_summary = self._llm_judge_score(variant, metrics, len(sources), claim_count)
+            if llm_score is not None:
+                judge_scores.append(llm_score)
+            score = round(median(judge_scores), 3)
+            evaluation = VariantEvaluation(
+                run_id=self.run_id,
+                variant_id=variant.id,
+                inner_loop="research",
+                score=score,
+                metrics=metrics,
+                judge_scores=judge_scores,
+                summary=(
+                    f"Retrieved {len(sources)} sources and {claim_count} claims; "
+                    f"rubric factual={metrics['factual_accuracy']:.3f}, citation={metrics['citation_accuracy']:.3f}, "
+                    f"complete={metrics['completeness']:.3f}, source_quality={metrics['source_quality']:.3f}, "
+                    f"tool_efficiency={metrics['tool_efficiency']:.3f}; {llm_summary}"
+                    f"median judge score {score:.3f}."
+                    + (f" Retrieval notes: {'; '.join(retrieval_notes)}" if retrieval_notes else "")
+                ),
+                passed=score >= self.pass_threshold,
+            )
+            tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"research_eval:{variant.id}",
+                role="research_variant_agent",
+                prompt=variant.payload,
+                model=self.llm.model_label,
+                started_at=started_at,
+                started=started,
+                status="completed",
+                output_summary=evaluation.summary,
+                token_usage=tokens_after - tokens_before,
+                tools_used=[retriever_name],
+                tool_calls=[{"tool": retriever_name, "query": variant.payload, "results": len(sources)}],
+            )
+            return evaluation
+        except Exception as exc:
+            tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"research_eval:{variant.id}",
+                role="research_variant_agent",
+                prompt=variant.payload,
+                model=self.llm.model_label,
+                started_at=started_at,
+                started=started,
+                status="failed",
+                output_summary="Research variant evaluation failed.",
+                token_usage=tokens_after - tokens_before,
+                tools_used=[retriever_name],
+                errors=[f"{type(exc).__name__}: {exc}"],
+            )
+            raise
 
     async def _search_with_fallback(
         self,
@@ -379,34 +555,65 @@ class ResearchLoop:
         }
 
 
-class OptimizationQueryLoop(ResearchLoop):
+class OptimizationQueryLoop:
+    """Inner loop for the optimize_query task mode.
+
+    Composes a ResearchLoop for retrieval and base scoring, then augments each
+    result with optimization-specific metrics (novelty, implementability,
+    evaluator relevance) before storing and ranking.  It does NOT inherit from
+    ResearchLoop: the two loops have different purposes and the research phase
+    here is a means to an end, not the final product.
+    """
+
     mode: TaskMode = "optimize_query"
 
-    async def _evaluate_variant(self, variant: Variant, store: ArtifactStore) -> VariantEvaluation:
-        evaluation = await super()._evaluate_variant(variant, store)
-        metrics = dict(evaluation.metrics)
+    def __init__(self, run_id: str, search_factory: SearchFactory, llm: Optional[LLMClient] = None, pass_threshold: float = 0.78):
+        self.run_id = run_id
+        self.llm = llm or LLMClient()
+        self.pass_threshold = pass_threshold
+        self._research_loop = ResearchLoop(run_id, search_factory, llm, pass_threshold)
+
+    async def evaluate(self, variants: list[Variant], store: ArtifactStore) -> InnerLoopResult:
+        # Run retrieval + base research scoring in parallel.  We call
+        # _evaluate_variant directly to get the research result without storing
+        # a research-typed VariantEvaluation — we'll store the augmented
+        # optimize_query-typed one ourselves below.
+        research_evals = await asyncio.gather(
+            *(self._research_loop._evaluate_variant(variant, store) for variant in variants)
+        )
+        augmented: list[VariantEvaluation] = []
+        for research_eval, variant in zip(research_evals, variants):
+            oq_eval = self._augment(research_eval, variant)
+            store.add_variant_evaluation(oq_eval)
+            augmented.append(oq_eval)
+        ranked = sorted(augmented, key=lambda e: e.score, reverse=True)
+        signal = "claim_corroboration_threshold" if ranked and ranked[0].score >= self.pass_threshold else "continue"
+        return InnerLoopResult(ranked_evaluations=ranked, termination_signal=signal)
+
+    def _augment(self, research_eval: VariantEvaluation, variant: Variant) -> VariantEvaluation:
+        metrics = dict(research_eval.metrics)
         metrics["evidence_coverage"] = metrics.get("coverage", 0.0)
         metrics["novelty"] = _novelty_score(variant.payload)
         metrics["implementability"] = _implementability_score(variant.payload)
         metrics["evaluator_relevance"] = _evaluator_relevance_score(variant.payload, str(variant.metadata.get("evaluator_name", "")))
-        judge_scores = list(evaluation.judge_scores) + [
+        judge_scores = list(research_eval.judge_scores) + [
             metrics["novelty"],
             metrics["implementability"],
             metrics["evaluator_relevance"],
         ]
-        llm_score, llm_summary = self._llm_optimization_query_score(variant, metrics)
+        llm_score, llm_summary = self._llm_judge_score(variant, metrics)
         if llm_score is not None:
             judge_scores.append(llm_score)
         score = round(median(judge_scores), 3)
         return VariantEvaluation(
-            run_id=evaluation.run_id,
-            variant_id=evaluation.variant_id,
+            run_id=research_eval.run_id,
+            variant_id=research_eval.variant_id,
             inner_loop="optimize_query",
             score=score,
             metrics=metrics,
             judge_scores=judge_scores,
             summary=(
-                evaluation.summary
+                research_eval.summary
                 + f" novelty={metrics['novelty']:.3f}; "
                 + f"implementability={metrics['implementability']:.3f}; "
                 + f"evaluator_relevance={metrics['evaluator_relevance']:.3f}. "
@@ -415,7 +622,7 @@ class OptimizationQueryLoop(ResearchLoop):
             passed=score >= self.pass_threshold,
         )
 
-    def _llm_optimization_query_score(self, variant: Variant, metrics: dict[str, float]) -> tuple[Optional[float], str]:
+    def _llm_judge_score(self, variant: Variant, metrics: dict[str, float]) -> tuple[Optional[float], str]:
         if not self.llm.is_live:
             return None, ""
         system = (
@@ -441,12 +648,16 @@ class OptimizationQueryLoop(ResearchLoop):
 
 
 class PlateauDetector:
+    # Ordered recovery actions applied in round-robin when plateau fires.
+    _RECOVERY_ACTIONS = ("rotate_retriever", "boost_temperature", "random_mutation")
+
     def __init__(self, mode: TaskMode):
         self.mode = mode
         self.best_score = 0.0
         self.plateau_count = 0
         self.epsilon = 0.005 if mode == "optimize" else 0.03
         self.patience = 2 if mode == "optimize" else 3
+        self._recovery_cycle = 0
 
     def update(self, score: float) -> str:
         if score > self.best_score + self.epsilon:
@@ -457,6 +668,16 @@ class PlateauDetector:
         if self.plateau_count >= self.patience:
             return "coverage_plateau" if self.mode == "research" else "score_plateau"
         return "continue"
+
+    def next_recovery(self) -> str:
+        """Return the next recovery action to apply and advance the cycle.
+
+        Rotates through: rotate_retriever → boost_temperature → random_mutation.
+        Each action is distinct so consecutive plateaus try different escapes.
+        """
+        action = self._RECOVERY_ACTIONS[self._recovery_cycle % len(self._RECOVERY_ACTIONS)]
+        self._recovery_cycle += 1
+        return action
 
 
 @dataclass(frozen=True)
@@ -495,6 +716,12 @@ class EvolutionaryOuterLoop:
         self.max_outer_iterations = max_outer_iterations
         self.population_size = population_size
         self.objective = _loop_objective_from_goal(goal, evaluator_name)
+        # One-shot recovery flags set by _apply_plateau_recovery() and
+        # consumed at the start of the next _propose_*_variants() call.
+        self._recovery_forced_retriever: Optional[str] = None
+        self._recovery_temperature: float = 0.7
+        self._recovery_inject_mutation: bool = False
+        self._recovery_retriever_index: int = 0
 
     async def run(self, store: ArtifactStore) -> None:
         if self.task_mode in {"optimize", "optimize_query"}:
@@ -510,14 +737,44 @@ class EvolutionaryOuterLoop:
         best_eval: Optional[VariantEvaluation] = None
         best_variants: list[Variant] = []
         for outer_iteration in range(1, self.max_outer_iterations + 1):
-            variants = self._propose_variants(outer_iteration, parents)
+            propose_started = time.perf_counter()
+            propose_started_at = now_iso()
+            variants = self._propose_variants(outer_iteration, parents, store)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:propose_{self.task_mode}_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Propose {self.task_mode} variants for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=propose_started_at,
+                started=propose_started,
+                status="completed",
+                output_summary=f"Proposed {len(variants)} {self.task_mode} variant(s).",
+            )
             last_variants = variants
+            persist_started = time.perf_counter()
+            persist_started_at = now_iso()
             for variant in variants:
                 store.add_variant(variant)
             store.append_progress(f"Outer {outer_iteration}: proposed {len(variants)} {self.task_mode} variants")
             for variant in variants:
                 store.append_progress(f"  Variant {variant.id}: {_shorten(variant.payload)}")
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:persist_{self.task_mode}_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Persist {self.task_mode} variants for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=persist_started_at,
+                started=persist_started,
+                status="completed",
+                output_summary=f"Persisted {len(variants)} variant(s) and progress entries.",
+            )
             result = await inner_loop.evaluate(variants, store)
+            rank_started = time.perf_counter()
+            rank_started_at = now_iso()
             last_result = result
             round_best = result.ranked_evaluations[0] if result.ranked_evaluations else None
             if round_best and (best_eval is None or round_best.score > best_eval.score):
@@ -549,9 +806,35 @@ class EvolutionaryOuterLoop:
                 )
             winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
             parents = [variant for variant in variants if variant.id in winner_ids]
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:rank_select_{self.task_mode}_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Rank and select parents for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=rank_started_at,
+                started=rank_started,
+                status="completed",
+                output_summary=f"Selected {len(parents)} parent(s); signal={termination_signal}.",
+            )
             if termination_signal in {"score_plateau", "coverage_plateau"}:
-                self._record_literature_refresh(store, termination_signal, outer_iteration)
-            if self._should_stop_outer_loop(termination_signal, round_best, outer_iteration):
+                self._apply_plateau_recovery(plateau, store, outer_iteration, termination_signal)
+            should_stop = self._should_stop_outer_loop(termination_signal, round_best, outer_iteration)
+            if not should_stop and outer_iteration >= self.max_outer_iterations:
+                should_stop = True
+            self._record_continuation_decision(
+                store,
+                loop_name="lead_researcher_outer_loop",
+                iteration=outer_iteration,
+                mode=self.task_mode,
+                should_continue=not should_stop,
+                termination_signal=termination_signal,
+                best_score=round_best.score if round_best else 0.0,
+                plateau_count=plateau.plateau_count,
+                reason=_continuation_reason(termination_signal, round_best, plateau.plateau_count, outer_iteration, self.max_outer_iterations),
+            )
+            if should_stop:
                 break
         if self.task_mode == "optimize" and last_result:
             self._write_optimization_outputs(store, best_variants or last_variants, best_eval)
@@ -565,10 +848,15 @@ class EvolutionaryOuterLoop:
             return OptimizationQueryLoop(self.run_id, self.search_factory, self.llm)
         return ResearchLoop(self.run_id, self.search_factory, self.llm)
 
-    def _propose_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
+    def _propose_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
         if self.task_mode == "optimize":
-            return self._propose_code_variants(outer_iteration, parents)
-        return self._propose_query_variants(outer_iteration, parents)
+            return self._propose_code_variants(outer_iteration, parents, store)
+        return self._propose_query_variants(outer_iteration, parents, store)
 
     async def _run_optimize_query(self, store: ArtifactStore) -> None:
         query_loop = OptimizationQueryLoop(self.run_id, self.search_factory, self.llm)
@@ -576,7 +864,23 @@ class EvolutionaryOuterLoop:
         parents: list[Variant] = []
         last_result: Optional[InnerLoopResult] = None
         for outer_iteration in range(1, self.max_outer_iterations + 1):
-            variants = self._propose_query_variants(outer_iteration, parents)
+            propose_started = time.perf_counter()
+            propose_started_at = now_iso()
+            variants = self._propose_query_variants(outer_iteration, parents, store)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:propose_query_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Propose optimize-query variants for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=propose_started_at,
+                started=propose_started,
+                status="completed",
+                output_summary=f"Proposed {len(variants)} query variant(s).",
+            )
+            persist_started = time.perf_counter()
+            persist_started_at = now_iso()
             for variant in variants:
                 variant.metadata.setdefault("challenge_goal", self.goal)
                 variant.metadata.setdefault("evaluator_name", self.evaluator_name)
@@ -585,7 +889,21 @@ class EvolutionaryOuterLoop:
             store.append_progress(f"Optimization-query phase {outer_iteration}: proposed {len(variants)} query variants")
             for variant in variants:
                 store.append_progress(f"  Query {variant.id}: {_shorten(variant.payload)}")
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:persist_query_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Persist optimize-query variants for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=persist_started_at,
+                started=persist_started,
+                status="completed",
+                output_summary=f"Persisted {len(variants)} query variant(s).",
+            )
             result = await query_loop.evaluate(variants, store)
+            rank_started = time.perf_counter()
+            rank_started_at = now_iso()
             last_result = result
             best_eval = result.ranked_evaluations[0] if result.ranked_evaluations else None
             plateau_signal = plateau.update(best_eval.score if best_eval else 0.0)
@@ -611,12 +929,55 @@ class EvolutionaryOuterLoop:
                 store.append_progress(f"  Query score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             winner_ids = {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}
             parents = [variant for variant in variants if variant.id in winner_ids]
-            if self._should_stop_query_loop(termination_signal, outer_iteration):
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:rank_select_query_round_{outer_iteration}",
+                role="orchestration",
+                prompt=f"Rank optimize-query findings for round {outer_iteration}",
+                model="deterministic-orchestrator",
+                started_at=rank_started_at,
+                started=rank_started,
+                status="completed",
+                output_summary=f"Selected {len(parents)} query parent(s); signal={termination_signal}.",
+            )
+            if termination_signal in {"coverage_plateau", "claim_corroboration_threshold"}:
+                if not self._should_stop_query_loop(termination_signal, outer_iteration):
+                    self._apply_plateau_recovery(plateau, store, outer_iteration, termination_signal)
+            should_stop = self._should_stop_query_loop(termination_signal, outer_iteration)
+            if not should_stop and outer_iteration >= self.max_outer_iterations:
+                should_stop = True
+            self._record_continuation_decision(
+                store,
+                loop_name="lead_researcher_query_loop",
+                iteration=outer_iteration,
+                mode="optimize_query",
+                should_continue=not should_stop,
+                termination_signal=termination_signal,
+                best_score=best_eval.score if best_eval else 0.0,
+                plateau_count=plateau.plateau_count,
+                reason=_continuation_reason(termination_signal, best_eval, plateau.plateau_count, outer_iteration, self.max_outer_iterations),
+            )
+            if should_stop:
                 break
 
+        seed_started = time.perf_counter()
+        seed_started_at = now_iso()
         seed_context = self._build_optimizer_seed_context(store, last_result)
         store.write_optimizer_seed_context(seed_context)
         store.append_progress(f"Optimizer seed context: {store.optimizer_seed_context_path}")
+        _record_timing_trace(
+            store,
+            self.run_id,
+            agent_name="orchestration:build_seed_context",
+            role="orchestration",
+            prompt="Build optimizer seed context from top query findings",
+            model="deterministic-orchestrator",
+            started_at=seed_started_at,
+            started=seed_started,
+            status="completed",
+            output_summary=f"Built seed context with {len(seed_context.get('top_query_findings', [])) if isinstance(seed_context.get('top_query_findings'), list) else 0} finding(s).",
+        )
         if self.evaluator is None:
             store.append_progress("Optimizer phase skipped: no evaluator was registered for optimize_query mode.")
             return
@@ -640,12 +1001,42 @@ class EvolutionaryOuterLoop:
         best_eval: Optional[VariantEvaluation] = None
         best_round_variants: list[Variant] = []
         for round_index in range(1, self.max_outer_iterations + 1):
-            code_variants = self._propose_code_variants(round_index, parents)
+            propose_started = time.perf_counter()
+            propose_started_at = now_iso()
+            code_variants = self._propose_code_variants(round_index, parents, store)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:propose_code_round_{round_index}",
+                role="orchestration",
+                prompt=f"Propose optimizer code variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=propose_started_at,
+                started=propose_started,
+                status="completed",
+                output_summary=f"Proposed {len(code_variants)} code variant(s).",
+            )
+            persist_started = time.perf_counter()
+            persist_started_at = now_iso()
             for variant in code_variants:
                 variant.metadata["optimizer_seed_context_path"] = str(store.optimizer_seed_context_path)
                 variant.metadata["query_seed_summary"] = seed_context.get("summary", "")
                 store.add_variant(variant)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:persist_code_round_{round_index}",
+                role="orchestration",
+                prompt=f"Persist optimizer code variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=persist_started_at,
+                started=persist_started,
+                status="completed",
+                output_summary=f"Persisted {len(code_variants)} code variant(s).",
+            )
             result = await optimize_loop.evaluate(code_variants, store)
+            rank_started = time.perf_counter()
+            rank_started_at = now_iso()
             round_best = result.ranked_evaluations[0] if result.ranked_evaluations else None
             if round_best and (best_eval is None or round_best.score > best_eval.score):
                 best_eval = round_best
@@ -670,9 +1061,35 @@ class EvolutionaryOuterLoop:
             for evaluation in result.ranked_evaluations[:3]:
                 store.append_progress(f"  Optimize score {evaluation.score:.3f} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in result.ranked_evaluations[:2]}]
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:rank_select_code_round_{round_index}",
+                role="orchestration",
+                prompt=f"Rank optimizer code variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=rank_started_at,
+                started=rank_started,
+                status="completed",
+                output_summary=f"Selected {len(parents)} code parent(s); signal={termination_signal}.",
+            )
             if termination_signal == "score_plateau":
-                self._record_literature_refresh(store, termination_signal, round_index)
-            if self._should_stop_optimizer_loop(termination_signal, round_best, round_index):
+                self._apply_plateau_recovery(plateau, store, round_index, termination_signal)
+            should_stop = self._should_stop_optimizer_loop(termination_signal, round_best, round_index)
+            if not should_stop and round_index >= self.max_outer_iterations:
+                should_stop = True
+            self._record_continuation_decision(
+                store,
+                loop_name="optimizer_loop",
+                iteration=round_index,
+                mode="optimize",
+                should_continue=not should_stop,
+                termination_signal=termination_signal,
+                best_score=round_best.score if round_best else 0.0,
+                plateau_count=plateau.plateau_count,
+                reason=_continuation_reason(termination_signal, round_best, plateau.plateau_count, round_index, self.max_outer_iterations),
+            )
+            if should_stop:
                 break
         self._write_optimization_outputs(store, best_round_variants, best_eval)
 
@@ -686,14 +1103,44 @@ class EvolutionaryOuterLoop:
         best_eval: Optional[VariantEvaluation] = None
         best_round_variants: list[Variant] = []
         for round_index in range(1, self.max_outer_iterations + 1):
-            code_variants = self._propose_prediction_market_variants(round_index, parents)
+            propose_started = time.perf_counter()
+            propose_started_at = now_iso()
+            code_variants = self._propose_prediction_market_variants(round_index, parents, store)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:propose_prediction_market_round_{round_index}",
+                role="orchestration",
+                prompt=f"Propose prediction-market strategy variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=propose_started_at,
+                started=propose_started,
+                status="completed",
+                output_summary=f"Proposed {len(code_variants)} prediction-market variant(s).",
+            )
+            persist_started = time.perf_counter()
+            persist_started_at = now_iso()
             for variant in code_variants:
                 variant.metadata["optimizer_seed_context_path"] = str(store.optimizer_seed_context_path)
                 variant.metadata["query_seed_summary"] = seed_context.get("summary", "")
                 store.add_variant(variant)
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:persist_prediction_market_round_{round_index}",
+                role="orchestration",
+                prompt=f"Persist prediction-market strategy variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=persist_started_at,
+                started=persist_started,
+                status="completed",
+                output_summary=f"Persisted {len(code_variants)} prediction-market variant(s).",
+            )
             evaluations = await asyncio.gather(
                 *(self._evaluate_prediction_market_variant(variant, store, round_index) for variant in code_variants)
             )
+            rank_started = time.perf_counter()
+            rank_started_at = now_iso()
             for evaluation in evaluations:
                 store.add_variant_evaluation(evaluation)
             ranked = sorted(evaluations, key=lambda item: item.score, reverse=True)
@@ -727,11 +1174,82 @@ class EvolutionaryOuterLoop:
                 source = evaluation.metrics.get("score_source", "unknown")
                 store.append_progress(f"  Prediction-market score {evaluation.score:.3f} via {source} for {evaluation.variant_id}: {_shorten(evaluation.summary)}")
             parents = [variant for variant in code_variants if variant.id in {evaluation.variant_id for evaluation in ranked[:2]}]
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"orchestration:rank_select_prediction_market_round_{round_index}",
+                role="orchestration",
+                prompt=f"Rank prediction-market variants for round {round_index}",
+                model="deterministic-orchestrator",
+                started_at=rank_started_at,
+                started=rank_started,
+                status="completed",
+                output_summary=f"Selected {len(parents)} strategy parent(s); signal={termination_signal}.",
+            )
             if termination_signal == "score_plateau":
-                self._record_literature_refresh(store, termination_signal, round_index)
-            if self._should_stop_optimizer_loop(termination_signal, round_best, round_index):
+                self._apply_plateau_recovery(plateau, store, round_index, termination_signal)
+            should_stop = self._should_stop_optimizer_loop(termination_signal, round_best, round_index)
+            if not should_stop and round_index >= self.max_outer_iterations:
+                should_stop = True
+            self._record_continuation_decision(
+                store,
+                loop_name="challenge_optimizer_loop",
+                iteration=round_index,
+                mode="optimize",
+                should_continue=not should_stop,
+                termination_signal=termination_signal,
+                best_score=round_best.score if round_best else 0.0,
+                plateau_count=plateau.plateau_count,
+                reason=_continuation_reason(termination_signal, round_best, plateau.plateau_count, round_index, self.max_outer_iterations),
+            )
+            if should_stop:
                 break
         self._write_optimization_outputs(store, best_round_variants, best_eval)
+
+    def _record_continuation_decision(
+        self,
+        store: ArtifactStore,
+        *,
+        loop_name: str,
+        iteration: int,
+        mode: TaskMode,
+        should_continue: bool,
+        termination_signal: str,
+        best_score: float,
+        plateau_count: int,
+        reason: str,
+    ) -> None:
+        decision = "continue" if should_continue else "exit"
+        next_action = "spawn/refine subagents for another loop" if should_continue else "exit loop and synthesize/persist outputs"
+        started = time.perf_counter()
+        started_at = now_iso()
+        store.add_loop_continuation_decision(
+            LoopContinuationDecision(
+                run_id=self.run_id,
+                loop_name=loop_name,
+                iteration=iteration,
+                mode=mode,
+                decision=decision,
+                reason=reason,
+                termination_signal=termination_signal,
+                best_score=round(best_score, 3),
+                plateau_count=plateau_count,
+                next_action=next_action,
+            )
+        )
+        _record_timing_trace(
+            store,
+            self.run_id,
+            agent_name=f"loop_controller:{loop_name}:round_{iteration}",
+            role="loop_controller",
+            prompt=f"{loop_name} round {iteration} signal={termination_signal}",
+            model="deterministic-loop-controller",
+            started_at=started_at,
+            started=started,
+            status="completed",
+            output_summary=f"Decision: {decision}. {reason}",
+        )
+        store.append_progress(f"Loop decision {loop_name} round {iteration}: {decision} - {reason}")
 
     def _should_stop_outer_loop(
         self,
@@ -790,6 +1308,8 @@ class EvolutionaryOuterLoop:
     async def _record_literature_grounding(self, store: ArtifactStore, reason: str) -> None:
         if any(claim.get("created_by_agent") == "literature_grounding_policy" for claim in store.list("claims")):
             return
+        started = time.perf_counter()
+        started_at = now_iso()
         query = (
             f"{self.goal} existing literature benchmarks failure modes evaluation "
             "optimization strategy agent regressions"
@@ -827,49 +1347,82 @@ class EvolutionaryOuterLoop:
             f"Literature grounding ({reason}): query='{query}' retrieved {len(sources)} source(s)"
             + (f"; notes={' ; '.join(notes)}" if notes else "")
         )
-
-    def _record_literature_refresh(self, store: ArtifactStore, reason: str, round_index: int) -> None:
-        existing_refresh = [
-            source
-            for source in store.list("sources")
-            if str(source.get("url", "")).startswith(f"memory://literature-refresh/{self.run_id}/")
-            and str(source.get("url", "")).endswith(f"/{reason}")
-        ]
-        if existing_refresh:
-            return
-        query = (
-            f"{self.goal} literature after {reason} "
-            "failure modes benchmark regressions optimization strategy"
+        _record_timing_trace(
+            store,
+            self.run_id,
+            agent_name=f"memory:literature_grounding:{reason}",
+            role="memory",
+            prompt=query,
+            model="deterministic-memory-policy",
+            started_at=started_at,
+            started=started,
+            status="completed",
+            output_summary=f"Grounded optimization context with {len(sources)} source(s).",
         )
+
+    def _apply_plateau_recovery(self, plateau: PlateauDetector, store: ArtifactStore, round_index: int, reason: str) -> None:
+        """Apply a concrete recovery action and set one-shot flags for the next proposal round.
+
+        Actions cycle per PlateauDetector instance:
+        - rotate_retriever: force the next query-variant round to use a different retriever.
+        - boost_temperature: raise LLM temperature to 1.2 for the next proposal round,
+          generating more diverse (less greedy) variants.
+        - random_mutation: inject random numeric perturbations into fallback code/query payloads.
+        """
+        # Deduplicate: don't re-apply the same reason twice.
+        already_applied = any(
+            str(s.get("url", "")).startswith(f"memory://plateau-recovery/{self.run_id}/")
+            and str(s.get("url", "")).endswith(f"/{reason}")
+            for s in store.list("sources")
+        )
+        if already_applied:
+            return
+
+        # Reset all flags; the chosen action will set exactly one.
+        self._recovery_forced_retriever = None
+        self._recovery_temperature = 0.7
+        self._recovery_inject_mutation = False
+
+        action = plateau.next_recovery()
+
+        if action == "rotate_retriever":
+            retrievers = [item.retriever for item in self.source_strategy] or ["local"]
+            retriever = retrievers[self._recovery_retriever_index % len(retrievers)]
+            self._recovery_retriever_index += 1
+            self._recovery_forced_retriever = retriever
+            action_note = f"rotate_retriever → {retriever}"
+        elif action == "boost_temperature":
+            self._recovery_temperature = 1.2
+            action_note = "boost_temperature → 1.2 (more diverse LLM proposals)"
+        else:
+            self._recovery_inject_mutation = True
+            action_note = "random_mutation → numeric perturbation of parent payloads"
+
+        store.append_progress(f"Plateau recovery round {round_index} ({reason}): {action_note}")
+
+        # Record a traceable source/claim so the recovery appears in the artifact trail.
         source = store.add_source(
             Source(
-                url=f"memory://literature-refresh/{self.run_id}/{round_index}/{reason}",
-                title=f"Literature refresh for {reason}",
+                url=f"memory://plateau-recovery/{self.run_id}/{round_index}/{reason}",
+                title=f"Plateau recovery: {action} at round {round_index}",
                 author="research-harness",
                 date=now_iso().split("T")[0],
                 source_type="memory",
-                summary=(
-                    "Triggered because the agent loop plateaued or regressed. "
-                    "Use external literature, challenge references, and eval failure cases before further hyperparameter changes."
-                ),
+                summary=f"Loop plateaued ({reason}). Applied recovery action: {action_note}.",
                 relevance_score=0.82,
                 credibility_score=0.72,
             )
         )
         store.add_claim(
             Claim(
-                text=(
-                    f"Loop round {round_index} emitted {reason}; the harness triggered a literature-refresh query "
-                    f"before further optimization: {query}."
-                ),
+                text=f"Round {round_index} plateaued ({reason}); applied '{action}': {action_note}.",
                 source_ids=[source.id],
                 confidence=0.78,
                 support_level="instrumented",
-                created_by_agent="literature_refresh_policy",
+                created_by_agent="plateau_recovery_policy",
                 run_id=self.run_id,
             )
         )
-        store.append_progress(f"Literature refresh triggered by {reason} at optimizer round {round_index}: {query}")
 
     async def _evaluate_prediction_market_variant(
         self,
@@ -912,6 +1465,8 @@ class EvolutionaryOuterLoop:
     ) -> None:
         if not best_eval:
             return
+        started = time.perf_counter()
+        started_at = now_iso()
         best_variant = next((variant for variant in variants if variant.id == best_eval.variant_id), None)
         candidate = best_variant.payload if best_variant else ""
         store.write_optimized_candidate(candidate + "\n")
@@ -933,6 +1488,9 @@ class EvolutionaryOuterLoop:
                 "target_profit_usd": self.objective.target,
                 "target_met": self._prediction_market_objective_met(best_eval),
                 "score_source": best_eval.metrics.get("score_source", "unknown"),
+                "sandbox_executed": best_eval.metrics.get("sandbox_executed", False),
+                "actions_seen": best_eval.metrics.get("actions_seen"),
+                "simulations": best_eval.metrics.get("simulations"),
                 "required_evaluator": "https://github.com/danrobinson/prediction-market-challenge",
                 "candidate_path": best_eval.metrics.get("candidate_path"),
                 "success_count": best_eval.metrics.get("success_count"),
@@ -964,6 +1522,18 @@ class EvolutionaryOuterLoop:
         store.append_progress(
             f"Optimization result: {store.optimization_result_path} "
             f"({payload['objective_direction']} {payload['objective_name']}={best_eval.score:.3f})"
+        )
+        _record_timing_trace(
+            store,
+            self.run_id,
+            agent_name="orchestration:write_optimization_outputs",
+            role="orchestration",
+            prompt="Write optimized candidate, optimal code, solution, and optimization result",
+            model="deterministic-orchestrator",
+            started_at=started_at,
+            started=started,
+            status="completed",
+            output_summary=f"Wrote optimization outputs for best variant {best_eval.variant_id}.",
         )
 
     def _build_optimizer_seed_context(self, store: ArtifactStore, result: Optional[InnerLoopResult]) -> dict[str, object]:
@@ -1009,34 +1579,58 @@ class EvolutionaryOuterLoop:
             )
         return parents
 
-    def _propose_query_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
-        llm_variants = self._llm_query_variants(outer_iteration, parents)
+    def _propose_query_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
+        # Consume one-shot recovery flags so they only affect this round.
+        forced_retriever = self._recovery_forced_retriever
+        temperature = self._recovery_temperature
+        self._recovery_forced_retriever = None
+        self._recovery_temperature = 0.7
+        self._recovery_inject_mutation = False  # not used for query variants
+
+        llm_variants = self._llm_query_variants(
+            outer_iteration,
+            parents,
+            temperature=temperature,
+            forced_retriever=forced_retriever,
+            store=store,
+        )
         if llm_variants:
             return llm_variants
+
+        # Fallback (no live LLM): build variants from source strategy or parent mutations.
         if not parents:
             variants = []
             for item in self.source_strategy[: self.population_size]:
+                retriever = forced_retriever or item.retriever
                 variants.append(
                     Variant(
                         run_id=self.run_id,
                         outer_iteration=outer_iteration,
-                    kind="query",
-                    payload=item.queries[0],
-                    parent_ids=[],
-                    metadata={
-                        "retriever": item.retriever,
-                        "purpose": item.purpose,
-                        "limit": item.limit,
-                        "research_role": "parallel_research_subagent",
-                        "search_phase": "broad" if outer_iteration == 1 else "narrow",
-                    },
+                        kind="query",
+                        payload=item.queries[0],
+                        parent_ids=[],
+                        metadata={
+                            "retriever": retriever,
+                            "purpose": item.purpose,
+                            "limit": item.limit,
+                            "research_role": "parallel_research_subagent",
+                            "search_phase": "broad" if outer_iteration == 1 else "narrow",
+                            **({"recovery": "rotate_retriever"} if forced_retriever else {}),
+                        },
+                    )
                 )
-            )
             return variants
+
         suffixes = ["survey benchmark", "limitations contradictory evidence", "recent empirical results", "implementation signals"]
         variants = []
         for index, suffix in enumerate(suffixes[: self.population_size]):
             parent = parents[index % len(parents)]
+            retriever = forced_retriever or str(parent.metadata.get("retriever", "local"))
             variants.append(
                 Variant(
                     run_id=self.run_id,
@@ -1044,15 +1638,35 @@ class EvolutionaryOuterLoop:
                     kind="query",
                     payload=f"{parent.payload} {suffix}",
                     parent_ids=[parent.id],
-                    metadata={**parent.metadata, "search_phase": "narrow", "narrowing_suffix": suffix},
+                    metadata={
+                        **parent.metadata,
+                        "retriever": retriever,
+                        "search_phase": "narrow",
+                        "narrowing_suffix": suffix,
+                        **({"recovery": "rotate_retriever"} if forced_retriever else {}),
+                    },
                 )
             )
         return variants
 
-    def _propose_code_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
-        llm_variants = self._llm_code_variants(outer_iteration, parents)
+    def _propose_code_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
+        # Consume one-shot recovery flags.
+        temperature = self._recovery_temperature
+        inject_mutation = self._recovery_inject_mutation
+        self._recovery_forced_retriever = None
+        self._recovery_temperature = 0.7
+        self._recovery_inject_mutation = False
+
+        llm_variants = self._llm_code_variants(outer_iteration, parents, temperature=temperature, store=store)
         if llm_variants:
             return llm_variants
+
+        # Fallback seeds (no live LLM).
         if not parents:
             seeds = [
                 "baseline direct implementation",
@@ -1071,7 +1685,8 @@ class EvolutionaryOuterLoop:
             else:
                 seeds = [f"{parent.payload} refined pass {outer_iteration}" for parent in parents]
                 seeds.extend(f"{parent.payload} alternative mutation {outer_iteration}" for parent in parents)
-        return [
+
+        variants = [
             Variant(
                 run_id=self.run_id,
                 outer_iteration=outer_iteration,
@@ -1083,6 +1698,11 @@ class EvolutionaryOuterLoop:
             for payload in seeds[: self.population_size]
         ]
 
+        if inject_mutation:
+            variants = [_randomly_mutate_variant(v, outer_iteration) for v in variants]
+
+        return variants
+
     def _optimizer_seed_prefix(self) -> str:
         if self.evaluator_name == "prediction_market":
             return (
@@ -1093,7 +1713,13 @@ class EvolutionaryOuterLoop:
             )
         return "Optimization strategy sketch:"
 
-    def _propose_prediction_market_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
+    def _propose_prediction_market_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
+        score_history = _score_history(store, mode="optimize") if store else []
         templates = [
             "pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1",
             "pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1",
@@ -1102,12 +1728,43 @@ class EvolutionaryOuterLoop:
             "pm_strategy=patient_market_maker size=0.5 spread=20 inventory=10 skew=15 quote_mode=extreme cancel_all=1",
             "pm_strategy=no_trade_control size=0 spread=99 inventory=0 skew=0 quote_mode=none cancel_all=1",
         ]
-        if parents and all(parent.kind == "code" for parent in parents):
+        if score_history:
+            best = score_history[0]
+            best_payload = str(best.get("payload") or "")
+            best_edge = float(best.get("mean_edge") or 0.0)
+            params = _prediction_market_params(best_payload)
+            base_spread = int(params["spread"])
+            base_size = float(params["size"])
+            base_inventory = float(params["inventory"])
+            base_skew = float(params["skew_divisor"])
             templates = [
-                f"{parent.payload} mutation_round={outer_iteration} spread_delta={delta}"
-                for parent in parents
-                for delta in [2, 4, 8]
+                (
+                    f"pm_strategy=score_memory_exploit prior_best_edge={best_edge:.3f} "
+                    f"spread={max(2, base_spread + delta)} size={max(0.1, base_size + size_delta):.2f} "
+                    f"inventory={base_inventory:.1f} skew={base_skew:.1f} quote_mode={params['quote_mode']} parent='{best_payload[:120]}'"
+                )
+                for delta, size_delta in [(-2, -0.25), (2, -0.5), (4, -0.25), (8, -0.75)]
+            ] + [
+                (
+                    f"pm_strategy=score_memory_explore prior_best_edge={best_edge:.3f} "
+                    f"spread={max(2, base_spread + delta)} size={max(0.1, base_size * 0.75):.2f} "
+                    f"inventory={max(5.0, base_inventory * 0.75):.1f} skew={base_skew + skew_delta:.1f} "
+                    f"quote_mode=extreme parent='{best_payload[:120]}'"
+                )
+                for delta, skew_delta in [(6, 3), (10, 5)]
             ] + templates
+        if parents and all(parent.kind == "code" for parent in parents):
+            parent_mutations = []
+            for parent in parents:
+                params = _prediction_market_params(parent.payload)
+                for delta in [2, 4, 8]:
+                    parent_mutations.append(
+                        f"pm_strategy=parent_score_mutation mutation_round={outer_iteration} "
+                        f"spread={max(2, int(params['spread']) + delta)} size={float(params['size']):.2f} "
+                        f"inventory={float(params['inventory']):.1f} skew={float(params['skew_divisor']):.1f} "
+                        f"quote_mode={params['quote_mode']} parent='{parent.payload[:120]}'"
+                    )
+            templates = templates + parent_mutations
         elif parents:
             context = self._optimizer_seed_prefix()
             templates = [f"{context} {template} query_seed={parents[index % len(parents)].payload}" for index, template in enumerate(templates)]
@@ -1126,53 +1783,105 @@ class EvolutionaryOuterLoop:
     def _render_solution(self, payload: str) -> str:
         if self.evaluator_name != "prediction_market":
             return ""
+        # If the LLM already wrote a complete Strategy class, use it directly.
+        if "class Strategy" in payload and "BaseStrategy" in payload:
+            return payload
         return _prediction_market_solution(payload)
 
     def _render_optimal_code(self, payload: str) -> str:
         if self.evaluator_name == "prediction_market":
+            # LLM-generated real Python code takes precedence over the template.
+            if "class Strategy" in payload and "BaseStrategy" in payload:
+                return payload
             return _prediction_market_solution(payload)
         return _generic_optimal_code(payload, self.evaluator_name)
 
-    def _llm_query_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
+    def _llm_query_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        *,
+        temperature: float = 0.7,
+        forced_retriever: Optional[str] = None,
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
         if not self.llm.is_live:
             return []
+        started = time.perf_counter()
+        started_at = now_iso()
+        tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         parent_payloads = [parent.payload for parent in parents]
         strategy = [
             {"retriever": item.retriever, "purpose": item.purpose, "query": item.queries[0], "limit": item.limit}
             for item in self.source_strategy[: self.population_size]
         ]
+        already_tried = list({p.payload for p in parents})
+        recovery_note = (
+            f"\nPLATEAU RECOVERY ACTIVE: forced_retriever={forced_retriever!r} — "
+            "every variant MUST use this retriever to escape the current search angle."
+            if forced_retriever else ""
+        )
         system = (
             "You are the outer orchestrator in an evolutionary research harness. "
-            "Start wide with short broad queries, then narrow only after observing source yield. "
-            "Fan out independent directions to parallel subagents. "
-            "Propose query variants as JSON only: {\"variants\": [{\"query\": str, \"retriever\": str, \"purpose\": str}]}."
+            "Propose diverse, independent query variants for parallel research subagents.\n\n"
+            "DIVERSITY RULES (strictly enforced):\n"
+            "- Each variant MUST cover a different aspect, angle, or information source.\n"
+            "- No two variants may be semantically equivalent or differ only in wording.\n"
+            "- Assign a different `retriever` to each variant when possible (use the available_strategy list).\n"
+            "- Do NOT repeat or closely rephrase any query in the already_tried list.\n"
+            "- Iteration 1: start broad and wide. Later iterations: narrow based on parent findings.\n"
+            + recovery_note + "\n\n"
+            "Return JSON only: {\"variants\": [{\"query\": str, \"retriever\": str, \"purpose\": str}]}"
         )
         user = json.dumps(
             {
                 "goal": self.goal,
                 "outer_iteration": outer_iteration,
                 "parents": parent_payloads,
+                "already_tried": already_tried,
                 "available_strategy": strategy,
                 "population_size": self.population_size,
+                **({"forced_retriever": forced_retriever} if forced_retriever else {}),
             },
             indent=2,
             sort_keys=True,
         )
         try:
-            payload = self.llm.complete_json(system, user, max_output_tokens=800)
+            payload = self.llm.complete_json(system, user, max_output_tokens=800, temperature=temperature)
         except Exception:
+            if store:
+                tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+                _record_timing_trace(
+                    store,
+                    self.run_id,
+                    agent_name=f"llm_propose_queries:round_{outer_iteration}",
+                    role="llm_thinking",
+                    prompt=user,
+                    model=self.llm.model_label,
+                    started_at=started_at,
+                    started=started,
+                    status="failed",
+                    output_summary="LLM query proposal failed; fallback variants will be used.",
+                    token_usage=tokens_after - tokens_before,
+                )
             return []
         rows = payload.get("variants", [])
         if not isinstance(rows, list):
             return []
+        seen_queries: set[str] = set(already_tried)
         variants = []
-        for row in rows[: self.population_size]:
+        for index, row in enumerate(rows[: self.population_size]):
             if not isinstance(row, dict):
                 continue
             query = str(row.get("query") or "").strip()
-            if not query:
+            if not query or query in seen_queries:
                 continue
-            retriever = str(row.get("retriever") or (self.source_strategy[0].retriever if self.source_strategy else "local"))
+            seen_queries.add(query)
+            retriever = forced_retriever or str(row.get("retriever") or "")
+            if not retriever and self.source_strategy:
+                retriever = self.source_strategy[index % len(self.source_strategy)].retriever
+            elif not retriever:
+                retriever = "local"
             variants.append(
                 Variant(
                     run_id=self.run_id,
@@ -1186,14 +1895,48 @@ class EvolutionaryOuterLoop:
                         "limit": 8,
                         "research_role": "parallel_research_subagent",
                         "search_phase": "broad" if outer_iteration == 1 else "narrow",
+                        **({"recovery_temperature": temperature} if temperature != 0.7 else {}),
+                        **({"recovery": "rotate_retriever"} if forced_retriever else {}),
                     },
                 )
             )
+        if store:
+            tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"llm_propose_queries:round_{outer_iteration}",
+                role="llm_thinking",
+                prompt=user,
+                model=self.llm.model_label,
+                started_at=started_at,
+                started=started,
+                status="completed",
+                output_summary=f"Proposed {len(variants)} query variants.",
+                token_usage=tokens_after - tokens_before,
+            )
         return variants
 
-    def _llm_code_variants(self, outer_iteration: int, parents: list[Variant]) -> list[Variant]:
+    def _llm_code_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        *,
+        temperature: float = 0.7,
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
         if not self.llm.is_live:
             return []
+        if self.evaluator_name == "prediction_market":
+            return self._llm_prediction_market_code_variants(
+                outer_iteration,
+                parents,
+                temperature=temperature,
+                store=store,
+            )
+        started = time.perf_counter()
+        started_at = now_iso()
+        tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         system = (
             "You are the outer orchestrator in an evolutionary optimization harness. "
             "Propose candidate code or strategy variants as JSON only: {\"variants\": [{\"payload\": str}]}."
@@ -1204,13 +1947,29 @@ class EvolutionaryOuterLoop:
                 "outer_iteration": outer_iteration,
                 "parents": [parent.payload for parent in parents],
                 "population_size": self.population_size,
+                "score_history": _score_history(store, mode="optimize") if store else [],
             },
             indent=2,
             sort_keys=True,
         )
         try:
-            payload = self.llm.complete_json(system, user, max_output_tokens=800)
+            payload = self.llm.complete_json(system, user, max_output_tokens=800, temperature=temperature)
         except Exception:
+            if store:
+                tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+                _record_timing_trace(
+                    store,
+                    self.run_id,
+                    agent_name=f"llm_propose_code:round_{outer_iteration}",
+                    role="llm_thinking",
+                    prompt=user,
+                    model=self.llm.model_label,
+                    started_at=started_at,
+                    started=started,
+                    status="failed",
+                    output_summary="LLM code proposal failed; fallback variants will be used.",
+                    token_usage=tokens_after - tokens_before,
+                )
             return []
         rows = payload.get("variants", [])
         if not isinstance(rows, list):
@@ -1232,7 +1991,257 @@ class EvolutionaryOuterLoop:
                     metadata={"goal": self.goal, "proposal_source": "llm"},
                 )
             )
+        if store:
+            tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"llm_propose_code:round_{outer_iteration}",
+                role="llm_thinking",
+                prompt=user,
+                model=self.llm.model_label,
+                started_at=started_at,
+                started=started,
+                status="completed",
+                output_summary=f"Proposed {len(variants)} code variants.",
+                token_usage=tokens_after - tokens_before,
+            )
         return variants
+
+    def _llm_prediction_market_code_variants(
+        self,
+        outer_iteration: int,
+        parents: list[Variant],
+        *,
+        temperature: float = 0.7,
+        store: Optional[ArtifactStore] = None,
+    ) -> list[Variant]:
+        """Ask the LLM to write complete, executable Python Strategy classes.
+
+        Unlike the generic variant path which produces parameter strings, this
+        generates real `class Strategy(BaseStrategy)` implementations that can be
+        written to disk and run directly against the upstream orderbook-pm grader.
+        """
+        parent_snippets = [p.payload[:600] for p in parents if "class Strategy" in p.payload]
+        system = (
+            "You are an expert market-making strategy developer for prediction markets. "
+            "Generate complete, executable Python Strategy classes for the upstream orderbook_pm_challenge evaluator.\n\n"
+            "INTERFACE (must be respected exactly):\n"
+            "```python\n"
+            "from orderbook_pm_challenge.strategy import BaseStrategy\n"
+            "from orderbook_pm_challenge.types import CancelAll, PlaceOrder, Side, StepState\n\n"
+            "class Strategy(BaseStrategy):\n"
+            "    def on_step(self, state: StepState):  # return list of actions\n"
+            "        # state fields: competitor_best_bid_ticks, competitor_best_ask_ticks,\n"
+            "        #   buy_filled_quantity, sell_filled_quantity,\n"
+            "        #   yes_inventory, no_inventory, free_cash\n"
+            "        # actions: CancelAll(), PlaceOrder(side=Side.BUY/SELL, price_ticks=int, quantity=float)\n"
+            "        # price_ticks: 1-99 (cents)\n"
+            "        ...\n"
+            "```\n\n"
+            "SCORING: mean_edge = sum(ask_price - true_prob for retail sell fills) "
+            "+ sum(true_prob - bid_price for retail buy fills) "
+            "- sum(adverse_fill_edge). Higher is better. "
+            "Key insight: quote OUTSIDE the competitor ladder to avoid adverse arbitrageur fills; "
+            "cancel every step before requoting; skew quotes to manage inventory risk.\n\n"
+            f"Return JSON only: {{\"variants\": [{{\"payload\": \"<complete Python source>\", \"description\": str}}]}} "
+            f"with exactly {self.population_size} variants. Each must be a fully self-contained Python file "
+            "with the imports and class definition. No placeholders or TODO comments."
+        )
+        user = json.dumps(
+            {
+                "goal": self.goal,
+                "outer_iteration": outer_iteration,
+                "parent_strategies": parent_snippets,
+                "population_size": self.population_size,
+                "instruction": (
+                    "Generate diverse strategies that differ meaningfully in logic. "
+                    "Try different approaches: e.g., one with aggressive inventory skew, "
+                    "one with very wide spreads, one adaptive to competitor mid changes, "
+                    "one that only quotes on one side based on inventory. "
+                    "Each variant MUST compile as valid Python."
+                ),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        started = time.perf_counter()
+        started_at = now_iso()
+        tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+        try:
+            payload = self.llm.complete_json(system, user, max_output_tokens=3000, temperature=temperature)
+        except Exception:
+            if store:
+                tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+                _record_timing_trace(
+                    store,
+                    self.run_id,
+                    agent_name=f"llm_propose_prediction_market_code:round_{outer_iteration}",
+                    role="llm_thinking",
+                    prompt=user,
+                    model=self.llm.model_label,
+                    started_at=started_at,
+                    started=started,
+                    status="failed",
+                    output_summary="LLM prediction-market code proposal failed; fallback variants will be used.",
+                    token_usage=tokens_after - tokens_before,
+                )
+            return []
+        rows = payload.get("variants", [])
+        if not isinstance(rows, list):
+            return []
+        variants = []
+        for row in rows[: self.population_size]:
+            if not isinstance(row, dict):
+                continue
+            code = str(row.get("payload") or "").strip()
+            if not code or "class Strategy" not in code:
+                continue
+            # Validate syntax before accepting the variant.
+            try:
+                compile(code, "<llm_variant>", "exec")
+            except SyntaxError:
+                continue
+            variants.append(
+                Variant(
+                    run_id=self.run_id,
+                    outer_iteration=outer_iteration,
+                    kind="code",
+                    payload=code,
+                    parent_ids=[parent.id for parent in parents],
+                    metadata={
+                        "goal": self.goal,
+                        "proposal_source": "llm_python",
+                        "description": str(row.get("description", "")),
+                        "challenge": "prediction_market",
+                        **({"recovery_temperature": temperature} if temperature != 0.7 else {}),
+                    },
+                )
+            )
+        if store:
+            tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            _record_timing_trace(
+                store,
+                self.run_id,
+                agent_name=f"llm_propose_prediction_market_code:round_{outer_iteration}",
+                role="llm_thinking",
+                prompt=user,
+                model=self.llm.model_label,
+                started_at=started_at,
+                started=started,
+                status="completed",
+                output_summary=f"Proposed {len(variants)} prediction-market code variants.",
+                token_usage=tokens_after - tokens_before,
+            )
+        return variants
+
+
+def _record_timing_trace(
+    store: ArtifactStore,
+    run_id: str,
+    *,
+    agent_name: str,
+    role: str,
+    prompt: str,
+    model: str,
+    started_at: str,
+    started: float,
+    status: str,
+    output_summary: str,
+    token_usage: int = 0,
+    tools_used: Optional[list[str]] = None,
+    tool_calls: Optional[list[dict[str, object]]] = None,
+    errors: Optional[list[str]] = None,
+) -> None:
+    store.add_trace(
+        AgentTrace(
+            run_id=run_id,
+            agent_name=agent_name,
+            role=role,
+            prompt=prompt,
+            model=model,
+            tools_used=tools_used or [],
+            tool_calls=tool_calls or [],
+            token_usage=max(0, token_usage),
+            runtime_ms=max(0, int((time.perf_counter() - started) * 1000)),
+            status=status,
+            errors=errors or [],
+            output_summary=output_summary,
+            started_at=started_at,
+        )
+    )
+
+
+def _continuation_reason(
+    termination_signal: str,
+    best_eval: Optional[VariantEvaluation],
+    plateau_count: int,
+    iteration: int,
+    max_iterations: int,
+) -> str:
+    score = best_eval.score if best_eval else 0.0
+    if iteration >= max_iterations and termination_signal not in {"score_threshold", "claim_corroboration_threshold", "profit_target"}:
+        return f"Iteration budget reached ({iteration}/{max_iterations}); exiting with best score {score:.3f}."
+    if termination_signal in {"score_threshold", "claim_corroboration_threshold"}:
+        return f"Quality threshold reached with best score {score:.3f}; exiting loop."
+    if termination_signal == "profit_target":
+        return f"Explicit profit target met with best score {score:.3f}; exiting loop."
+    if termination_signal in {"score_plateau", "coverage_plateau"}:
+        return f"Plateau detected after {plateau_count} stalled round(s); recovery may run, then loop exits unless objective requires more iterations."
+    return f"More research/evaluation is needed; best score {score:.3f}, plateau count {plateau_count}."
+
+
+def _score_history(store: Optional[ArtifactStore], *, mode: str, limit: int = 8) -> list[dict[str, object]]:
+    if store is None:
+        return []
+    variants = {str(row.get("id")): row for row in store.list("variants")}
+    rows = [row for row in store.list("variant_evaluations") if str(row.get("inner_loop")) == mode]
+    rows.sort(key=lambda row: float(row.get("score", 0.0) or 0.0), reverse=True)
+    history: list[dict[str, object]] = []
+    for row in rows[:limit]:
+        variant = variants.get(str(row.get("variant_id")), {})
+        metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+        history.append(
+            {
+                "variant_id": row.get("variant_id"),
+                "score": row.get("score"),
+                "mean_edge": metrics.get("mean_edge"),
+                "score_source": metrics.get("score_source"),
+                "payload": str(variant.get("payload", ""))[:900],
+                "summary": str(row.get("summary", ""))[:400],
+            }
+        )
+    return history
+
+
+def _randomly_mutate_variant(variant: Variant, seed: int) -> Variant:
+    """Return a copy of variant with every numeric token perturbed by ±10-40%.
+
+    Used as the random_mutation plateau recovery action to escape local optima
+    when the population has converged and the LLM is not available.
+    """
+    rng = random.Random(seed ^ (hash(variant.payload) & 0xFFFF))
+
+    def _perturb(match: re.Match) -> str:
+        original = float(match.group(1))
+        if original == 0.0:
+            return match.group(1)
+        factor = rng.uniform(0.6, 1.4)
+        perturbed = original * factor
+        # Preserve int vs float representation.
+        if "." in match.group(1):
+            return str(round(perturbed, 2))
+        return str(int(round(perturbed)))
+
+    mutated_payload = re.sub(r"(-?\d+(?:\.\d+)?)", _perturb, variant.payload)
+    return Variant(
+        run_id=variant.run_id,
+        outer_iteration=variant.outer_iteration,
+        kind=variant.kind,
+        payload=mutated_payload,
+        parent_ids=variant.parent_ids,
+        metadata={**variant.metadata, "recovery": "random_mutation"},
+    )
 
 
 def _support_level(confidence: float) -> str:
@@ -1456,24 +2465,25 @@ def _pm_edge_from_eval(evaluation: Optional[VariantEvaluation]) -> float:
 
 def _run_prediction_market_official(strategy_path: Path) -> dict[str, object]:
     strategy_text = strategy_path.read_text(encoding="utf-8")
-    if os.environ.get("PREDICTION_MARKET_USE_UPSTREAM") != "1":
-        result = _prediction_market_local_semantic_score(strategy_text)
-        result["error"] = "Set PREDICTION_MARKET_USE_UPSTREAM=1 to run the upstream orderbook-pm grader."
-        return result
-    if not PM_UPSTREAM_PATH.exists():
-        result = _prediction_market_local_semantic_score(strategy_text)
-        result["error"] = f"Missing upstream repo at {PM_UPSTREAM_PATH}"
+    upstream_path = _find_pm_upstream_path()
+    if upstream_path is None:
+        result = _run_prediction_market_sandbox(strategy_path)
+        result["error"] = (
+            "Upstream repo not found. Install prediction-market-challenge at a known path or "
+            "set PREDICTION_MARKET_CHALLENGE_PATH. Used local sandbox execution instead. "
+            "Set PREDICTION_MARKET_USE_UPSTREAM=0 to suppress this message."
+        )
         return result
     cmd = [
         "uv",
         "run",
         "--project",
-        str(PM_UPSTREAM_PATH),
+        str(upstream_path),
         "orderbook-pm",
         "run",
         str(strategy_path),
         "--simulations",
-        os.environ.get("PREDICTION_MARKET_SIMULATIONS", "40"),
+        os.environ.get("PREDICTION_MARKET_SIMULATIONS", "200"),
         "--steps",
         os.environ.get("PREDICTION_MARKET_STEPS", "600"),
         "--seed-start",
@@ -1496,17 +2506,17 @@ def _run_prediction_market_official(strategy_path: Path) -> dict[str, object]:
             timeout=float(os.environ.get("PREDICTION_MARKET_TIMEOUT_SECONDS", "120")),
         )
     except Exception as exc:
-        result = _prediction_market_local_semantic_score(strategy_text)
+        result = _run_prediction_market_sandbox(strategy_path)
         result["error"] = f"{type(exc).__name__}: {exc}"
         return result
     if completed.returncode != 0:
-        result = _prediction_market_local_semantic_score(strategy_text)
+        result = _run_prediction_market_sandbox(strategy_path)
         result["error"] = (completed.stderr or completed.stdout).strip()[:1000]
         return result
     try:
         payload = json.loads(completed.stdout)
     except json.JSONDecodeError as exc:
-        result = _prediction_market_local_semantic_score(strategy_text)
+        result = _run_prediction_market_sandbox(strategy_path)
         result["error"] = f"JSONDecodeError: {exc}; stdout={completed.stdout[:500]}"
         return result
     results = payload.get("simulation_results", [])
@@ -1526,7 +2536,204 @@ def _run_prediction_market_official(strategy_path: Path) -> dict[str, object]:
     }
 
 
-def _prediction_market_local_semantic_score(strategy_text: str, simulations: int = 80, steps: int = 800) -> dict[str, object]:
+def _run_prediction_market_sandbox(strategy_path: Path) -> dict[str, object]:
+    sandbox_root = strategy_path.parent / "sandbox"
+    sandbox_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="pm_", dir=sandbox_root) as directory:
+        runner_path = Path(directory) / "sandbox_runner.py"
+        runner_path.write_text(_prediction_market_sandbox_runner(), encoding="utf-8")
+        completed = subprocess.run(
+            [sys.executable, str(runner_path), str(strategy_path)],
+            check=False,
+            text=True,
+            capture_output=True,
+            cwd=directory,
+            timeout=float(os.environ.get("PREDICTION_MARKET_SANDBOX_TIMEOUT_SECONDS", "30")),
+        )
+    if completed.returncode != 0:
+        result = _prediction_market_local_semantic_score(strategy_path.read_text(encoding="utf-8"))
+        result["sandbox_executed"] = False
+        result["score_source"] = "local_semantic_fallback_after_sandbox_failure"
+        result["sandbox_error"] = (completed.stderr or completed.stdout).strip()[:1000]
+        return result
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        result = _prediction_market_local_semantic_score(strategy_path.read_text(encoding="utf-8"))
+        result["sandbox_executed"] = False
+        result["score_source"] = "local_semantic_fallback_after_sandbox_json_error"
+        result["sandbox_error"] = f"JSONDecodeError: {exc}; stdout={completed.stdout[:500]}"
+        return result
+    payload["official_measured"] = False
+    payload["sandbox_executed"] = True
+    payload["score_source"] = "local_sandbox_strategy_execution"
+    return payload
+
+
+def _prediction_market_sandbox_runner() -> str:
+    return r'''
+from __future__ import annotations
+
+import importlib.util
+import json
+import math
+import os
+import random
+import sys
+import types
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+
+
+class BaseStrategy:
+    pass
+
+
+class Side(Enum):
+    BUY = "buy"
+    SELL = "sell"
+
+
+@dataclass
+class CancelAll:
+    pass
+
+
+@dataclass
+class PlaceOrder:
+    side: Side
+    price_ticks: int
+    quantity: float
+
+
+@dataclass
+class StepState:
+    competitor_best_bid_ticks: int
+    competitor_best_ask_ticks: int
+    buy_filled_quantity: float
+    sell_filled_quantity: float
+    yes_inventory: float
+    no_inventory: float
+    free_cash: float
+
+
+root = types.ModuleType("orderbook_pm_challenge")
+strategy_mod = types.ModuleType("orderbook_pm_challenge.strategy")
+types_mod = types.ModuleType("orderbook_pm_challenge.types")
+strategy_mod.BaseStrategy = BaseStrategy
+types_mod.CancelAll = CancelAll
+types_mod.PlaceOrder = PlaceOrder
+types_mod.Side = Side
+types_mod.StepState = StepState
+sys.modules["orderbook_pm_challenge"] = root
+sys.modules["orderbook_pm_challenge.strategy"] = strategy_mod
+sys.modules["orderbook_pm_challenge.types"] = types_mod
+
+
+def main(path: str) -> None:
+    spec = importlib.util.spec_from_file_location("candidate_strategy", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Unable to load strategy module.")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    strategy_cls = getattr(module, "Strategy")
+    strategy = strategy_cls()
+    rng = random.Random(20260509)
+    simulations = int(os.environ.get("PREDICTION_MARKET_SIMULATIONS", "200"))
+    edge = 0.0
+    retail_edge = 0.0
+    arb_edge = 0.0
+    failures = 0
+    actions_seen = 0
+    yes_inventory = 0.0
+    no_inventory = 0.0
+    free_cash = 1000.0
+    for sim in range(simulations):
+        true_prob = max(0.02, min(0.98, 0.5 + rng.uniform(-0.2, 0.2)))
+        buy_filled = 0.0
+        sell_filled = 0.0
+        for step in range(300):
+            true_prob = max(0.01, min(0.99, true_prob + rng.gauss(0.0, 0.018)))
+            competitor_mid = int(max(2, min(98, round(true_prob * 100 + rng.gauss(0, 1.2)))))
+            competitor_bid = max(1, competitor_mid - rng.choice([1, 2, 3]))
+            competitor_ask = min(99, competitor_mid + rng.choice([1, 2, 3]))
+            state = StepState(
+                competitor_best_bid_ticks=competitor_bid,
+                competitor_best_ask_ticks=competitor_ask,
+                buy_filled_quantity=buy_filled,
+                sell_filled_quantity=sell_filled,
+                yes_inventory=yes_inventory,
+                no_inventory=no_inventory,
+                free_cash=free_cash,
+            )
+            try:
+                actions = strategy.on_step(state)
+            except Exception:
+                failures += 1
+                continue
+            if actions is None:
+                actions = []
+            if not isinstance(actions, list):
+                failures += 1
+                continue
+            for action in actions[:8]:
+                if isinstance(action, CancelAll):
+                    continue
+                if not isinstance(action, PlaceOrder):
+                    failures += 1
+                    continue
+                actions_seen += 1
+                price_ticks = int(action.price_ticks)
+                quantity = max(0.0, min(float(action.quantity), 10.0))
+                if price_ticks < 1 or price_ticks > 99 or quantity <= 0 or not math.isfinite(quantity):
+                    failures += 1
+                    continue
+                price = price_ticks / 100.0
+                if action.side == Side.SELL:
+                    retail_fill = rng.random() < max(0.01, min(0.25, 0.08 + (price - true_prob) * 0.8))
+                    arb_fill = price < true_prob and rng.random() < 0.85
+                    if retail_fill:
+                        gain = quantity * (price - true_prob)
+                        edge += gain
+                        retail_edge += gain
+                        no_inventory += quantity
+                        sell_filled += quantity
+                    if arb_fill:
+                        loss = quantity * (price - true_prob)
+                        edge += loss
+                        arb_edge += loss
+                elif action.side == Side.BUY:
+                    retail_fill = rng.random() < max(0.01, min(0.25, 0.08 + (true_prob - price) * 0.8))
+                    arb_fill = price > true_prob and rng.random() < 0.85
+                    if retail_fill and free_cash >= price * quantity:
+                        gain = quantity * (true_prob - price)
+                        edge += gain
+                        retail_edge += gain
+                        yes_inventory += quantity
+                        buy_filled += quantity
+                        free_cash -= price * quantity
+                    if arb_fill:
+                        loss = quantity * (true_prob - price)
+                        edge += loss
+                        arb_edge += loss
+    print(json.dumps({
+        "mean_edge": round(edge / float(simulations), 6),
+        "mean_arb_edge": round(arb_edge / float(simulations), 6),
+        "mean_retail_edge": round(retail_edge / float(simulations), 6),
+        "success_count": simulations,
+        "failure_count": failures,
+        "simulations": simulations,
+        "actions_seen": actions_seen,
+    }))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1])
+'''
+
+
+def _prediction_market_local_semantic_score(strategy_text: str, simulations: int = 200, steps: int = 800) -> dict[str, object]:
     params = _params_from_strategy_text(strategy_text)
     rng = random.Random(20260507)
     edges = []

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Tuple
@@ -18,7 +19,7 @@ from .agents import (
 from .llm import LLMClient
 from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter, _loop_objective_from_goal
 from .run_benchmarks import write_run_benchmarks
-from .schemas import AgentBudget, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
+from .schemas import AgentBudget, AgentTrace, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
 from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
 from .search import DocsBlogsSearch
 from .search import GitHubSearch
@@ -26,6 +27,7 @@ from .search import OpenAlexSearch
 from .search import PriorArtifactMemorySearch
 from .search import SocialWebSearch
 from .search import WebSearch
+from .sessions import SessionStore, default_session_projects_dir
 from .store import ArtifactStore
 
 
@@ -96,6 +98,10 @@ class HarnessConfig:
     llm_model: str = "gpt-5.2"
     research_lead_model: Optional[str] = None
     research_subagent_model: Optional[str] = None
+    session_projects_dir: Optional[Path] = None
+    resume_session_id: Optional[str] = None
+    fork_session_id: Optional[str] = None
+    enable_sessions: bool = True
     echo_progress: bool = True
     default_budget: AgentBudget = field(default_factory=AgentBudget)
 
@@ -121,7 +127,8 @@ class Orchestrator:
             task_type=plan.task_type,
             harness_config_id=f"{self.config.id}:{selected_mode}:{primary_retriever.tool_name}:source_strategy_v1",
         )
-        store = ArtifactStore(self.output_root / run.id, echo_progress=self.config.echo_progress)
+        session_store = self._start_session_store(goal, run)
+        store = ArtifactStore(self.output_root / run.id, echo_progress=self.config.echo_progress, session_store=session_store)
         store.add_run(run)
         store.append_progress(f"Starting run {run.id}")
         store.append_progress(f"Execution mode: {selected_mode}")
@@ -142,13 +149,66 @@ class Orchestrator:
             run.status = "failed"
             raise
         finally:
-            traces = store.list("agent_traces")
-            run.total_tokens = sum(int(trace["token_usage"]) for trace in traces)
+            final_started = time.perf_counter()
+            final_started_at = now_iso()
+            # Use real accumulated token counts from the LLM client.
+            run.total_tokens = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+            run.total_cost = round(self.llm.total_cost(), 6)
+            self._write_prd(store, run, plan, source_strategy, selected_mode, stage="completed")
+            # Write a per-run cost breakdown so it's easy to audit spend.
+            cost_payload = self.llm.cost_breakdown()
+            cost_payload["run_id"] = run.id
+            cost_payload["completed_at"] = None
+            store.write_cost(cost_payload)
+            store.add_trace(
+                AgentTrace(
+                    run_id=run.id,
+                    agent_name="orchestration:finalize_run_outputs",
+                    role="orchestration",
+                    prompt="Write final PRD and cost artifacts before benchmark generation.",
+                    model="deterministic-orchestrator",
+                    tools_used=[],
+                    tool_calls=[],
+                    token_usage=0,
+                    runtime_ms=max(0, int((time.perf_counter() - final_started) * 1000)),
+                    status="completed",
+                    errors=[],
+                    output_summary="Final PRD and cost artifacts written.",
+                    started_at=final_started_at,
+                )
+            )
             run.completed_at = now_iso()
             store.update_run(run)
             self._write_prd(store, run, plan, source_strategy, selected_mode, stage="completed")
+            cost_payload["completed_at"] = run.completed_at
+            store.write_cost(cost_payload)
             write_run_benchmarks(store)
+            store.append_progress(
+                f"Cost: ${run.total_cost:.4f} ({run.total_tokens} tokens) — see {store.cost_path}"
+            )
+            if session_store is not None:
+                session_store.complete_session(status=run.status, summary=f"Run {run.id} {run.status}.")
         return run, store
+
+    def _start_session_store(self, goal: str, run: RunRecord) -> Optional[SessionStore]:
+        if not self.config.enable_sessions:
+            return None
+        projects_dir = self.config.session_projects_dir or default_session_projects_dir()
+        try:
+            session_store = SessionStore(Path.cwd(), projects_dir)
+            record = session_store.start_session(
+                goal=goal,
+                run_id=run.id,
+                output_dir=self.output_root / run.id,
+                resume_from=self.config.resume_session_id,
+                fork_from=self.config.fork_session_id,
+            )
+        except OSError:
+            return None
+        run.session_id = record.id
+        run.session_jsonl_path = str(record.jsonl_path)
+        run.session_metadata_path = str(record.metadata_path)
+        return session_store
 
     def _write_prd(
         self,
@@ -198,7 +258,11 @@ class Orchestrator:
                 "progress": str(store.progress_path),
                 "run_benchmark": str(store.run_benchmark_path),
                 "decision_dag": str(store.decision_dag_path),
+                "agent_timeline": str(store.agent_timeline_path),
+                "loop_continuation_decisions": str(store.loop_continuation_path),
                 "trace": str(store.trace_log_path),
+                "session_jsonl": run.session_jsonl_path,
+                "session_metadata": run.session_metadata_path,
             },
             "notes": [
                 "This file is the run-local PRD/task map.",
@@ -456,7 +520,7 @@ class Orchestrator:
     async def _run_loop(
         self, run: RunRecord, store: ArtifactStore, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]
     ) -> None:
-        router = TaskRouter(self.evaluator_registry)
+        router = TaskRouter(self.evaluator_registry, llm=self.llm)
         decision = router.decide(run.user_goal, self.config.task_mode, self.config.evaluator_name)
         store.add_task_ingestion_decision(decision)
         run.task_mode = decision.selected_mode
@@ -1002,15 +1066,24 @@ class Orchestrator:
 
     def _next_run_id(self, goal: str) -> str:
         base = goal_slug(goal)
-        candidate = f"run_{base}"
+        run_number = self._next_run_number()
+        candidate = f"{run_number:03d}_run_{base}"
         if not (self.output_root / candidate).exists():
             return candidate
-        index = 2
         while True:
-            numbered = f"{candidate}-{index:02d}"
+            run_number += 1
+            numbered = f"{run_number:03d}_run_{base}"
             if not (self.output_root / numbered).exists():
                 return numbered
-            index += 1
+
+    def _next_run_number(self) -> int:
+        self.output_root.mkdir(parents=True, exist_ok=True)
+        numbers = [_run_number_from_name(path.name) for path in self.output_root.iterdir() if path.is_dir()]
+        explicit_numbers = [number for number in numbers if number is not None]
+        if explicit_numbers:
+            return max(explicit_numbers) + 1
+        legacy_runs = [path for path in self.output_root.iterdir() if path.is_dir() and path.name.startswith("run_")]
+        return len(legacy_runs) + 1
 
 
 def _prompt(name: str) -> str:
@@ -1026,6 +1099,13 @@ def goal_slug(goal: str, max_length: int = 72) -> str:
     slug = "-".join(selected)
     slug = slug[:max_length].strip("-")
     return slug or "research-run"
+
+
+def _run_number_from_name(name: str) -> Optional[int]:
+    match = re.match(r"^(\d+)_run_", name)
+    if not match:
+        return None
+    return int(match.group(1))
 
 
 def _objective_payload(goal: str, evaluator_name: Optional[str], store: ArtifactStore) -> dict[str, object]:

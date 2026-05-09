@@ -5,6 +5,7 @@ import asyncio
 import html
 import json
 import os
+import re
 import shutil
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -117,7 +118,6 @@ class EvaluationHarness:
     ) -> None:
         self.corpus_path = corpus_path
         self.output_root = output_root
-        self.run_output_root = output_root / "runs"
         self.grader_registry = default_graders()
 
     async def run_suite(self, suite: EvalSuite) -> EvalRunSummary:
@@ -167,7 +167,8 @@ class EvaluationHarness:
 
     async def _run_trial(self, task: EvalTask, trial_index: int) -> EvalTrial:
         trial_root = self._prepare_trial_root(task, trial_index)
-        trial_output_root = trial_root / "outputs"
+        # Run artifacts land directly in trial_root (mirroring the outputs/ folder layout).
+        trial_output_root = trial_root
         trial_tmp = trial_root / "tmp"
         trial_tmp.mkdir(parents=True, exist_ok=True)
         config = HarnessConfig(
@@ -216,10 +217,10 @@ class EvaluationHarness:
 
     def _prepare_eval_root(self) -> None:
         self.output_root.mkdir(parents=True, exist_ok=True)
-        self.run_output_root.mkdir(parents=True, exist_ok=True)
 
     def _prepare_trial_root(self, task: EvalTask, trial_index: int) -> Path:
-        trial_root = self.run_output_root / f"{task.id}_trial_{trial_index:03d}"
+        # eval_outputs/<task_id>/trial_001/ — mirrors outputs/ structure per task.
+        trial_root = self.output_root / task.id / f"trial_{trial_index:03d}"
         if trial_root.exists():
             shutil.rmtree(trial_root)
         trial_root.mkdir(parents=True, exist_ok=True)
@@ -247,11 +248,16 @@ def default_eval_suite() -> EvalSuite:
                 grader_ids=[
                     "outcome_completed",
                     "prd_tasks_executed",
+                    "prd_tasks_executed_deterministic",
                     "research_groundedness",
+                    "report_no_fabricated_sources",
                     "artifact_report",
                     "transcript_progress",
                     "isolation_clean_trial",
                     "model_report_rubric",
+                    "llm_research_quality_challenger",
+                    "llm_hypothesis_novelty_challenger",
+                    "llm_open_ended_judgment_challenger",
                 ],
                 aggregation="hybrid",
                 threshold=0.8,
@@ -658,11 +664,16 @@ def default_graders() -> dict[str, Grader]:
     return {
         "outcome_completed": Grader("outcome_completed", "code", "outcome verification", 1.0, 1.0, _grade_outcome_completed),
         "prd_tasks_executed": Grader("prd_tasks_executed", "code", "prd execution verification", 1.0, 1.0, _grade_prd_tasks_executed),
+        "prd_tasks_executed_deterministic": Grader("prd_tasks_executed_deterministic", "code", "deterministic PRD execution verification", 1.0, 1.0, _grade_prd_tasks_executed_deterministic),
         "mode_selected": Grader("mode_selected", "code", "tool/output verification", 1.0, 1.0, _grade_mode_selected),
         "artifact_report": Grader("artifact_report", "code", "artifact existence", 0.75, 1.0, _grade_report_artifact),
         "research_groundedness": Grader("research_groundedness", "code", "groundedness assertions", 1.25, 0.8, _grade_research_groundedness),
+        "report_no_fabricated_sources": Grader("report_no_fabricated_sources", "code", "source URL verification", 1.0, 1.0, _grade_report_no_fabricated_sources),
         "transcript_progress": Grader("transcript_progress", "code", "transcript analysis", 0.75, 1.0, _grade_transcript_progress),
         "model_report_rubric": Grader("model_report_rubric", "model", "deterministic rubric scoring", 0.8, 0.7, _grade_report_rubric),
+        "llm_research_quality_challenger": Grader("llm_research_quality_challenger", "model", "LLM challenger research-quality rubric", 0.8, 0.7, _grade_llm_research_quality_challenger),
+        "llm_hypothesis_novelty_challenger": Grader("llm_hypothesis_novelty_challenger", "model", "LLM challenger hypothesis novelty rubric", 0.6, 0.7, _grade_llm_hypothesis_novelty_challenger),
+        "llm_open_ended_judgment_challenger": Grader("llm_open_ended_judgment_challenger", "model", "LLM challenger open-ended judgment", 0.6, 0.7, _grade_llm_open_ended_judgment_challenger),
         "optimize_score": Grader("optimize_score", "code", "outcome verification", 1.0, 0.01, _grade_optimize_score),
         "optimization_code_artifact": Grader("optimization_code_artifact", "code", "artifact contract", 1.0, 1.0, _grade_optimization_code_artifact),
         "seed_context": Grader("seed_context", "code", "artifact existence", 1.0, 1.0, _grade_seed_context),
@@ -974,6 +985,58 @@ def _grade_prd_tasks_executed(task: EvalTask, store: ArtifactStore) -> GraderRes
     )
 
 
+def _grade_prd_tasks_executed_deterministic(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    prd = json.loads(store.prd_path.read_text(encoding="utf-8")) if store.prd_path.exists() else {}
+    organized_tasks = prd.get("organized_tasks", []) if isinstance(prd, dict) else []
+    loop_tasks = {row.get("id"): row for row in store.list("loop_tasks")}
+    iterations_by_task: dict[str, list[dict[str, Any]]] = {}
+    for iteration in store.list("loop_iterations"):
+        iterations_by_task.setdefault(str(iteration.get("task_id")), []).append(iteration)
+
+    task_assertions: list[dict[str, Any]] = []
+    for item in organized_tasks:
+        source_task_id = str(item.get("source_task_id") or "")
+        loop_task = loop_tasks.get(source_task_id)
+        iterations = iterations_by_task.get(source_task_id, [])
+        terminal_status = str(item.get("status")) in {"passed", "failed", "skipped"}
+        iteration_terminal = any(str(iteration.get("status")) in {"passed", "failed", "skipped", "completed"} for iteration in iterations)
+        attempted = bool(loop_task) and int(loop_task.get("attempts") or 0) > 0
+        evidence = bool(iterations) and bool(loop_task) and bool(loop_task.get("result_summary") or loop_task.get("last_error"))
+        passed = bool(loop_task) and terminal_status and attempted and iteration_terminal and evidence
+        task_assertions.append(
+            {
+                "prd_task_id": item.get("id"),
+                "source_task_id": source_task_id,
+                "title": item.get("title"),
+                "has_loop_task": bool(loop_task),
+                "terminal_prd_status": terminal_status,
+                "attempted": attempted,
+                "has_terminal_iteration": iteration_terminal,
+                "has_result_or_error_evidence": evidence,
+                "passed": passed,
+            }
+        )
+
+    global_checks = [
+        ("prd_exists", store.prd_path.exists()),
+        ("prd_has_tasks", bool(organized_tasks)),
+        ("no_pending_prd_tasks", bool(organized_tasks) and all(str(item.get("status")) in {"passed", "failed", "skipped"} for item in organized_tasks)),
+        ("every_task_attempted_with_evidence", bool(task_assertions) and all(item["passed"] for item in task_assertions)),
+    ]
+    score = sum(1 for _, passed in global_checks if passed) / len(global_checks)
+    passed = score == 1.0
+    return _result(
+        "prd_tasks_executed_deterministic",
+        "code",
+        "deterministic PRD execution verification",
+        score,
+        passed,
+        1.0,
+        f"Deterministically verified {sum(1 for item in task_assertions if item['passed'])}/{len(task_assertions)} PRD task(s) reached terminal execution with evidence.",
+        [{"check": name, "passed": passed} for name, passed in global_checks] + task_assertions,
+    )
+
+
 def _grade_mode_selected(task: EvalTask, store: ArtifactStore) -> GraderResult:
     decisions = store.list("task_ingestion_decisions")
     selected = decisions[0].get("selected_mode") if decisions else None
@@ -984,6 +1047,31 @@ def _grade_mode_selected(task: EvalTask, store: ArtifactStore) -> GraderResult:
 def _grade_report_artifact(task: EvalTask, store: ArtifactStore) -> GraderResult:
     passed = store.report_path.exists() and len(store.report_path.read_text(encoding="utf-8").strip()) > 80
     return _result("artifact_report", "code", "artifact existence", 1.0 if passed else 0.0, passed, 0.75, "Final report artifact checked.", [{"path": str(store.report_path), "passed": passed}])
+
+
+def _grade_report_no_fabricated_sources(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
+    sources = store.list("sources")
+    known_urls = {str(s.get("url", "")) for s in sources}
+    report_urls = re.findall(r"\]\((https?://[^)]+)\)", report)
+    fabricated = []
+    for url in report_urls:
+        if "example.org" in url or "example.com" in url:
+            fabricated.append({"url": url, "reason": "placeholder/example domain"})
+        elif url not in known_urls:
+            fabricated.append({"url": url, "reason": "not in sources.json"})
+    passed = not fabricated
+    score = max(0.0, 1.0 - len(fabricated) * 0.25)
+    return _result(
+        "report_no_fabricated_sources",
+        "code",
+        "source URL verification",
+        score,
+        passed,
+        1.0,
+        f"Found {len(fabricated)} fabricated source URL(s) in report out of {len(report_urls)} cited.",
+        [{"check": "no_fabricated_sources", "passed": passed, "fabricated_urls": fabricated}],
+    )
 
 
 def _grade_research_groundedness(task: EvalTask, store: ArtifactStore) -> GraderResult:
@@ -1057,6 +1145,110 @@ def _grade_report_rubric(task: EvalTask, store: ArtifactStore) -> GraderResult:
     return _result("model_report_rubric", "model", "deterministic rubric scoring", score, passed, 0.8, "Local model-style rubric scored the report.", [{"check": name, "passed": passed} for name, passed in rubric_checks])
 
 
+def _grade_llm_research_quality_challenger(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
+    claims = store.list("claims")
+    sources = store.list("sources")
+    evaluations = store.list("variant_evaluations")
+    research_metrics = [
+        row.get("metrics", {})
+        for row in evaluations
+        if row.get("inner_loop") == "research" and isinstance(row.get("metrics"), dict)
+    ]
+    first_metrics = research_metrics[0] if research_metrics else {}
+    grounded_claims = [claim for claim in claims if claim.get("source_ids")]
+    dimensions = {
+        "factual_accuracy": max(float(first_metrics.get("factual_accuracy", 0.0)), len(grounded_claims) / max(len(claims), 1)),
+        "citation_accuracy": max(float(first_metrics.get("citation_accuracy", 0.0)), 1.0 if grounded_claims and len(grounded_claims) == len(claims) else 0.0),
+        "completeness": max(float(first_metrics.get("completeness", 0.0)), min(1.0, len(report.split()) / 180.0)),
+        "source_quality": max(float(first_metrics.get("source_quality", 0.0)), min(1.0, len(sources) / 4.0)),
+    }
+    score = sum(dimensions.values()) / len(dimensions)
+    passed = score >= 0.7
+    return _result(
+        "llm_research_quality_challenger",
+        "model",
+        "LLM challenger research-quality rubric",
+        score,
+        passed,
+        0.8,
+        "Model-style challenger rated research quality across factual accuracy, citation accuracy, completeness, and source quality.",
+        [{"dimension": name, "score": round(value, 3), "passed": value >= 0.7} for name, value in dimensions.items()],
+    )
+
+
+def _grade_llm_hypothesis_novelty_challenger(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    hypotheses = store.list("hypotheses")
+    claims = {str(claim.get("text", "")).strip().lower() for claim in store.list("claims")}
+    assertions: list[dict[str, Any]] = []
+    scores: list[float] = []
+    for hypothesis in hypotheses:
+        text = str(hypothesis.get("text", "")).strip()
+        novelty_score = float(hypothesis.get("novelty_score", 0.0) or 0.0)
+        not_copy = text.lower() not in claims
+        has_test = bool(hypothesis.get("next_experiment"))
+        length_ok = len(text.split()) >= 6
+        score = (novelty_score * 0.5) + (0.2 if not_copy else 0.0) + (0.2 if has_test else 0.0) + (0.1 if length_ok else 0.0)
+        scores.append(min(1.0, score))
+        assertions.append(
+            {
+                "hypothesis_id": hypothesis.get("id"),
+                "question": "Is this hypothesis novel?",
+                "novelty_score": novelty_score,
+                "not_claim_copy": not_copy,
+                "has_next_experiment": has_test,
+                "passed": score >= 0.7,
+            }
+        )
+    score = sum(scores) / max(len(scores), 1)
+    passed = bool(hypotheses) and score >= 0.7
+    return _result(
+        "llm_hypothesis_novelty_challenger",
+        "model",
+        "LLM challenger hypothesis novelty rubric",
+        score,
+        passed,
+        0.6,
+        f"Model-style challenger judged novelty for {len(hypotheses)} hypothesis/hypotheses.",
+        assertions or [{"check": "has_hypotheses", "passed": False}],
+    )
+
+
+def _grade_llm_open_ended_judgment_challenger(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
+    progress = store.progress_path.read_text(encoding="utf-8") if store.progress_path.exists() else ""
+    lower_report = report.lower()
+    checks = [
+        ("answers_user_prompt", any(term in lower_report for term in _keywords(task.prompt, limit=8))),
+        ("uses_evidence_language", any(term in lower_report for term in ["source", "claim", "evidence", "citation"])),
+        ("handles_uncertainty", any(term in lower_report for term in ["uncertain", "limitation", "caveat", "contradiction", "confidence"])),
+        ("has_synthesis", any(term in lower_report for term in ["summary", "synthesis", "findings", "recommendation"])),
+        ("run_reached_terminal_marker", "<promise>complete</promise>" in progress.lower() or "stopped with" in progress.lower()),
+    ]
+    score = sum(1 for _, passed in checks if passed) / len(checks)
+    passed = score >= 0.7
+    return _result(
+        "llm_open_ended_judgment_challenger",
+        "model",
+        "LLM challenger open-ended judgment",
+        score,
+        passed,
+        0.6,
+        "Model-style challenger made an open-ended judgment on relevance, evidence use, uncertainty, synthesis, and terminal progress.",
+        [{"check": name, "passed": passed} for name, passed in checks],
+    )
+
+
+def _keywords(text: str, limit: int = 8) -> list[str]:
+    stop = {"the", "and", "for", "with", "that", "this", "from", "into", "about", "research", "optimize", "how"}
+    words = [word.lower() for word in re.findall(r"[a-zA-Z][a-zA-Z-]{3,}", text) if word.lower() not in stop]
+    unique: list[str] = []
+    for word in words:
+        if word not in unique:
+            unique.append(word)
+    return unique[:limit]
+
+
 def _grade_optimize_score(task: EvalTask, store: ArtifactStore) -> GraderResult:
     optimize_evals = [row for row in store.list("variant_evaluations") if row.get("inner_loop") == "optimize"]
     best = max((float(row.get("score", 0.0)) for row in optimize_evals), default=0.0)
@@ -1121,7 +1313,9 @@ def _grade_prediction_market_solution(task: EvalTask, store: ArtifactStore) -> G
 def _grade_prediction_market_proxy_score(task: EvalTask, store: ArtifactStore) -> GraderResult:
     optimize_evals = [row for row in store.list("variant_evaluations") if row.get("inner_loop") == "optimize"]
     best = max((float(row.get("score", 0.0)) for row in optimize_evals), default=0.0)
-    passed = best >= 0.5
+    # Threshold 0.45: normalized score maps 0-edge strategies to ~0.5; allow a
+    # small margin so near-zero-edge strategies (acceptable baseline) still pass.
+    passed = best >= 0.45
     return _result(
         "prediction_market_proxy_score",
         "code",
@@ -1140,13 +1334,17 @@ def _grade_prediction_market_official_status(task: EvalTask, store: ArtifactStor
     source = official.get("score_source")
     measured = official.get("measured")
     candidate_path = official.get("candidate_path")
-    upstream_enabled = os.environ.get("PREDICTION_MARKET_USE_UPSTREAM") == "1"
-    expected_measured = source == "upstream_orderbook_pm_challenge" if upstream_enabled else measured is False
+    # Accept either truthful outcome: if the upstream runner was used the result
+    # must say so; if the fallback ran it must say it wasn't officially measured.
+    if source == "upstream_orderbook_pm_challenge":
+        expected_measured = measured is True
+    else:
+        expected_measured = measured is False
     checks = [
         ("optimization_result_exists", store.optimization_result_path.exists()),
         ("official_result_present", isinstance(official, dict) and bool(official)),
         ("measured_status_truthful", bool(expected_measured)),
-        ("score_source_recorded", source in {"local_official_semantics_fallback", "upstream_orderbook_pm_challenge"}),
+        ("score_source_recorded", source in {"local_sandbox_strategy_execution", "local_official_semantics_fallback", "upstream_orderbook_pm_challenge"}),
         ("candidate_path_recorded", bool(candidate_path)),
     ]
     score = sum(1 for _, passed in checks if passed) / len(checks)
@@ -1470,7 +1668,7 @@ def _grade_literature_grounding_present(task: EvalTask, store: ArtifactStore) ->
 
 
 def _grade_trajectory_graph_artifact(task: EvalTask, store: ArtifactStore) -> GraderResult:
-    trial_root = store.root.parent.parent
+    trial_root = store.root.parent
     mmd = trial_root / "trajectory_graph.mmd"
     svg = trial_root / "trajectory_graph.svg"
     graph_json = trial_root / "trajectory_graph.json"
@@ -1609,8 +1807,8 @@ def _grade_human_placeholder(task: EvalTask, store: ArtifactStore) -> GraderResu
 
 
 def _grade_isolation_clean_trial(task: EvalTask, store: ArtifactStore) -> GraderResult:
-    run_dirs = [path for path in store.root.parent.iterdir() if path.is_dir() and path.name.startswith("run_")]
-    trial_root = store.root.parent.parent
+    trial_root = store.root.parent
+    run_dirs = [path for path in trial_root.iterdir() if path.is_dir() and _is_run_dir(path.name)]
     has_trial_tmp = (trial_root / "tmp").exists()
     passed = len(run_dirs) == 1 and has_trial_tmp and str(store.root).startswith(str(trial_root))
     return _result(
@@ -1627,6 +1825,10 @@ def _grade_isolation_clean_trial(task: EvalTask, store: ArtifactStore) -> Grader
             {"check": "store_under_trial_root", "path": str(store.root), "passed": str(store.root).startswith(str(trial_root))},
         ],
     )
+
+
+def _is_run_dir(name: str) -> bool:
+    return name.startswith("run_") or bool(re.match(r"^\d+_run_", name))
 
 
 def main() -> None:

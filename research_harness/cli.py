@@ -68,6 +68,27 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not stream run progress to the terminal; artifacts are still written.",
     )
+    parser.add_argument(
+        "--session-projects-dir",
+        type=Path,
+        default=Path(os.environ["AUTORE_PROJECTS_DIR"]) if os.environ.get("AUTORE_PROJECTS_DIR") else None,
+        help="Directory for plaintext session JSONL logs. Defaults to ~/.autore/projects/.",
+    )
+    parser.add_argument(
+        "--resume-session",
+        default=os.environ.get("AUTORE_RESUME_SESSION"),
+        help="Record this run as a fresh session resumed from an existing session id.",
+    )
+    parser.add_argument(
+        "--fork-session",
+        default=os.environ.get("AUTORE_FORK_SESSION"),
+        help="Record this run as a fresh session forked from an existing session id.",
+    )
+    parser.add_argument(
+        "--no-sessions",
+        action="store_true",
+        help="Disable ~/.autore/projects session JSONL logging for this run.",
+    )
     return parser
 
 
@@ -99,6 +120,10 @@ def main() -> None:
         evaluator_name=args.evaluator,
         llm_provider=args.llm_provider,
         llm_model=args.llm_model,
+        session_projects_dir=args.session_projects_dir,
+        resume_session_id=args.resume_session,
+        fork_session_id=args.fork_session,
+        enable_sessions=not args.no_sessions,
         echo_progress=not args.quiet,
     )
     orchestrator = Orchestrator(args.corpus, args.output, config)
@@ -106,6 +131,8 @@ def main() -> None:
     print(f"Run: {run.id}")
     print(f"Status: {run.status}")
     print(f"Artifacts: {store.root}")
+    if run.session_jsonl_path:
+        print(f"Session JSONL: {run.session_jsonl_path}")
     print(f"PRD: {store.prd_path}")
     if store.optimizer_seed_context_path.exists():
         print(f"Optimizer seed context: {store.optimizer_seed_context_path}")
@@ -120,6 +147,7 @@ def main() -> None:
     print(f"Report: {store.report_path}")
     print(f"Run benchmark: {store.run_benchmark_path}")
     print(f"Decision DAG: {store.decision_dag_path}")
+    print(f"Agent timeline: {store.agent_timeline_path}")
 
 
 if __name__ == "__main__":
