@@ -29,6 +29,40 @@ Every run writes a `prd.json`. The PRD records the selected product agent,
 runtime mode, agent-harness definition, ordered tasks, acceptance criteria, and
 artifact paths.
 
+## Three-Loop Architecture
+
+The harness runs three nested loops:
+
+```text
+Outer loop  — Session (sessions.py)
+              Manages context isolation and parallel agent runs.
+              Resets state between runs so each agent starts clean.
+
+Middle loop — EvolutionaryOuterLoop (loops.py)
+              Proposes and evaluates variants across N outer iterations.
+              Drives research (query variants → retrieve → score) or
+              optimize (code variants → evaluator → score).
+
+Inner loop  — Ralph loop (orchestrator._run_loop + agent harness)
+              The agent harness: model + loop policy + tools + store.
+              Picks next story (passes: false) from prd.json.
+              Executes it via research or optimization agent.
+              Updates prd.json (passes: true) and appends progress.txt.
+              Repeats until all stories pass or iteration budget exhausted.
+```
+
+```mermaid
+flowchart TD
+  prd["prd.json\nUS-001..US-N\npasses: false"] --> pick["Pick next story\npasses: false"]
+  pick --> exec["Execute story\nresearch / optimize agent"]
+  exec --> commit["EvolutionaryOuterLoop\npropose variants → evaluate → rank"]
+  commit --> update["Update prd.json\npasses: true"]
+  update --> log["Append progress.txt\nsave learnings"]
+  log --> more{"More stories?"}
+  more -->|yes| pick
+  more -->|no| done["Done\nAll stories complete"]
+```
+
 ## System Diagram
 
 The visual architecture/roadmap diagram is available at

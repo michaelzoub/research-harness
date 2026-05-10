@@ -330,10 +330,10 @@ class Orchestrator:
                 )
             )
             tasks.append(
-                _prd_task(2, "Critique evidence", "critique", {}, ["Review claims", "Record contradictions or questions"], ["prd_task_001"], traces, "critic_reviewer")
+                _prd_task(2, "Critique evidence", "critique", {}, ["Review claims", "Record contradictions or questions"], ["US-001"], traces, "critic_reviewer")
             )
             tasks.append(
-                _prd_task(3, "Synthesize report", "synthesize", {}, ["Write final_report.md"], ["prd_task_002"], traces, "synthesis_agent")
+                _prd_task(3, "Synthesize report", "synthesize", {}, ["Write final_report.md"], ["US-002"], traces, "synthesis_agent")
             )
             return tasks
 
@@ -921,6 +921,20 @@ class Orchestrator:
             )
         )
         store.append_progress(f"Task {iteration}: {task.status} - {result.summary}")
+        self._update_prd_tasks(store)
+
+    def _update_prd_tasks(self, store: ArtifactStore) -> None:
+        """Refresh organized_tasks in prd.json after each story completes."""
+        loop_tasks = store.list("loop_tasks")
+        if not loop_tasks or not store.prd_path.exists():
+            return
+        tasks = [_prd_task_from_loop_task(task, index) for index, task in enumerate(loop_tasks, start=1)]
+        try:
+            existing = json.loads(store.prd_path.read_text(encoding="utf-8"))
+            existing["organized_tasks"] = tasks
+            store.write_prd(existing)
+        except (json.JSONDecodeError, OSError):
+            pass
 
     async def _pass_task(
         self,
@@ -972,6 +986,7 @@ class Orchestrator:
             )
         )
         store.append_progress(f"Task {iteration}: skipped - {summary}")
+        self._update_prd_tasks(store)
 
     def create_loop_tasks(self, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]) -> list[LoopTask]:
         tasks: list[LoopTask] = []
@@ -1488,9 +1503,9 @@ def _read_json_if_exists(path: Path) -> dict[str, object]:
 
 def _prd_task_from_loop_task(task: dict[str, object], index: int) -> dict[str, object]:
     priority = int(task.get("priority", index) or index)
-    dependencies = [] if priority <= 1 else [f"prd_task_{priority - 1:03d}"]
+    dependencies = [] if priority <= 1 else [f"US-{priority - 1:03d}"]
     return {
-        "id": f"prd_task_{priority:03d}",
+        "id": f"US-{priority:03d}",
         "source_task_id": task.get("id"),
         "title": task.get("title"),
         "kind": task.get("action"),
@@ -1500,7 +1515,7 @@ def _prd_task_from_loop_task(task: dict[str, object], index: int) -> dict[str, o
         "attempts": int(task.get("attempts", 0) or 0),
         "dependencies": dependencies,
         "params": task.get("params", {}),
-        "acceptance_criteria": task.get("acceptance_criteria", []),
+        "acceptanceCriteria": task.get("acceptance_criteria", []),
         "result_summary": task.get("result_summary"),
         "last_error": task.get("last_error"),
     }
@@ -1522,7 +1537,7 @@ def _prd_task(
     if matching:
         status = "failed" if failed else "passed"
     return {
-        "id": f"prd_task_{index:03d}",
+        "id": f"US-{index:03d}",
         "title": title,
         "kind": kind,
         "priority": index,
@@ -1531,7 +1546,7 @@ def _prd_task(
         "attempts": len(matching),
         "dependencies": dependencies,
         "params": params,
-        "acceptance_criteria": acceptance_criteria,
+        "acceptanceCriteria": acceptance_criteria,
         "result_summary": matching[-1].get("output_summary") if matching else None,
         "last_error": "; ".join(str(error) for trace in failed for error in trace.get("errors", [])) or None,
         "trace_ids": [trace.get("id") for trace in matching],
