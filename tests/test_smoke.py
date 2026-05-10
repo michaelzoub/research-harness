@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import io
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
 
 from challenges.prediction_market import prediction_market_score
 from research_harness.benchmark import collect_runs, write_outputs
+from research_harness.cli import build_parser, configure_interactive_run
 from research_harness.evals import (
     EvaluationHarness,
     GraderResult,
@@ -17,15 +21,114 @@ from research_harness.evals import (
     graph_trajectory_match,
     trajectory_match,
 )
-from research_harness.loops import ResearchLoop
+from research_harness.loops import EvaluatorRegistry, ResearchLoop, TaskRouter
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
-from research_harness.schemas import Variant
+from research_harness.schemas import Claim, Contradiction, Hypothesis, RunRecord, Source, Variant
 from research_harness.search import LocalCorpusSearch, OpenAlexSearch, _parse_arxiv_feed
 from research_harness.sessions import SessionStore
 from research_harness.store import ArtifactStore
 
 
 class SmokeTest(unittest.TestCase):
+    def test_cli_allows_selection_based_setup_without_goal(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([])
+
+        self.assertIsNone(args.goal)
+        self.assertFalse(args.interactive)
+
+    def test_interactive_cli_setup_collects_run_choices(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["--interactive", "--retriever", "local"])
+        text_answers = iter(
+            [
+                "Research agent workflow evaluation",
+                "5",
+            ]
+        )
+        keys = iter(["down", "down", "enter", "down", "enter", "enter"])
+        prompts: list[str] = []
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            configured = configure_interactive_run(
+                args,
+                input_func=lambda prompt: prompts.append(prompt) or next(text_answers),
+                output_func=lambda _message: None,
+                key_reader=lambda: next(keys),
+            )
+
+        self.assertEqual(configured.goal, "Research agent workflow evaluation")
+        self.assertEqual(configured.task_mode, "optimize")
+        self.assertEqual(configured.evaluator, "length_score")
+        self.assertEqual(configured.retriever, "local")
+        self.assertEqual(configured.max_iterations, 5)
+        self.assertEqual(configured.llm_provider, "auto")
+        self.assertFalse(configured.quiet)
+        self.assertFalse(any("Choose a number" in prompt for prompt in prompts))
+
+    def test_interactive_prediction_market_routes_to_challenge_mode(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["--interactive", "--retriever", "local"])
+        text_answers = iter(["optimizing prediction market making", "12"])
+        keys = iter(["down", "down", "enter", "down", "down", "enter", "enter"])
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            configured = configure_interactive_run(
+                args,
+                input_func=lambda _prompt: next(text_answers),
+                output_func=lambda _message: None,
+                key_reader=lambda: next(keys),
+            )
+
+        self.assertEqual(configured.task_mode, "optimize_query")
+        self.assertEqual(configured.evaluator, "prediction_market")
+
+    def test_prediction_market_evaluator_overrides_plain_optimize_to_challenge_flow(self) -> None:
+        router = TaskRouter(EvaluatorRegistry())
+
+        decision = router.decide(
+            "optimizing the prediction market market making strategy, get to 10 dollars",
+            requested_mode="optimize",
+            evaluator_name="prediction_market",
+        )
+
+        self.assertEqual(decision.selected_mode, "optimize_query")
+        self.assertEqual(decision.product_agent, "challenge")
+        self.assertEqual(decision.evaluator_name, "prediction_market")
+
+    def test_plan_uses_llm_interpretation_for_typoed_prediction_market_goal(self) -> None:
+        class FakePlannerLLM:
+            is_live = True
+
+            def complete_json(self, _system: str, user: str, **_kwargs: object) -> dict[str, object]:
+                self.user_payload = json.loads(user)
+                return {
+                    "task_type": "bounded",
+                    "topics": ["prediction_market", "market_making"],
+                    "topic_queries": [
+                        "prediction market order book market making adverse selection",
+                        "stale quote arbitrage retail order flow inventory skew",
+                    ],
+                    "rationale": "Interpreted typoed predictionm arket and mm'ing as prediction-market market making.",
+                }
+
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto"),
+        )
+        fake_llm = FakePlannerLLM()
+        orchestrator.llm = fake_llm  # type: ignore[assignment]
+
+        plan = orchestrator.create_plan("optimizing the predictionm arket mm'ing, get to 10$")
+        strategy = orchestrator.create_source_strategy(plan.goal, plan)
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertEqual(plan.planner, "llm")
+        self.assertIn("prediction_market", plan.topics)
+        self.assertIn("prediction market order book market making", queries)
+        self.assertIn("selected_evaluator", fake_llm.user_payload)
+
     def test_phase2_smoke(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
@@ -50,6 +153,99 @@ class SmokeTest(unittest.TestCase):
             self.assertTrue(run.id.startswith("001_run_multi-agent-systems-improve-automated-literature-review-quality"))
             self.assertTrue(store.prd_path.exists())
             self.assertGreaterEqual(len(json.loads(store.prd_path.read_text(encoding="utf-8"))["organized_tasks"]), 1)
+
+    def test_world_model_dedup_provenance_and_observability_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output_root = Path(directory)
+            store_a = ArtifactStore(output_root / "001_run_world")
+            run_a = RunRecord(
+                id="001_run_world",
+                user_goal="Research provenance",
+                task_type="open_ended",
+                harness_config_id="test-config",
+                prompt_versions={"literature_agent": "abc123"},
+                harness_config_snapshot={"mode": "test"},
+            )
+            store_a.add_run(run_a)
+            source_a = store_a.add_source(
+                Source(
+                    url="https://example.com/paper",
+                    title="World model paper",
+                    author="Ada",
+                    date="2026",
+                    source_type="paper",
+                    summary="A paper about persistent world models.",
+                    relevance_score=0.9,
+                    credibility_score=0.9,
+                )
+            )
+            claim_a = store_a.add_claim(
+                Claim(
+                    text="Persistent stores improve cross-run memory.",
+                    source_ids=[source_a.id],
+                    confidence=0.8,
+                    support_level="strong",
+                    created_by_agent="test",
+                    run_id=run_a.id,
+                )
+            )
+            hypothesis_a = store_a.add_hypothesis(
+                Hypothesis(
+                    text="Cross-run dedupe should reduce repeated claims.",
+                    supporting_claim_ids=[claim_a.id],
+                    contradicting_claim_ids=[],
+                    confidence=0.7,
+                    novelty_score=0.6,
+                    testability_score=0.8,
+                    next_experiment="Run the same source twice.",
+                )
+            )
+            store_a.add_contradiction(
+                Contradiction(
+                    claim_a=claim_a.id,
+                    claim_b=claim_a.id,
+                    explanation="Self-check edge for provenance coverage.",
+                    severity="low",
+                )
+            )
+            store_a.write_report("Report citing the persistent world model claim.\n")
+            store_a.write_harness_diagnosis()
+
+            store_b = ArtifactStore(output_root / "002_run_world")
+            source_b = store_b.add_source(
+                Source(
+                    url="https://example.com/paper",
+                    title="World model paper",
+                    author="Ada",
+                    date="2026",
+                    source_type="paper",
+                    summary="A paper about persistent world models.",
+                    relevance_score=0.9,
+                    credibility_score=0.9,
+                )
+            )
+            claim_b = store_b.add_claim(
+                Claim(
+                    text="Persistent stores improve cross-run memory.",
+                    source_ids=[source_b.id],
+                    confidence=0.8,
+                    support_level="strong",
+                    created_by_agent="test",
+                    run_id="002_run_world",
+                )
+            )
+
+            self.assertEqual(source_b.duplicate_of, source_a.id)
+            self.assertEqual(claim_b.duplicate_of, claim_a.id)
+            self.assertTrue(store_a.sqlite_path.exists())
+            self.assertTrue(store_a.harness_diagnosis_path.exists())
+            self.assertGreaterEqual(len(store_a.list("provenance_edges")), 4)
+            self.assertEqual(hypothesis_a.run_id, run_a.id)
+            with sqlite3.connect(store_a.sqlite_path) as connection:
+                artifact_count = connection.execute("SELECT COUNT(*) FROM artifacts").fetchone()[0]
+                migration_count = connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]
+            self.assertGreaterEqual(artifact_count, 4)
+            self.assertGreaterEqual(migration_count, 1)
 
     def test_duplicate_run_names_are_numbered(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -347,6 +543,33 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(prd["product_agent"], "challenge")
             self.assertEqual(prd["agent_harness"]["runtime_mode"], "optimize_query")
 
+    def test_prediction_market_report_filters_unrelated_sources_for_typos(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=Path(directory),
+                config=HarnessConfig(
+                    retriever="local",
+                    max_loop_iterations=1,
+                    task_mode="optimize",
+                    evaluator_name="prediction_market",
+                    include_debugger=False,
+                    echo_progress=False,
+                    llm_provider="local",
+                ),
+            )
+            run, store = asyncio.run(orchestrator.run("optimizing the predictionm arket mm'ing, get to 10$"))
+
+            report = store.report_path.read_text(encoding="utf-8")
+
+            self.assertEqual(run.task_mode, "optimize_query")
+            self.assertEqual(run.product_agent, "challenge")
+            self.assertIn("Prediction Market", report)
+            self.assertIn("prediction_market", report)
+            self.assertNotIn("Review of deep learning", report)
+            self.assertNotIn("Brain Tumor", report)
+            self.assertNotIn("G*Power", report)
+
     def test_prediction_market_dont_stop_profit_target_keeps_prd_incomplete_until_met(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
@@ -596,11 +819,27 @@ class ArxivRetrieverTest(unittest.TestCase):
         self.assertIn("orderbook", queries.replace(" ", ""))
         self.assertNotIn("workplace automation", queries)
 
-    def test_source_strategy_does_not_force_prediction_market_lens_without_prompt_topic(self) -> None:
+    def test_prediction_market_evaluator_forces_prediction_market_lens(self) -> None:
         orchestrator = Orchestrator(
             corpus_path=Path("examples/corpus/research_corpus.json"),
             output_root=Path("outputs"),
             config=HarnessConfig(retriever="auto", evaluator_name="prediction_market"),
+        )
+
+        goal = "Optimize an image compression routine with a deterministic benchmark"
+        plan = orchestrator.create_plan(goal)
+        strategy = orchestrator.create_source_strategy(goal, plan)
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertIn("prediction-market", plan.strategy)
+        self.assertIn("market scoring rules", queries)
+        self.assertIn("adverse selection", queries)
+
+    def test_source_strategy_does_not_force_prediction_market_lens_without_prompt_or_evaluator(self) -> None:
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto"),
         )
 
         goal = "Optimize an image compression routine with a deterministic benchmark"

@@ -151,6 +151,17 @@ class TaskRouter:
                     + (f"evaluator '{evaluator_name}' is registered." if evaluator else "no evaluator registered.")
                 ),
             )
+        if requested == "optimize" and evaluator_name == "prediction_market" and evaluator:
+            return TaskIngestionDecision(
+                requested_mode=requested,
+                selected_mode="optimize_query",
+                evaluator_name=evaluator_name,
+                product_agent="challenge",
+                reason=(
+                    "Challenge agent selected optimization-query loop because the prediction_market evaluator "
+                    "requires challenge strategy research before scoring."
+                ),
+            )
         if requested == "optimize" and evaluator:
             product_agent = _product_agent_for("optimize", goal, evaluator_name)
             return TaskIngestionDecision(
@@ -1261,6 +1272,11 @@ class EvolutionaryOuterLoop:
             return outer_iteration >= self.max_outer_iterations
         if termination_signal == "score_threshold" and self.objective.has_explicit_target:
             return self._generic_objective_met(best_eval)
+        # Mirror _should_stop_query_loop: enforce at least 2 rounds for research
+        # so a single high-scoring-but-irrelevant retrieval can't exit early.
+        if self.task_mode == "research" and termination_signal == "claim_corroboration_threshold":
+            min_rounds = min(2, self.max_outer_iterations)
+            return outer_iteration >= min_rounds
         return termination_signal in {"score_threshold", "claim_corroboration_threshold", "score_plateau", "coverage_plateau"}
 
     def _should_stop_query_loop(self, termination_signal: str, outer_iteration: int) -> bool:
@@ -1560,6 +1576,7 @@ class EvolutionaryOuterLoop:
             "top_query_findings": top_items,
             "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
             "has_evaluator": self.evaluator is not None,
+            "evaluator_name": self.evaluator_name or None,
         }
 
     def _seed_context_variants(self, seed_context: dict[str, object]) -> list[Variant]:
@@ -2168,8 +2185,30 @@ def _record_timing_trace(
             errors=errors or [],
             output_summary=output_summary,
             started_at=started_at,
+            prompt_version=hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16],
+            prompt_tokens=max(0, token_usage),
+            failure_component=_trace_component(role, agent_name),
         )
     )
+
+
+def _trace_component(role: str, agent_name: str) -> str:
+    text = f"{role} {agent_name}".lower()
+    if any(term in text for term in ["search", "literature", "retriever", "memory"]):
+        return "retrieval"
+    if "hypothesis" in text:
+        return "hypothesis_generation"
+    if "critic" in text:
+        return "critic"
+    if "synthesis" in text:
+        return "synthesis"
+    if any(term in text for term in ["optimize", "evaluator", "prediction_market"]):
+        return "optimizer"
+    if "loop_controller" in text:
+        return "loop_control"
+    if "orchestration" in text:
+        return "orchestration"
+    return "unknown"
 
 
 def _continuation_reason(

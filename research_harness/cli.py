@@ -3,14 +3,31 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import sys
+import termios
+import tty
 from pathlib import Path
+from typing import Callable, Optional
 
 from .orchestrator import HarnessConfig, Orchestrator
 
 
+TASK_MODE_CHOICES = ("auto", "research", "optimize", "optimize_query")
+RETRIEVER_CHOICES = ("auto", "local", "arxiv", "openalex", "github", "web", "docs_blogs", "twitter", "memory")
+LLM_PROVIDER_CHOICES = ("auto", "openai", "local")
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run the research harness MVP.")
-    parser.add_argument("goal", help="High-level research goal.")
+    parser = argparse.ArgumentParser(
+        description="Run the research harness. Use no arguments for a selection-based setup.",
+    )
+    parser.add_argument("goal", nargs="?", help="High-level research goal. Omit to use the interactive run setup.")
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Open the selection-based run setup, using any supplied flags as defaults.",
+    )
     parser.add_argument(
         "--mode",
         choices=["standard", "deterministic"],
@@ -31,7 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--retriever",
-        choices=["auto", "local", "arxiv", "openalex", "github", "web", "docs_blogs", "twitter", "memory"],
+        choices=RETRIEVER_CHOICES,
         default=os.environ.get("RESEARCH_HARNESS_RETRIEVER", "auto"),
         help="Evidence retriever/source mix. Auto uses a mixed strategy. Use local for the offline demo corpus.",
     )
@@ -43,7 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--task-mode",
-        choices=["auto", "optimize", "research", "optimize_query"],
+        choices=TASK_MODE_CHOICES,
         default=os.environ.get("RESEARCH_HARNESS_TASK_MODE", "auto"),
         help="Task ingestion mode for the evolutionary agent loop. Auto uses evaluator availability and prompt heuristics.",
     )
@@ -54,7 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--llm-provider",
-        choices=["auto", "openai", "local"],
+        choices=LLM_PROVIDER_CHOICES,
         default=os.environ.get("RESEARCH_HARNESS_LLM_PROVIDER", "auto"),
         help="LLM provider for agent proposal, judging, and synthesis. Auto uses OpenAI when OPENAI_API_KEY is set.",
     )
@@ -92,6 +109,216 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def prompt_choice(
+    title: str,
+    options: list[tuple[str, str]],
+    *,
+    default: str,
+    input_func: Callable[[str], str] = input,
+    output_func: Callable[[str], None] = print,
+    key_reader: Optional[Callable[[], str]] = None,
+    use_arrows: Optional[bool] = None,
+) -> str:
+    if use_arrows is None:
+        use_arrows = key_reader is not None or sys.stdin.isatty()
+    if use_arrows:
+        return prompt_arrow_choice(title, options, default=default, key_reader=key_reader)
+    output_func("")
+    output_func(title)
+    for index, (value, label) in enumerate(options, start=1):
+        suffix = " [default]" if value == default else ""
+        output_func(f"  {index}. {label}{suffix}")
+    while True:
+        answer = input_func("Choose a number: ").strip()
+        if not answer:
+            return default
+        if answer.isdigit():
+            selected_index = int(answer)
+            if 1 <= selected_index <= len(options):
+                return options[selected_index - 1][0]
+        output_func(f"Please enter 1-{len(options)}, or press Enter for the default.")
+
+
+def prompt_arrow_choice(
+    title: str,
+    options: list[tuple[str, str]],
+    *,
+    default: str,
+    key_reader: Optional[Callable[[], str]] = None,
+) -> str:
+    if not options:
+        raise ValueError("prompt_arrow_choice requires at least one option")
+    selected_index = next((index for index, (value, _label) in enumerate(options) if value == default), 0)
+    read_key = key_reader or read_terminal_key
+    lines_rendered = 0
+
+    while True:
+        if lines_rendered:
+            sys.stdout.write(f"\033[{lines_rendered}F")
+        lines = [title, "Use Up/Down, then Enter."]
+        for index, (_value, label) in enumerate(options):
+            prefix = ">" if index == selected_index else " "
+            lines.append(f"{prefix} {label}")
+        for line in lines:
+            sys.stdout.write(f"\033[2K\r{line}\n")
+        sys.stdout.flush()
+        lines_rendered = len(lines)
+
+        key = read_key()
+        if key in {"up", "k"}:
+            selected_index = (selected_index - 1) % len(options)
+        elif key in {"down", "j"}:
+            selected_index = (selected_index + 1) % len(options)
+        elif key in {"enter", "\r", "\n"}:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            return options[selected_index][0]
+
+
+def read_terminal_key() -> str:
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        char = sys.stdin.read(1)
+        if char == "\x1b":
+            suffix = sys.stdin.read(2)
+            if suffix == "[A":
+                return "up"
+            if suffix == "[B":
+                return "down"
+            return "escape"
+        if char in {"\r", "\n"}:
+            return "enter"
+        return char
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+
+def prompt_text(
+    prompt: str,
+    *,
+    default: Optional[str] = None,
+    required: bool = False,
+    input_func: Callable[[str], str] = input,
+    output_func: Callable[[str], None] = print,
+) -> str:
+    rendered = f"{prompt} [{default}]: " if default else f"{prompt}: "
+    while True:
+        answer = input_func(rendered).strip()
+        if answer:
+            return answer
+        if default is not None:
+            return default
+        if not required:
+            return ""
+        output_func("Please enter a value.")
+
+
+def prompt_int(
+    prompt: str,
+    *,
+    default: int,
+    input_func: Callable[[str], str] = input,
+    output_func: Callable[[str], None] = print,
+) -> int:
+    while True:
+        answer = input_func(f"{prompt} [{default}]: ").strip()
+        if not answer:
+            return default
+        try:
+            value = int(answer)
+        except ValueError:
+            output_func("Please enter a whole number.")
+            continue
+        if value > 0:
+            return value
+        output_func("Please enter a number greater than zero.")
+
+
+def configure_interactive_run(
+    args: argparse.Namespace,
+    *,
+    input_func: Callable[[str], str] = input,
+    output_func: Callable[[str], None] = print,
+    key_reader: Optional[Callable[[], str]] = None,
+) -> argparse.Namespace:
+    output_func("autore run setup")
+    output_func("Existing flags are used as starting values.")
+    args.goal = prompt_text(
+        "What should the agent work on?",
+        default=args.goal,
+        required=True,
+        input_func=input_func,
+        output_func=output_func,
+    )
+    args.task_mode = prompt_choice(
+        "What kind of run is this?",
+        [
+            ("auto", "Auto decide"),
+            ("research", "Research and synthesize"),
+            ("optimize", "Optimize against an evaluator"),
+            ("optimize_query", "Research first, then optimize"),
+        ],
+        default=args.task_mode or "auto",
+        input_func=input_func,
+        output_func=output_func,
+        key_reader=key_reader,
+    )
+    if args.task_mode in {"optimize", "optimize_query"}:
+        evaluator = prompt_choice(
+            "Which evaluator should score candidates?",
+            [
+                ("", "Decide from the prompt"),
+                ("length_score", "length_score demo evaluator"),
+                ("prediction_market", "prediction_market challenge evaluator"),
+                ("custom", "Type a custom evaluator name"),
+            ],
+            default=args.evaluator or "",
+            input_func=input_func,
+            output_func=output_func,
+            key_reader=key_reader,
+        )
+        if evaluator == "custom":
+            evaluator = prompt_text(
+                "Evaluator name",
+                default=None,
+                required=True,
+                input_func=input_func,
+                output_func=output_func,
+            )
+        args.evaluator = evaluator or None
+        if args.evaluator == "prediction_market":
+            args.task_mode = "optimize_query"
+    args.retriever = prompt_choice(
+        "Where should research evidence come from?",
+        [
+            ("auto", "Auto mix of available sources"),
+            ("local", "Bundled offline corpus"),
+            ("arxiv", "arXiv"),
+            ("openalex", "OpenAlex"),
+            ("github", "GitHub"),
+            ("web", "General web"),
+            ("docs_blogs", "Docs and blogs"),
+            ("twitter", "Twitter/X"),
+            ("memory", "Stored run memory"),
+        ],
+        default=args.retriever or "auto",
+        input_func=input_func,
+        output_func=output_func,
+        key_reader=key_reader,
+    )
+    args.max_iterations = prompt_int(
+        "Iteration budget",
+        default=args.max_iterations,
+        input_func=input_func,
+        output_func=output_func,
+    )
+    output_func("")
+    output_func("Starting run.")
+    return args
+
+
 def load_dotenv(path: Path = Path(".env"), *, override: bool = False) -> None:
     if not path.exists():
         return
@@ -111,7 +338,15 @@ def load_dotenv(path: Path = Path(".env"), *, override: bool = False) -> None:
 def main() -> None:
     load_dotenv()
     load_dotenv(Path(".env.local"), override=True)
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args = parser.parse_args()
+    if args.interactive or not args.goal:
+        if not sys.stdin.isatty():
+            parser.error(
+                "a goal is required when stdin is not interactive; "
+                "run `autore` in a terminal for the selection setup"
+            )
+        args = configure_interactive_run(args)
     config = HarnessConfig(
         mode=args.mode or "evolutionary",
         retriever=args.retriever,
@@ -146,6 +381,9 @@ def main() -> None:
         print(f"Solution: {store.solution_path}")
     print(f"Report: {store.report_path}")
     print(f"Run benchmark: {store.run_benchmark_path}")
+    print(f"Run notebook: {store.run_notebook_path}")
+    print(f"Harness diagnosis: {store.harness_diagnosis_path}")
+    print(f"World model DB: {store.sqlite_path}")
     print(f"Decision DAG: {store.decision_dag_path}")
     print(f"Agent timeline: {store.agent_timeline_path}")
 

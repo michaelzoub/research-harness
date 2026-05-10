@@ -3,15 +3,18 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 import sys
 from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+from .diagnostics import classify_failure, diagnose_snapshot
 from .schemas import (
     AgentTrace,
     Claim,
     Contradiction,
+    CostEvent,
     Experiment,
     FailedPath,
     HarnessChange,
@@ -20,6 +23,7 @@ from .schemas import (
     LoopTask,
     LoopContinuationDecision,
     OpenQuestion,
+    ProvenanceEdge,
     RunRecord,
     Source,
     TaskIngestionDecision,
@@ -41,6 +45,9 @@ ENTITY_FILES = {
     "harness_changes": "harness_changes.json",
     "runs": "runs.json",
     "agent_traces": "agent_traces.json",
+    "provenance_edges": "provenance_edges.json",
+    "cost_events": "cost_events.json",
+    "harness_diagnoses": "harness_diagnoses.json",
     "loop_tasks": "tasks.json",
     "loop_iterations": "loop_iterations.json",
     "task_ingestion_decisions": "task_ingestion_decisions.json",
@@ -58,7 +65,13 @@ class ArtifactStore:
     intentionally small, deterministic, and easy to inspect.
     """
 
-    def __init__(self, root: Path, echo_progress: bool = False, session_store: Optional[Any] = None):
+    def __init__(
+        self,
+        root: Path,
+        echo_progress: bool = False,
+        session_store: Optional[Any] = None,
+        sqlite_path: Optional[Path] = None,
+    ):
         self.root = root
         self.echo_progress = echo_progress
         self.session_store = session_store
@@ -69,6 +82,7 @@ class ArtifactStore:
                 path.write_text("[]\n", encoding="utf-8")
         self.trace_log_path = self.root / "trace.jsonl"
         self.cost_path = self.root / "cost.json"
+        self.sqlite_path = sqlite_path or self.root.parent / "world_model.sqlite"
         self.report_path = self.root / "final_report.md"
         self.prd_path = self.root / "prd.json"
         self.optimizer_seed_context_path = self.root / "optimizer_seed_context.json"
@@ -81,10 +95,13 @@ class ArtifactStore:
         self.run_benchmark_path = self.root / "run_benchmark.html"
         self.decision_dag_path = self.root / "decision_dag.png"
         self.agent_timeline_path = self.root / "agent_timeline.png"
+        self.run_notebook_path = self.root / "run_notebook.ipynb"
+        self.harness_diagnosis_path = self.root / "harness_diagnosis.json"
         self.loop_continuation_path = self.root / "loop_continuation_decisions.json"
         self.progress_path = self.root / "progress.txt"
         if not self.progress_path.exists():
             self.progress_path.write_text("", encoding="utf-8")
+        self._migrate_sqlite()
 
     def add_source(self, source: Source) -> Source:
         # Primary dedup: exact URL match.
@@ -98,15 +115,66 @@ class ArtifactStore:
             for row in self.list("sources"):
                 if _normalize_title(str(row.get("title", ""))) == normalized:
                     return Source(**row)
+        self._annotate_dedup("sources", source, _canonical_key("sources", to_dict(source)))
         self._append("sources", source)
         return source
 
     def add_claim(self, claim: Claim) -> Claim:
+        self._annotate_dedup("claims", claim, _canonical_key("claims", to_dict(claim)))
         self._append("claims", claim)
+        for source_id in claim.source_ids:
+            self.add_provenance_edge(
+                ProvenanceEdge(
+                    run_id=claim.run_id,
+                    from_type="source",
+                    from_id=source_id,
+                    to_type="claim",
+                    to_id=claim.id,
+                    relationship="supports",
+                    metadata={"confidence": claim.confidence, "support_level": claim.support_level},
+                )
+            )
+        if claim.duplicate_of:
+            self.add_provenance_edge(
+                ProvenanceEdge(
+                    run_id=claim.run_id,
+                    from_type="claim",
+                    from_id=claim.id,
+                    to_type="claim",
+                    to_id=claim.duplicate_of,
+                    relationship="duplicate_of",
+                )
+            )
         return claim
 
     def add_hypothesis(self, hypothesis: Hypothesis) -> Hypothesis:
+        if hypothesis.run_id is None:
+            hypothesis.run_id = self.root.name
+        self._annotate_dedup("hypotheses", hypothesis, _canonical_key("hypotheses", to_dict(hypothesis)))
         self._append("hypotheses", hypothesis)
+        for claim_id in hypothesis.supporting_claim_ids:
+            self.add_provenance_edge(
+                ProvenanceEdge(
+                    run_id=hypothesis.run_id or self.root.name,
+                    from_type="claim",
+                    from_id=claim_id,
+                    to_type="hypothesis",
+                    to_id=hypothesis.id,
+                    relationship="supports",
+                    metadata={"confidence": hypothesis.confidence},
+                )
+            )
+        for claim_id in hypothesis.contradicting_claim_ids:
+            self.add_provenance_edge(
+                ProvenanceEdge(
+                    run_id=hypothesis.run_id or self.root.name,
+                    from_type="claim",
+                    from_id=claim_id,
+                    to_type="hypothesis",
+                    to_id=hypothesis.id,
+                    relationship="contradicts",
+                )
+            )
         return hypothesis
 
     def add_experiment(self, experiment: Experiment) -> Experiment:
@@ -119,9 +187,27 @@ class ArtifactStore:
 
     def add_contradiction(self, contradiction: Contradiction) -> Contradiction:
         self._append("contradictions", contradiction)
+        run_id = self.root.name
+        for claim_id in [contradiction.claim_a, contradiction.claim_b]:
+            self.add_provenance_edge(
+                ProvenanceEdge(
+                    run_id=run_id,
+                    from_type="claim",
+                    from_id=claim_id,
+                    to_type="contradiction",
+                    to_id=contradiction.id,
+                    relationship="contradicts",
+                    metadata={"severity": contradiction.severity},
+                )
+            )
         return contradiction
 
     def add_failed_path(self, failed_path: FailedPath) -> FailedPath:
+        detail = classify_failure(failed_path.reason, component=failed_path.failure_component)
+        failed_path.failure_category = detail["category"]
+        failed_path.failure_component = detail["component"]
+        failed_path.retryable = bool(detail["retryable"])
+        failed_path.severity = str(detail["severity"])
         self._append("failed_paths", failed_path)
         return failed_path
 
@@ -131,6 +217,7 @@ class ArtifactStore:
 
     def add_run(self, run: RunRecord) -> RunRecord:
         self._append("runs", run)
+        self._upsert_run_observability(run.id, run.harness_config_snapshot, run.prompt_versions, {})
         return run
 
     def add_loop_task(self, task: LoopTask) -> LoopTask:
@@ -170,6 +257,24 @@ class ArtifactStore:
         self._append("loop_continuation_decisions", decision)
         return decision
 
+    def add_provenance_edge(self, edge: ProvenanceEdge) -> ProvenanceEdge:
+        for row in self.list("provenance_edges"):
+            if (
+                row.get("from_type") == edge.from_type
+                and row.get("from_id") == edge.from_id
+                and row.get("to_type") == edge.to_type
+                and row.get("to_id") == edge.to_id
+                and row.get("relationship") == edge.relationship
+            ):
+                return ProvenanceEdge(**row)
+        self._append("provenance_edges", edge)
+        self._mirror_provenance_edge(to_dict(edge))
+        return edge
+
+    def add_cost_event(self, event: CostEvent) -> CostEvent:
+        self._append("cost_events", event)
+        return event
+
     def append_progress(self, text: str) -> None:
         if self.echo_progress:
             print(_format_progress_for_terminal(text), flush=True)
@@ -184,10 +289,19 @@ class ArtifactStore:
             if row["id"] == run.id:
                 rows[index] = to_dict(run)
                 self._write("runs", rows)
+                self._mirror_to_sqlite("runs", rows[index])
+                self._upsert_run_observability(run.id, run.harness_config_snapshot, run.prompt_versions, _read_json(self.cost_path, {}))
                 return
         self.add_run(run)
 
     def add_trace(self, trace: AgentTrace) -> AgentTrace:
+        if trace.status != "completed" or trace.errors:
+            detail = classify_failure(" ".join(trace.errors), component=trace.failure_component)
+            trace.failure_category = detail["category"]
+            trace.failure_component = detail["component"]
+            trace.retryable = bool(detail["retryable"])
+        elif trace.failure_category == "none":
+            trace.failure_component = trace.failure_component if trace.failure_component != "unknown" else _component_from_role(trace.role, trace.agent_name)
         self._append("agent_traces", trace)
         payload = to_dict(trace)
         with self.trace_log_path.open("a", encoding="utf-8") as handle:
@@ -207,6 +321,19 @@ class ArtifactStore:
         self._snapshot_before_write(self.report_path, "before writing final report")
         self.report_path.write_text(text, encoding="utf-8")
         self._record_artifact_write(self.report_path, "report")
+        report_id = self.report_path.name
+        for entity, from_type in [("claims", "claim"), ("hypotheses", "hypothesis"), ("contradictions", "contradiction")]:
+            for row in self.list(entity):
+                self.add_provenance_edge(
+                    ProvenanceEdge(
+                        run_id=str(row.get("run_id") or self.root.name),
+                        from_type=from_type,
+                        from_id=str(row.get("id")),
+                        to_type="report",
+                        to_id=report_id,
+                        relationship="cited_or_summarized_by",
+                    )
+                )
         return self.report_path
 
     def write_prd(self, payload: dict[str, Any]) -> Path:
@@ -249,15 +376,26 @@ class ArtifactStore:
         self._snapshot_before_write(self.cost_path, "before writing cost summary")
         self.cost_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         self._record_artifact_write(self.cost_path, "cost")
+        self._upsert_run_observability(str(payload.get("run_id") or self.root.name), {}, {}, payload)
         return self.cost_path
+
+    def write_harness_diagnosis(self, payload: Optional[dict[str, Any]] = None) -> Path:
+        diagnosis = payload or diagnose_snapshot(self.snapshot(), run_root=self.root)
+        self._snapshot_before_write(self.harness_diagnosis_path, "before writing harness diagnosis")
+        self.harness_diagnosis_path.write_text(json.dumps(diagnosis, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.harness_diagnosis_path, "harness_diagnosis")
+        self._append("harness_diagnoses", {"id": f"diagnosis_{self.root.name}", "run_id": self.root.name, **diagnosis})
+        return self.harness_diagnosis_path
 
     def find_by(self, entity: str, key: str, value: Any) -> Optional[dict[str, Any]]:
         return next((row for row in self.list(entity) if row.get(key) == value), None)
 
     def _append(self, entity: str, value: Any) -> None:
         rows = self.list(entity)
-        rows.append(to_dict(value) if is_dataclass(value) else value)
+        row = to_dict(value) if is_dataclass(value) else value
+        rows.append(row)
         self._write(entity, rows)
+        self._mirror_to_sqlite(entity, row)
 
     def _write(self, entity: str, rows: list[dict[str, Any]]) -> None:
         path = self.root / ENTITY_FILES[entity]
@@ -271,11 +409,201 @@ class ArtifactStore:
         if self.session_store is not None:
             self.session_store.append_event("artifact_write", {"kind": kind, "path": str(path)})
 
+    def _migrate_sqlite(self) -> None:
+        self.sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+        migrations_dir = Path(__file__).resolve().parent / "migrations"
+        with sqlite3.connect(self.sqlite_path) as connection:
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)"
+            )
+            applied = {row[0] for row in connection.execute("SELECT version FROM schema_migrations")}
+            for migration in sorted(migrations_dir.glob("*.sql")):
+                version = migration.stem
+                if version in applied:
+                    continue
+                connection.executescript(migration.read_text(encoding="utf-8"))
+                connection.execute(
+                    "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
+                    (version,),
+                )
+            connection.commit()
+
+    def _annotate_dedup(self, entity: str, value: Any, canonical_key: str) -> None:
+        if not canonical_key:
+            return
+        row = to_dict(value) if is_dataclass(value) else dict(value)
+        duplicate = self._find_sqlite_duplicate(entity, canonical_key)
+        if duplicate is None and entity == "sources":
+            duplicate = self._find_source_duplicate_by_title(row)
+        if duplicate is None:
+            setattr(value, "canonical_id", getattr(value, "id", None))
+            return
+        duplicate_id = str(duplicate["id"])
+        setattr(value, "canonical_id", duplicate_id)
+        setattr(value, "duplicate_of", duplicate_id)
+
+    def _find_sqlite_duplicate(self, entity: str, canonical_key: str) -> Optional[dict[str, Any]]:
+        with sqlite3.connect(self.sqlite_path) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """
+                SELECT id, run_id
+                FROM artifacts
+                WHERE entity = ? AND canonical_key = ?
+                ORDER BY created_at ASC
+                LIMIT 1
+                """,
+                (entity, canonical_key),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def _find_source_duplicate_by_title(self, row: dict[str, Any]) -> Optional[dict[str, Any]]:
+        normalized = _normalize_title(str(row.get("title") or ""))
+        if not normalized:
+            return None
+        with sqlite3.connect(self.sqlite_path) as connection:
+            for artifact_id, run_id, payload_json in connection.execute(
+                "SELECT id, run_id, payload_json FROM artifacts WHERE entity = 'sources' ORDER BY created_at ASC"
+            ):
+                try:
+                    payload = json.loads(payload_json)
+                except json.JSONDecodeError:
+                    continue
+                if _normalize_title(str(payload.get("title") or "")) == normalized:
+                    return {"id": artifact_id, "run_id": run_id}
+        return None
+
+    def _mirror_to_sqlite(self, entity: str, row: dict[str, Any]) -> None:
+        if entity == "provenance_edges":
+            self._mirror_provenance_edge(row)
+            return
+        row_id = str(row.get("id") or f"{entity}_{len(self.list(entity))}")
+        run_id = str(row.get("run_id") or self.root.name)
+        canonical_key = _canonical_key(entity, row)
+        created_at = str(row.get("created_at") or row.get("retrieved_at") or row.get("started_at") or row.get("completed_at") or "")
+        with sqlite3.connect(self.sqlite_path) as connection:
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO artifacts(entity, id, run_id, canonical_key, duplicate_of, payload_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, COALESCE(NULLIF(?, ''), datetime('now')))
+                """,
+                (
+                    entity,
+                    row_id,
+                    run_id,
+                    canonical_key,
+                    row.get("duplicate_of"),
+                    json.dumps(row, sort_keys=True),
+                    created_at,
+                ),
+            )
+            connection.commit()
+
+    def _mirror_provenance_edge(self, row: dict[str, Any]) -> None:
+        with sqlite3.connect(self.sqlite_path) as connection:
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO provenance_edges(
+                  id, run_id, from_type, from_id, to_type, to_id, relationship, metadata_json, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    row.get("id"),
+                    row.get("run_id") or self.root.name,
+                    row.get("from_type"),
+                    row.get("from_id"),
+                    row.get("to_type"),
+                    row.get("to_id"),
+                    row.get("relationship"),
+                    json.dumps(row.get("metadata") or {}, sort_keys=True),
+                    row.get("created_at") or "",
+                ),
+            )
+            connection.commit()
+
+    def _upsert_run_observability(
+        self,
+        run_id: str,
+        harness_config: dict[str, Any],
+        prompt_versions: dict[str, str],
+        cost: dict[str, Any],
+    ) -> None:
+        existing_config = harness_config
+        existing_prompts = prompt_versions
+        if not existing_config or not existing_prompts:
+            run = self.find_by("runs", "id", run_id)
+            if run:
+                existing_config = existing_config or dict(run.get("harness_config_snapshot") or {})
+                existing_prompts = existing_prompts or dict(run.get("prompt_versions") or {})
+        with sqlite3.connect(self.sqlite_path) as connection:
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO run_observability(
+                  run_id, harness_config_json, prompt_versions_json, cost_json, created_at
+                )
+                VALUES (?, ?, ?, ?, datetime('now'))
+                """,
+                (
+                    run_id,
+                    json.dumps(existing_config, sort_keys=True, default=str),
+                    json.dumps(existing_prompts, sort_keys=True),
+                    json.dumps(cost, sort_keys=True, default=str),
+                ),
+            )
+            connection.commit()
+
 
 def _normalize_title(title: str) -> str:
     """Return a lowercase, punctuation-stripped title prefix for dedup comparison."""
     normalized = re.sub(r"[^a-z0-9]", "", title.lower())
     return normalized[:80]
+
+
+def _canonical_key(entity: str, row: dict[str, Any]) -> str:
+    if entity == "sources":
+        url = str(row.get("url") or "").strip().lower()
+        if url:
+            return f"url:{url}"
+        title = _normalize_title(str(row.get("title") or ""))
+        return f"title:{title}" if title else ""
+    if entity in {"claims", "hypotheses"}:
+        text = re.sub(r"\s+", " ", str(row.get("text") or "").strip().lower())
+        text = re.sub(r"[^a-z0-9 ]", "", text)
+        return f"text:{text[:240]}" if text else ""
+    if entity == "runs":
+        return str(row.get("id") or "")
+    return str(row.get("id") or "")
+
+
+def _read_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return default
+
+
+def _component_from_role(role: str, agent_name: str) -> str:
+    text = f"{role} {agent_name}".lower()
+    if any(term in text for term in ["search", "literature", "retriever", "memory"]):
+        return "retrieval"
+    if "hypothesis" in text:
+        return "hypothesis_generation"
+    if "critic" in text:
+        return "critic"
+    if "synthesis" in text:
+        return "synthesis"
+    if any(term in text for term in ["optimize", "evaluator", "prediction_market"]):
+        return "optimizer"
+    if any(term in text for term in ["router", "loop_controller"]):
+        return "loop_control"
+    if "orchestration" in text:
+        return "orchestration"
+    if "debug" in text:
+        return "harness_debugger"
+    return "unknown"
 
 
 def _format_progress_for_terminal(text: str) -> str:

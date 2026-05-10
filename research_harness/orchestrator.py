@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from .agents import (
     AgentResult,
@@ -19,7 +20,7 @@ from .agents import (
 from .llm import LLMClient
 from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter, _loop_objective_from_goal
 from .run_benchmarks import write_run_benchmarks
-from .schemas import AgentBudget, AgentTrace, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
+from .schemas import AgentBudget, AgentTrace, CostEvent, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
 from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
 from .search import DocsBlogsSearch
 from .search import GitHubSearch
@@ -126,6 +127,8 @@ class Orchestrator:
             user_goal=goal,
             task_type=plan.task_type,
             harness_config_id=f"{self.config.id}:{selected_mode}:{primary_retriever.tool_name}:source_strategy_v1",
+            prompt_versions=_prompt_versions(),
+            harness_config_snapshot=_config_snapshot(self.config, selected_mode, primary_retriever.tool_name),
         )
         session_store = self._start_session_store(goal, run)
         store = ArtifactStore(self.output_root / run.id, echo_progress=self.config.echo_progress, session_store=session_store)
@@ -159,6 +162,7 @@ class Orchestrator:
             cost_payload = self.llm.cost_breakdown()
             cost_payload["run_id"] = run.id
             cost_payload["completed_at"] = None
+            self._record_cost_events(store, run)
             store.write_cost(cost_payload)
             store.add_trace(
                 AgentTrace(
@@ -175,6 +179,7 @@ class Orchestrator:
                     errors=[],
                     output_summary="Final PRD and cost artifacts written.",
                     started_at=final_started_at,
+                    failure_component="orchestration",
                 )
             )
             run.completed_at = now_iso()
@@ -209,6 +214,28 @@ class Orchestrator:
         run.session_jsonl_path = str(record.jsonl_path)
         run.session_metadata_path = str(record.metadata_path)
         return session_store
+
+    def _record_cost_events(self, store: ArtifactStore, run: RunRecord) -> None:
+        if store.list("cost_events"):
+            return
+        for index, call in enumerate(self.llm.call_history, start=1):
+            store.add_cost_event(
+                CostEvent(
+                    run_id=run.id,
+                    component=f"model_call_{index}",
+                    provider=str(call.get("provider") or self.llm.provider),
+                    model=str(call.get("model") or self.llm.model),
+                    prompt_tokens=int(call.get("prompt_tokens") or 0),
+                    completion_tokens=int(call.get("completion_tokens") or 0),
+                    cost_usd=float(call.get("cost_usd") or 0.0),
+                    call_type="model",
+                    metadata={
+                        key: value
+                        for key, value in call.items()
+                        if key not in {"provider", "model", "prompt_tokens", "completion_tokens", "cost_usd"}
+                    },
+                )
+            )
 
     def _write_prd(
         self,
@@ -259,10 +286,19 @@ class Orchestrator:
                 "run_benchmark": str(store.run_benchmark_path),
                 "decision_dag": str(store.decision_dag_path),
                 "agent_timeline": str(store.agent_timeline_path),
+                "run_notebook": str(store.run_notebook_path),
+                "harness_diagnosis": str(store.harness_diagnosis_path),
+                "world_model_sqlite": str(store.sqlite_path),
                 "loop_continuation_decisions": str(store.loop_continuation_path),
                 "trace": str(store.trace_log_path),
                 "session_jsonl": run.session_jsonl_path,
                 "session_metadata": run.session_metadata_path,
+            },
+            "observability": {
+                "prompt_versions": run.prompt_versions,
+                "harness_config_snapshot": run.harness_config_snapshot,
+                "cost_path": str(store.cost_path),
+                "failure_taxonomy_path": str(store.harness_diagnosis_path),
             },
             "notes": [
                 "This file is the run-local PRD/task map.",
@@ -374,8 +410,9 @@ class Orchestrator:
         return "open_ended"
 
     def create_plan(self, goal: str) -> ResearchPlan:
-        task_type = self.classify_task(goal)
-        topics = _prompt_topics(goal)
+        interpretation = self.interpret_goal(goal)
+        task_type = interpretation["task_type"] if interpretation["task_type"] in {"bounded", "open_ended"} else self.classify_task(goal)
+        topics = set(str(topic) for topic in interpretation.get("topics", []) if topic)
         if "prediction_market" in topics:
             search_angles = [
                 "prediction-market microstructure and market-making mechanisms",
@@ -408,28 +445,65 @@ class Orchestrator:
             search_angles=search_angles,
             hypothesis_angles=hypothesis_angles,
             stopping_signals=STOPPING_SIGNALS,
+            topics=sorted(topics),
+            topic_queries=[str(query) for query in interpretation.get("topic_queries", []) if query],
+            planner=str(interpretation.get("planner", "deterministic-fallback")),
         )
+
+    def interpret_goal(self, goal: str) -> dict[str, Any]:
+        if self.llm.is_live:
+            system = (
+                "You interpret research-harness goals for planning and source selection. "
+                "Infer the user's domain and intent semantically, including typos and abbreviations. "
+                "Return JSON only with: task_type ('bounded' or 'open_ended'), topics (short snake_case strings), "
+                "topic_queries (3-6 concrete search queries), and rationale."
+            )
+            user = json.dumps(
+                {
+                    "goal": goal,
+                    "requested_task_mode": self.config.task_mode,
+                    "selected_evaluator": self.config.evaluator_name,
+                    "known_evaluators": ["length_score", "prediction_market"],
+                    "note": (
+                        "If selected_evaluator is prediction_market, treat the task as prediction-market "
+                        "market-making even when the goal has typos such as 'predictionm arket' or shorthand like mm'ing."
+                    ),
+                },
+                sort_keys=True,
+            )
+            try:
+                payload = self.llm.complete_json(system, user, max_output_tokens=700, temperature=0.1)
+                return _normalize_goal_interpretation(payload, fallback_task_type=self.classify_task(goal), planner="llm")
+            except Exception:
+                pass
+        return _fallback_goal_interpretation(goal, self.config.evaluator_name, self.classify_task(goal))
 
     def create_source_strategy(self, goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
         retriever = self.config.retriever.lower()
+        strategy_goal = goal
+        if "prediction_market" in set(plan.topics):
+            strategy_goal = (
+                f"{goal} prediction market order book market making adverse selection "
+                "stale quotes retail order flow inventory risk"
+            )
         if retriever == "local":
             return [
                 SourceStrategyItem(
                     name=f"local_{index + 1}",
                     retriever="local",
                     purpose=angle,
-                    queries=[f"{goal} {angle}"],
+                    queries=[f"{strategy_goal} {angle}"],
                     limit=self.config.default_budget.max_tool_calls,
                 )
                 for index, angle in enumerate(plan.search_angles)
             ]
         if retriever == "auto":
-            return _mixed_source_strategy(goal, plan)
+            return _mixed_source_strategy(strategy_goal, plan)
         if retriever in {"arxiv", "openalex", "github", "web", "docs_blogs", "twitter", "memory"}:
-            return _single_retriever_strategy(goal, plan, retriever)
+            return _single_retriever_strategy(strategy_goal, plan, retriever)
         if retriever not in {"auto", "arxiv"}:
             raise ValueError(f"Unknown retriever: {self.config.retriever}")
-        return _mixed_source_strategy(goal, plan)
+        return _mixed_source_strategy(strategy_goal, plan)
 
     async def _run_phase1(
         self, run: RunRecord, store: ArtifactStore, plan: ResearchPlan, source_strategy: list[SourceStrategyItem]
@@ -1091,6 +1165,23 @@ def _prompt(name: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _prompt_versions() -> dict[str, str]:
+    prompt_dir = Path(__file__).resolve().parent.parent / "prompts"
+    versions = {}
+    for path in sorted(prompt_dir.glob("*.md")):
+        versions[path.stem] = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    return versions
+
+
+def _config_snapshot(config: HarnessConfig, selected_mode: str, primary_retriever: str) -> dict[str, Any]:
+    payload = asdict(config)
+    payload["selected_mode"] = selected_mode
+    payload["primary_retriever"] = primary_retriever
+    payload["session_projects_dir"] = str(config.session_projects_dir) if config.session_projects_dir else None
+    payload["default_budget"] = to_dict(config.default_budget)
+    return json.loads(json.dumps(payload, default=str))
+
+
 def goal_slug(goal: str, max_length: int = 72) -> str:
     words = re.findall(r"[a-zA-Z0-9]+", goal.lower())
     selected = [word for word in words if word not in RUN_SLUG_STOPWORDS]
@@ -1193,8 +1284,8 @@ def _research_judge_rubric() -> list[dict[str, object]]:
 def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
     concepts = _goal_terms(goal)
     core = " ".join(concepts[:6]) or goal
-    broad = _broad_landscape_query(goal)
-    topic_queries = _topic_query_lenses(goal)
+    broad = _broad_landscape_query(goal, plan)
+    topic_queries = plan.topic_queries
     brain_terms = "brain neuroscience cognitive computational neuroscience intelligence"
     agent_terms = "agentic agents autonomous multi-agent planner executor tool use memory"
     workplace_terms = "workplace automation enterprise productivity software agents"
@@ -1202,7 +1293,7 @@ def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategy
     contrarian_terms = "limitations failures safety reliability critique"
     if topic_queries:
         first_query = topic_queries[0]
-    elif any(term in concepts for term in ["brain", "brains", "neuroscience", "cognitive"]):
+    elif "neuroscience" in set(plan.topics):
         first_query = f"{core} {brain_terms}"
     else:
         first_query = f"{core} {agent_terms}"
@@ -1288,8 +1379,49 @@ def _goal_terms(goal: str) -> list[str]:
     return [word for word in words if word not in RUN_SLUG_STOPWORDS]
 
 
-def _broad_landscape_query(goal: str) -> str:
-    topics = _prompt_topics(goal)
+def _normalize_goal_interpretation(payload: dict[str, object], *, fallback_task_type: TaskType, planner: str) -> dict[str, Any]:
+    raw_topics = payload.get("topics", [])
+    topics = [str(topic).strip().lower().replace("-", "_").replace(" ", "_") for topic in raw_topics if str(topic).strip()] if isinstance(raw_topics, list) else []
+    raw_queries = payload.get("topic_queries", [])
+    topic_queries = [str(query).strip() for query in raw_queries if str(query).strip()] if isinstance(raw_queries, list) else []
+    task_type = str(payload.get("task_type") or fallback_task_type)
+    if task_type not in {"bounded", "open_ended"}:
+        task_type = fallback_task_type
+    return {
+        "task_type": task_type,
+        "topics": _dedupe_strings(topics),
+        "topic_queries": _dedupe_strings(topic_queries),
+        "rationale": str(payload.get("rationale", "")),
+        "planner": planner,
+    }
+
+
+def _fallback_goal_interpretation(goal: str, evaluator_name: Optional[str], fallback_task_type: TaskType) -> dict[str, Any]:
+    topics = _fallback_prompt_topics(goal)
+    if evaluator_name == "prediction_market":
+        topics.add("prediction_market")
+    return {
+        "task_type": fallback_task_type,
+        "topics": sorted(topics),
+        "topic_queries": _topic_query_lenses(topics),
+        "rationale": "Offline deterministic fallback used because live LLM interpretation was unavailable.",
+        "planner": "deterministic-fallback",
+    }
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped = []
+    for value in values:
+        key = value.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(value)
+    return deduped
+
+
+def _broad_landscape_query(goal: str, plan: ResearchPlan) -> str:
+    topics = set(plan.topics)
     if "prediction_market" in topics:
         return "prediction markets"
     if "neuroscience" in topics and "agents" in topics:
@@ -1302,7 +1434,7 @@ def _broad_landscape_query(goal: str) -> str:
     return " ".join(terms[: min(4, len(terms))])
 
 
-def _prompt_topics(goal: str) -> set[str]:
+def _fallback_prompt_topics(goal: str) -> set[str]:
     normalized = goal.lower()
     topics: set[str] = set()
     if "prediction market" in normalized or "prediction-market" in normalized:
@@ -1320,8 +1452,7 @@ def _prompt_topics(goal: str) -> set[str]:
     return topics
 
 
-def _topic_query_lenses(goal: str) -> list[str]:
-    topics = _prompt_topics(goal)
+def _topic_query_lenses(topics: set[str]) -> list[str]:
     queries: list[str] = []
     if "prediction_market" in topics:
         queries.append("prediction market limit order book market making adverse selection arbitrage retail order flow")

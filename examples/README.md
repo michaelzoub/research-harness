@@ -7,6 +7,12 @@ placeholder `.gitkeep` files.
 
 ## Example Runs
 
+Selection-based setup:
+
+```bash
+./autore
+```
+
 Offline deterministic demo:
 
 ```bash

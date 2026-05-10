@@ -1,7 +1,9 @@
 # Artifact Schema
 
-The MVP uses JSON files as database tables. Later phases can map these directly
-to SQLite or Postgres rows.
+The harness keeps append-friendly JSON files for inspectability and mirrors the
+same records into `world_model.sqlite` in the output root. SQLite migrations live
+under `research_harness/migrations/` and maintain cross-run dedupe, provenance,
+and observability indexes behind `ArtifactStore`.
 
 ## sources
 
@@ -15,6 +17,8 @@ to SQLite or Postgres rows.
 - `summary`
 - `relevance_score`
 - `credibility_score`
+- `canonical_id`
+- `duplicate_of`
 
 ## claims
 
@@ -26,6 +30,8 @@ to SQLite or Postgres rows.
 - `contradicted_by`
 - `created_by_agent`
 - `run_id`
+- `canonical_id`
+- `duplicate_of`
 
 ## hypotheses
 
@@ -37,6 +43,9 @@ to SQLite or Postgres rows.
 - `novelty_score`
 - `testability_score`
 - `next_experiment`
+- `run_id`
+- `canonical_id`
+- `duplicate_of`
 
 ## experiments
 
@@ -71,6 +80,10 @@ to SQLite or Postgres rows.
 - `reason`
 - `created_by_agent`
 - `run_id`
+- `failure_category`
+- `failure_component`
+- `retryable`
+- `severity`
 
 ## harness_changes
 
@@ -83,6 +96,12 @@ to SQLite or Postgres rows.
 - `status`
 - `created_at`
 - `run_id`
+- `component`
+- `diagnosis`
+- `risk_score`
+- `expected_value_score`
+- `priority_score`
+- `trace_pattern_delta`
 
 ## runs
 
@@ -97,6 +116,46 @@ to SQLite or Postgres rows.
 - `total_cost`
 - `total_tokens`
 - `harness_config_id`
+- `prompt_versions`
+- `harness_config_snapshot`
+
+## provenance_edges
+
+- `id`
+- `run_id`
+- `from_type`
+- `from_id`
+- `to_type`
+- `to_id`
+- `relationship`
+- `metadata`
+- `created_at`
+
+## cost_events
+
+- `id`
+- `run_id`
+- `component`
+- `provider`
+- `model`
+- `prompt_tokens`
+- `completion_tokens`
+- `cost_usd`
+- `call_type`
+- `metadata`
+- `created_at`
+
+## harness_diagnoses
+
+- `id`
+- `run_id`
+- `artifact_yield`
+- `components`
+- `failure_taxonomy`
+- `localized_components`
+- `prior_run_comparison`
+- `score_patterns`
+- `trace_patterns`
 
 ## task_ingestion_decisions
 
@@ -131,3 +190,19 @@ Optimization and challenge runs that execute an evaluator write:
 - `status`
 - `errors`
 - `output_summary`
+- `prompt_version`
+- `prompt_tokens`
+- `completion_tokens`
+- `cost_usd`
+- `failure_category`
+- `failure_component`
+- `retryable`
+
+## SQLite world model
+
+`world_model.sqlite` is stored next to run directories and contains:
+
+- `schema_migrations`: applied migration versions.
+- `artifacts`: JSON payload mirror keyed by `(entity, id)` with `run_id`, `canonical_key`, and `duplicate_of`.
+- `provenance_edges`: queryable provenance graph.
+- `run_observability`: per-run prompt versions, harness config snapshots, and cost JSON.

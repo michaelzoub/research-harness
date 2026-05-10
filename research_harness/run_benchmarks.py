@@ -34,6 +34,12 @@ _ROLE_COLORS: dict[str, str] = {
 }
 _DEFAULT_ROLE_COLOR = "#94a3b8"
 
+# Harness bookkeeping traces — omitted from agent_timeline.png so the chart shows
+# model-backed agents and evaluators (wall clock until output is ready).
+_TIMELINE_CHART_EXCLUDED_ROLES: frozenset[str] = frozenset(
+    {"orchestration", "loop_controller", "memory"}
+)
+
 _ROLE_SHORT: dict[str, str] = {
     "search_literature":         "Search",
     "hypothesis_generation":     "Hyp",
@@ -248,13 +254,55 @@ def _trailing_number(text: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
-def _build_timeline_spans(summary: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
+def _timeline_chart_lane(role: str, human_label: str) -> Optional[str]:
+    """Map a trace to a Gantt row lane for the agent-focused chart, or None to omit."""
+    if role in _TIMELINE_CHART_EXCLUDED_ROLES:
+        return None
+    if role == "research_variant_agent":
+        return human_label
+    if role == "llm_thinking":
+        return "LLM"
+    if role == "optimize_evaluator":
+        return "Optimizer evaluation"
+    if role == "search_literature":
+        return "Literature search"
+    if role == "hypothesis_generation":
+        return "Hypothesis"
+    if role == "critic_reviewer":
+        return "Critic"
+    if role == "synthesis_agent":
+        return "Synthesis"
+    if role == "harness_debugger":
+        return "Harness debugger"
+    if role == "task_router":
+        return "Task router"
+    if role == "literature_grounding_policy":
+        return "Literature grounding"
+    if role == "plateau_recovery_policy":
+        return "Plateau recovery"
+    return human_label
+
+
+def _gantt_row_label(span: dict[str, Any]) -> str:
+    """Left-axis label: consolidated lane when present, else full span label."""
+    return str(span.get("row_label") or span["label"])
+
+
+def _build_timeline_spans(
+    summary: dict[str, Any],
+    *,
+    for_agent_chart: bool = False,
+) -> tuple[list[dict[str, Any]], int, int]:
     """Parse agent trace summaries into Gantt spans.
 
     Returns (spans, num_rows, total_ms).  Each span dict has:
       label, role, status, offset_ms, runtime_ms, end_ms, token_usage, summary, row.
     Rows are assigned by unique agent_name in order of first appearance so
     parallel agents land on separate rows and the chart reads top-to-bottom.
+
+    When for_agent_chart is True, orchestration / loop / memory traces are dropped
+    and several roles share one row (e.g. all LLM calls on \"LLM\") so the PNG
+    highlights agents and wall-clock time until model output is ready.
     """
     run = summary.get("run") or {}
     run_start = _parse_iso(str(run.get("started_at", "")))
@@ -296,10 +344,20 @@ def _build_timeline_spans(summary: dict[str, Any]) -> tuple[list[dict[str, Any]]
     for span in spans:
         span["label"] = _human_span_label(str(span["raw_label"]), str(span["role"]), label_counts)
 
-    # Dedicate one row per unique agent_name, ordered by first appearance.
+    if for_agent_chart:
+        chart_spans: list[dict[str, Any]] = []
+        for span in spans:
+            lane = _timeline_chart_lane(str(span["role"]), str(span["label"]))
+            if lane is None:
+                continue
+            span["row_label"] = lane
+            chart_spans.append(span)
+        spans = chart_spans
+
+    # Dedicate one row per unique label (or consolidated row_label for agent chart).
     agent_to_row: dict[str, int] = {}
     for span in spans:
-        name = span["label"]
+        name = str(span["row_label"]) if for_agent_chart else span["label"]
         if name not in agent_to_row:
             agent_to_row[name] = len(agent_to_row)
         span["row"] = agent_to_row[name]
@@ -328,14 +386,14 @@ def _gantt_svg(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> str
         )
 
     SVG_W     = 960
-    LEFT_PAD  = 196   # label column
+    LEFT_PAD  = 220   # label column (room for "Optimizer evaluation", etc.)
     RIGHT_PAD = 16
     CHART_W   = SVG_W - LEFT_PAD - RIGHT_PAD
     BAR_H     = 18
     ROW_H     = 26
     AXIS_H    = 34
-    BOT_PAD   = 12
     MAX_ROWS  = 40
+    BOT_PAD   = 38 if num_rows > MAX_ROWS else 28  # caption (+ optional overflow line)
 
     display_rows  = min(num_rows, MAX_ROWS)
     display_spans = [s for s in spans if s["row"] < display_rows]
@@ -362,7 +420,10 @@ def _gantt_svg(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> str
         if tx > SVG_W - RIGHT_PAD + 2:
             break
         label = _fmt_tick(tick)
-        p.append(f'<line x1="{tx}" y1="{AXIS_H - 4}" x2="{tx}" y2="{svg_h - BOT_PAD}" stroke="#e2e8f0" stroke-width="1"/>')
+        p.append(
+            f'<line x1="{tx}" y1="{AXIS_H - 4}" x2="{tx}" y2="{AXIS_H + display_rows * ROW_H}" '
+            f'stroke="#e2e8f0" stroke-width="1"/>'
+        )
         p.append(f'<text x="{tx}" y="{AXIS_H - 8}" text-anchor="middle" font-size="10" fill="#94a3b8">{html.escape(label)}</text>')
         tick += tick_ms
         if tick > total_ms + tick_ms:
@@ -420,17 +481,23 @@ def _gantt_svg(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> str
         if row not in labeled_rows:
             labeled_rows.add(row)
             label_y = AXIS_H + row * ROW_H + ROW_H // 2 + 4
-            short = _shorten(span["label"], 26)
+            short = _shorten(_gantt_row_label(span), 30)
             p.append(
                 f'<text x="{LEFT_PAD - 10}" y="{label_y}" text-anchor="end" '
                 f'font-size="11" fill="{color}" font-weight="500">'
                 f'{html.escape(short)}</text>'
             )
 
+    caption_y = AXIS_H + display_rows * ROW_H + 14
+    p.append(
+        f'<text x="12" y="{caption_y}" font-size="9" fill="#64748b">'
+        f'Each bar spans wall-clock time from agent start until model output is ready.</text>'
+    )
+
     if num_rows > MAX_ROWS:
         p.append(
-            f'<text x="{SVG_W // 2}" y="{svg_h - 3}" text-anchor="middle" '
-            f'font-size="10" fill="#94a3b8">… {num_rows - MAX_ROWS} more agents not shown</text>'
+            f'<text x="{SVG_W // 2}" y="{caption_y + 12}" text-anchor="middle" '
+            f'font-size="10" fill="#94a3b8">… {num_rows - MAX_ROWS} more rows not shown</text>'
         )
 
     p.append("</svg>")
@@ -439,12 +506,12 @@ def _gantt_svg(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> str
 
 def _gantt_png(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> bytes:
     width = 1280
-    left_pad = 250
+    left_pad = 272
     right_pad = 24
     chart_w = width - left_pad - right_pad
     row_h = 26
     axis_h = 34
-    bottom = 12
+    bottom = 38 if num_rows > 40 else 28  # caption (+ optional overflow line)
     display_rows = min(num_rows, 40)
     height = axis_h + max(display_rows, 1) * row_h + bottom
     canvas = _PngCanvas(width, height, "#ffffff")
@@ -480,9 +547,11 @@ def _gantt_png(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> byt
             canvas.text(x + 4, y + 3, _shorten(str(span["label"]), max(6, w // 9)), "#ffffff", 1)
         if row not in labeled_rows:
             labeled_rows.add(row)
-            canvas.text(8, axis_h + row * row_h + 8, _shorten(str(span["label"]), 28), color, 1)
+            canvas.text(8, axis_h + row * row_h + 8, _shorten(_gantt_row_label(span), 32), color, 1)
+    caption_y = axis_h + display_rows * row_h + 12
+    canvas.text(12, caption_y, "Each bar: start to model output ready (wall clock).", "#64748b", 1)
     if num_rows > display_rows:
-        canvas.text(width // 2 - 80, height - 12, f"... {num_rows - display_rows} more rows", "#94a3b8", 1)
+        canvas.text(width // 2 - 100, caption_y + 12, f"... {num_rows - display_rows} more rows", "#94a3b8", 1)
     return canvas.png()
 
 
@@ -577,13 +646,15 @@ def _round_rows_html(summary: dict[str, Any]) -> str:
 
 
 def write_run_benchmarks(store: ArtifactStore) -> None:
+    if not store.harness_diagnosis_path.exists():
+        store.write_harness_diagnosis()
     summary = build_run_summary(store)
     (store.root / "run_benchmark_summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     dag = decision_dag_mermaid(summary)
-    spans, num_rows, total_ms = _build_timeline_spans(summary)
+    spans, num_rows, total_ms = _build_timeline_spans(summary, for_agent_chart=True)
     dag_svg = decision_dag_svg(summary)
     timeline_svg = _gantt_svg(spans, num_rows, total_ms)
     (store.root / "decision_dag.mmd").write_text(dag, encoding="utf-8")
@@ -591,6 +662,7 @@ def write_run_benchmarks(store: ArtifactStore) -> None:
     _write_png_from_svg_or_fallback(store.agent_timeline_path, timeline_svg, lambda: _gantt_png(spans, num_rows, total_ms))
     (store.root / "run_benchmark.md").write_text(run_benchmark_markdown(summary, dag), encoding="utf-8")
     (store.root / "run_benchmark.html").write_text(run_benchmark_html(summary), encoding="utf-8")
+    store.run_notebook_path.write_text(json.dumps(run_notebook_export(summary), indent=2) + "\n", encoding="utf-8")
 
 
 def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
@@ -613,6 +685,10 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
     claims = store.list("claims")
     hypotheses = store.list("hypotheses")
     contradictions = store.list("contradictions")
+    provenance_edges = store.list("provenance_edges")
+    cost_events = store.list("cost_events")
+    harness_diagnosis = read_json(store.harness_diagnosis_path, {})
+    cost = read_json(store.cost_path, {})
     models = Counter(str(trace.get("model", "unknown")) for trace in traces)
     best_eval = max(evaluations, key=lambda row: float(row.get("score", 0.0)), default={})
     return {
@@ -628,6 +704,8 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
             "claims": len(claims),
             "hypotheses": len(hypotheses),
             "contradictions": len(contradictions),
+            "provenance_edges": len(provenance_edges),
+            "cost_events": len(cost_events),
             "agent_traces": len(traces),
             "failed_agents": sum(1 for trace in traces if trace.get("status") != "completed"),
         },
@@ -635,6 +713,8 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
         "prd": prd,
         "optimizer_seed_context": optimizer_seed_context,
         "optimization_result": optimization_result,
+        "harness_diagnosis": harness_diagnosis,
+        "cost": cost,
         "optimized_candidate": str(store.optimized_candidate_path) if optimized_candidate_exists else None,
         "optimal_code": str(store.optimal_code_path) if optimal_code_exists else None,
         "solution": str(store.solution_path) if solution_exists else None,
@@ -659,6 +739,50 @@ def build_run_summary(store: ArtifactStore) -> dict[str, Any]:
             for trace in traces
         ],
     }
+
+
+def run_notebook_export(summary: dict[str, Any]) -> dict[str, Any]:
+    run = summary.get("run") or {}
+    counts = summary.get("counts") or {}
+    diagnosis = summary.get("harness_diagnosis") or {}
+    cost = summary.get("cost") or {}
+    cells = [
+        _markdown_cell(
+            "# Research Harness Run\n\n"
+            f"- Run: `{run.get('id', 'unknown')}`\n"
+            f"- Status: `{run.get('status', 'unknown')}`\n"
+            f"- Goal: {run.get('user_goal', '')}\n"
+        ),
+        _markdown_cell(
+            "## Artifact Counts\n\n"
+            + "\n".join(f"- {key}: {value}" for key, value in sorted(counts.items()))
+        ),
+        _markdown_cell(
+            "## Observability\n\n"
+            f"- Total cost: `${float(cost.get('cost_usd') or 0.0):.4f}`\n"
+            f"- Total tokens: `{cost.get('total_tokens', run.get('total_tokens', 0))}`\n"
+            f"- Model calls: `{cost.get('model_call_count', 0)}`\n"
+        ),
+        _code_cell("harness_diagnosis = " + json.dumps(diagnosis, indent=2, sort_keys=True)),
+        _code_cell("trace_summaries = " + json.dumps(summary.get("trace_summaries", []), indent=2, sort_keys=True)),
+    ]
+    return {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python", "pygments_lexer": "ipython3"},
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+
+
+def _markdown_cell(source: str) -> dict[str, Any]:
+    return {"cell_type": "markdown", "metadata": {}, "source": source.splitlines(keepends=True)}
+
+
+def _code_cell(source: str) -> dict[str, Any]:
+    return {"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [], "source": source.splitlines(keepends=True)}
 
 
 def read_json(path: Path, default: Any) -> Any:
@@ -936,7 +1060,7 @@ def run_benchmark_html(summary: dict[str, Any]) -> str:
     run      = summary.get("run") or {}
     decision = summary.get("task_ingestion") or {}
 
-    spans, num_rows, total_ms = _build_timeline_spans(summary)
+    spans, num_rows, total_ms = _build_timeline_spans(summary, for_agent_chart=False)
 
     run_id      = str(run.get("id", "unknown"))
     goal        = str(run.get("user_goal", ""))

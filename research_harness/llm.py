@@ -5,7 +5,7 @@ import os
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 
 class LLMError(RuntimeError):
@@ -64,6 +64,7 @@ class LLMClient:
         # Accumulated real token counts across all calls on this client instance.
         self.total_prompt_tokens: int = 0
         self.total_completion_tokens: int = 0
+        self.call_history: list[dict[str, Any]] = []
 
     @property
     def is_live(self) -> bool:
@@ -88,16 +89,37 @@ class LLMClient:
             )
         else:
             response = self._openai_response(system, user, max_output_tokens=max_output_tokens, temperature=temperature)
+        response.cost = self._response_cost(response)
         self.total_prompt_tokens += response.prompt_tokens
         self.total_completion_tokens += response.completion_tokens
+        self.call_history.append(
+            {
+                "provider": response.provider,
+                "model": response.model,
+                "prompt_tokens": response.prompt_tokens,
+                "completion_tokens": response.completion_tokens,
+                "total_tokens": response.prompt_tokens + response.completion_tokens,
+                "cost_usd": round(response.cost, 6),
+                "is_live": response.provider != "local",
+                "temperature": temperature,
+                "max_output_tokens": max_output_tokens,
+            }
+        )
         return response
 
     def total_cost(self) -> float:
         """Return accumulated cost in USD based on model pricing table."""
+        if not self.call_history:
+            return 0.0
+        return sum(float(call.get("cost_usd") or 0.0) for call in self.call_history)
+
+    def _response_cost(self, response: LLMResponse) -> float:
+        if response.provider == "local":
+            return 0.0
         pricing = _pricing_for(self.model)
         return (
-            self.total_prompt_tokens * pricing["input"]
-            + self.total_completion_tokens * pricing["output"]
+            response.prompt_tokens * pricing["input"]
+            + response.completion_tokens * pricing["output"]
         )
 
     def cost_breakdown(self) -> dict[str, object]:
@@ -109,9 +131,11 @@ class LLMClient:
             "completion_tokens": self.total_completion_tokens,
             "total_tokens": self.total_prompt_tokens + self.total_completion_tokens,
             "cost_usd": round(self.total_cost(), 6),
+            "model_call_count": len(self.call_history),
+            "model_calls": self.call_history,
             "pricing_input_per_token": pricing["input"],
             "pricing_output_per_token": pricing["output"],
-            "pricing_note": "Prices are estimates for unreleased models; verify against provider billing.",
+            "pricing_note": "Local deterministic fallback calls are recorded with zero cost; live-provider prices are estimates until verified against billing.",
         }
 
     def complete_json(self, system: str, user: str, *, max_output_tokens: int = 900, temperature: float = 0.7) -> dict[str, object]:

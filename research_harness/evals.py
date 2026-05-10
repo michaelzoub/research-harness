@@ -238,11 +238,13 @@ def default_eval_suite() -> EvalSuite:
                 name="Open-ended research produces grounded artifacts",
                 prompt="Research how multi-agent systems improve automated literature review quality",
                 task_mode="research",
+                max_iterations=3,
                 success_criteria=[
                     "Run completes",
                     "Report is written",
                     "Claims cite source IDs",
                     "Research retrieves enough sources and claims",
+                    "Output is topically relevant to the prompt",
                     "Trial starts from an isolated clean artifact directory",
                 ],
                 grader_ids=[
@@ -251,6 +253,7 @@ def default_eval_suite() -> EvalSuite:
                     "prd_tasks_executed_deterministic",
                     "research_groundedness",
                     "report_no_fabricated_sources",
+                    "prompt_output_relevance",
                     "artifact_report",
                     "transcript_progress",
                     "isolation_clean_trial",
@@ -335,6 +338,30 @@ def default_eval_suite() -> EvalSuite:
                 ],
                 aggregation="hybrid",
                 threshold=0.8,
+            ),
+            EvalTask(
+                id="research_prompt_output_relevance",
+                name="Research output is topically relevant to the original prompt",
+                prompt="Research recent advances in transformer architecture efficiency for large language models",
+                task_mode="research",
+                max_iterations=3,
+                success_criteria=[
+                    "Run completes with a report",
+                    "Report and claims are about the prompt topic (transformer efficiency)",
+                    "Sources retrieved are topically relevant",
+                    "Off-topic content (unrelated fields) is not present",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "artifact_report",
+                    "report_no_fabricated_sources",
+                    "prompt_output_relevance",
+                    "research_groundedness",
+                    "transcript_progress",
+                    "isolation_clean_trial",
+                ],
+                aggregation="hybrid",
+                threshold=0.6,
             ),
         ],
     )
@@ -697,6 +724,7 @@ def default_graders() -> dict[str, Grader]:
         "parallel_trial_isolation": Grader("parallel_trial_isolation", "code", "cross-trial isolation check", 1.0, 1.0, _grade_parallel_trial_isolation_unavailable),
         "human_spot_check_placeholder": Grader("human_spot_check_placeholder", "human", "spot-check sampling", 0.0, 1.0, _grade_human_placeholder),
         "isolation_clean_trial": Grader("isolation_clean_trial", "code", "environment isolation check", 1.0, 1.0, _grade_isolation_clean_trial),
+        "prompt_output_relevance": Grader("prompt_output_relevance", "code", "prompt-output topical relevance", 1.0, 0.4, _grade_prompt_output_relevance),
     }
 
 
@@ -1247,6 +1275,76 @@ def _keywords(text: str, limit: int = 8) -> list[str]:
         if word not in unique:
             unique.append(word)
     return unique[:limit]
+
+
+def _topic_keywords(text: str, limit: int = 10) -> list[str]:
+    """Extract domain-specific topic terms, filtering generic verbs and filler words."""
+    stop = {
+        "the", "and", "for", "with", "that", "this", "from", "into", "about",
+        "research", "optimize", "find", "make", "give", "take", "show", "have",
+        "using", "used", "uses", "based", "also", "more", "some", "many", "most",
+        "these", "those", "they", "their", "each", "when", "what", "which",
+        "where", "there", "then", "than", "can", "could", "will", "would",
+        "should", "shall", "must", "need", "want", "like", "just", "even",
+        "only", "well", "very", "much", "such", "both", "after", "before",
+        "over", "under", "other", "same", "different", "new", "long", "high",
+        "data", "model", "models", "system", "systems", "method", "paper",
+        "task", "tasks", "result", "results", "approach", "work",
+    }
+    words = [word.lower() for word in re.findall(r"[a-zA-Z][a-zA-Z-]{4,}", text) if word.lower() not in stop]
+    unique: list[str] = []
+    for word in words:
+        if word not in unique:
+            unique.append(word)
+    return unique[:limit]
+
+
+def _grade_prompt_output_relevance(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    """Check whether the report, claims, and sources are topically relevant to the original prompt."""
+    report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
+    claims = store.list("claims")
+    sources = store.list("sources")
+    keywords = _topic_keywords(task.prompt, limit=10)
+    if not keywords:
+        return _result(
+            "prompt_output_relevance", "code", "prompt-output topical relevance",
+            0.0, False, 1.0,
+            "Could not extract topic keywords from prompt.",
+            [{"check": "keywords_extracted", "passed": False}],
+        )
+    lower_report = report.lower()
+    report_hits = sum(1 for kw in keywords if kw in lower_report)
+    report_ratio = report_hits / len(keywords)
+    relevant_claims = [
+        claim for claim in claims
+        if any(kw in str(claim.get("text", "")).lower() for kw in keywords)
+    ]
+    claim_ratio = len(relevant_claims) / max(len(claims), 1)
+    relevant_sources = [
+        source for source in sources
+        if any(kw in str(source.get("title", "")).lower() for kw in keywords)
+    ]
+    source_ratio = len(relevant_sources) / max(len(sources), 1)
+    score = round((report_ratio * 0.4) + (claim_ratio * 0.4) + (source_ratio * 0.2), 3)
+    passed = score >= 0.4
+    return _result(
+        "prompt_output_relevance",
+        "code",
+        "prompt-output topical relevance",
+        score,
+        passed,
+        1.0,
+        (
+            f"Prompt keywords={keywords}; report={report_hits}/{len(keywords)} hits; "
+            f"claims={len(relevant_claims)}/{len(claims)} relevant; "
+            f"sources={len(relevant_sources)}/{len(sources)} relevant."
+        ),
+        [
+            {"check": "report_keyword_ratio", "keywords": keywords, "hits": report_hits, "ratio": round(report_ratio, 3), "passed": report_ratio >= 0.4},
+            {"check": "claim_relevance", "relevant": len(relevant_claims), "total": len(claims), "ratio": round(claim_ratio, 3), "passed": claim_ratio >= 0.4},
+            {"check": "source_relevance", "relevant": len(relevant_sources), "total": len(sources), "ratio": round(source_ratio, 3), "passed": source_ratio >= 0.2},
+        ],
+    )
 
 
 def _grade_optimize_score(task: EvalTask, store: ArtifactStore) -> GraderResult:

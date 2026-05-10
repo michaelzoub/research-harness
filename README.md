@@ -12,6 +12,17 @@ The three product agents are `research`, `optimize`, and `challenge`. `optimize`
 
 ```bash
 git clone <repo-url> research-harness && cd research-harness
+./autore
+```
+
+Running `./autore` with no arguments opens a selection-based setup: enter the
+goal, pick the run type, choose an evaluator/source when needed, and start the
+run without memorizing flags. Use Up/Down to move through choices and Enter to
+select.
+
+You can still pass a prompt directly for scripted use:
+
+```bash
 ./autore "Research adaptive agent harnesses for automated scientific discovery"
 ```
 
@@ -21,7 +32,28 @@ Optional install so `autore` is on `PATH`:
 python3 -m pip install -e .
 ```
 
-## Commands
+## Selection-Based Setup
+
+```bash
+./autore
+```
+
+The interactive setup asks for:
+
+| Choice | Options |
+| --- | --- |
+| Run type | Auto decide, research, optimize, or research-then-optimize. |
+| Evaluator | Prompt-derived, `length_score`, `prediction_market`, or a custom name. |
+| Evidence source | Auto mix, local corpus, arXiv, OpenAlex, GitHub, web, docs/blogs, Twitter/X, or memory. |
+| Budget | Iteration count. |
+
+To start from existing flags but finish by selection, use:
+
+```bash
+./autore --interactive --retriever local
+```
+
+## Scriptable Options
 
 | Flag / option | What it does |
 | --- | --- |
@@ -74,6 +106,11 @@ Each run creates `outputs/<NNN>_run_<slug>/`:
 | `solution.py` | Challenge-specific runnable solution (prediction-market only). |
 | `final_report.md` | Final synthesis report. |
 | `run_benchmark.html` | Per-run visual benchmark with Gantt timeline and decision DAG. |
+| `run_notebook.ipynb` | Notebook export with trace summaries, artifact counts, cost, and diagnosis data. |
+| `harness_diagnosis.json` | Component-level failure taxonomy, trace-pattern comparison, and debugger localization. |
+| `provenance_edges.json` | Claim/source/hypothesis/contradiction/report provenance graph. |
+| `cost.json` / `cost_events.json` | Per-run model usage totals and per-call accounting for live model calls. |
+| `world_model.sqlite` | Cross-run SQLite mirror in the output root for dedupe, provenance, and observability queries. |
 | `decision_dag.png` / `agent_timeline.png` | Flow and timing visuals. |
 
 ## Evaluation

@@ -144,6 +144,8 @@ class Source:
     credibility_score: float
     id: str = field(default_factory=lambda: new_id("src"))
     retrieved_at: str = field(default_factory=now_iso)
+    canonical_id: Optional[str] = None
+    duplicate_of: Optional[str] = None
 
 
 @dataclass
@@ -156,6 +158,8 @@ class Claim:
     run_id: str
     contradicted_by: list[str] = field(default_factory=list)
     id: str = field(default_factory=lambda: new_id("claim"))
+    canonical_id: Optional[str] = None
+    duplicate_of: Optional[str] = None
 
 
 @dataclass
@@ -168,6 +172,9 @@ class Hypothesis:
     testability_score: float
     next_experiment: str
     id: str = field(default_factory=lambda: new_id("hyp"))
+    run_id: Optional[str] = None
+    canonical_id: Optional[str] = None
+    duplicate_of: Optional[str] = None
 
 
 @dataclass
@@ -206,6 +213,10 @@ class FailedPath:
     created_by_agent: str
     run_id: str
     id: str = field(default_factory=lambda: new_id("fail"))
+    failure_category: str = "unknown"
+    failure_component: str = "unknown"
+    retryable: bool = False
+    severity: str = "medium"
 
 
 @dataclass
@@ -219,6 +230,12 @@ class HarnessChange:
     status: str = "pending"
     created_at: str = field(default_factory=now_iso)
     id: str = field(default_factory=lambda: new_id("change"))
+    component: str = "harness"
+    diagnosis: str = ""
+    risk_score: float = 0.5
+    expected_value_score: float = 0.5
+    priority_score: float = 0.5
+    trace_pattern_delta: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -237,6 +254,8 @@ class RunRecord:
     session_id: Optional[str] = None
     session_jsonl_path: Optional[str] = None
     session_metadata_path: Optional[str] = None
+    prompt_versions: dict[str, str] = field(default_factory=dict)
+    harness_config_snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -255,6 +274,41 @@ class AgentTrace:
     output_summary: str
     id: str = field(default_factory=lambda: new_id("trace"))
     started_at: str = ""  # ISO timestamp when agent execution began (wall clock)
+    prompt_version: Optional[str] = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cost_usd: float = 0.0
+    failure_category: str = "none"
+    failure_component: str = "unknown"
+    retryable: bool = False
+
+
+@dataclass
+class ProvenanceEdge:
+    run_id: str
+    from_type: str
+    from_id: str
+    to_type: str
+    to_id: str
+    relationship: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: str = field(default_factory=now_iso)
+    id: str = field(default_factory=lambda: new_id("edge"))
+
+
+@dataclass
+class CostEvent:
+    run_id: str
+    component: str
+    provider: str
+    model: str
+    prompt_tokens: int
+    completion_tokens: int
+    cost_usd: float
+    call_type: str = "model"
+    metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: str = field(default_factory=now_iso)
+    id: str = field(default_factory=lambda: new_id("cost"))
 
 
 @dataclass
@@ -265,6 +319,9 @@ class ResearchPlan:
     search_angles: list[str]
     hypothesis_angles: list[str]
     stopping_signals: list[str]
+    topics: list[str] = field(default_factory=list)
+    topic_queries: list[str] = field(default_factory=list)
+    planner: str = "deterministic-fallback"
 
 
 @dataclass

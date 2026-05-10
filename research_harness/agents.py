@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 import time
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Optional, Protocol
 
 from .llm import LLMClient
+from .diagnostics import diagnose_snapshot, score_harness_change
 from .schemas import (
     AgentBudget,
     AgentTrace,
@@ -21,6 +23,7 @@ from .schemas import (
     OpenQuestion,
     RunRecord,
     now_iso,
+    to_dict,
 )
 from .search import SearchBackend
 from .store import ArtifactStore
@@ -71,6 +74,9 @@ class BaseAgent:
         # Snapshot LLM token counters before this agent runs so we can compute
         # the delta for this specific agent call.
         tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
+        prompt_tokens_before = self.llm.total_prompt_tokens
+        completion_tokens_before = self.llm.total_completion_tokens
+        cost_before = self.llm.total_cost()
         try:
             if self.budget.cancelled:
                 status = "cancelled"
@@ -87,6 +93,10 @@ class BaseAgent:
         runtime_ms = int((time.perf_counter() - started) * 1000)
         tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         agent_tokens = tokens_after - tokens_before
+        agent_prompt_tokens = self.llm.total_prompt_tokens - prompt_tokens_before
+        agent_completion_tokens = self.llm.total_completion_tokens - completion_tokens_before
+        agent_cost = max(0.0, self.llm.total_cost() - cost_before)
+        rendered_prompt = self.prompt_template.replace("{goal}", run.user_goal)
         store.append_progress(f"Agent {status}: {self.name} in {runtime_ms}ms tokens={agent_tokens} - {summary}")
         store.add_trace(
             AgentTrace(
@@ -94,7 +104,7 @@ class BaseAgent:
                 run_id=run.id,
                 agent_name=self.name,
                 role=self.role,
-                prompt=self.prompt_template.replace("{goal}", run.user_goal),
+                prompt=rendered_prompt,
                 model=self.model,
                 tools_used=self.tools_used,
                 tool_calls=self.tool_calls,
@@ -104,6 +114,10 @@ class BaseAgent:
                 errors=errors,
                 output_summary=summary,
                 started_at=started_at,
+                prompt_version=_text_sha256(rendered_prompt),
+                prompt_tokens=agent_prompt_tokens,
+                completion_tokens=agent_completion_tokens,
+                cost_usd=round(agent_cost, 6),
             )
         )
         return AgentResult(self.name, summary, errors)
@@ -299,6 +313,15 @@ class SynthesisAgent(BaseAgent):
         contradictions = store.list("contradictions")
         questions = sorted(store.list("open_questions"), key=lambda row: row["priority"])
         seed_context = _read_optional_json(store.optimizer_seed_context_path)
+        sources, claims, hypotheses, contradictions, questions = _filter_report_evidence(
+            run,
+            sources,
+            claims,
+            hypotheses,
+            contradictions,
+            questions,
+            seed_context,
+        )
         report = _build_report_with_llm(self.llm, run, sources, claims, hypotheses, contradictions, questions, seed_context)
         store.write_report(report)
         return f"Synthesized final report with {len(sources)} sources, {len(claims)} claims, and {len(hypotheses)} hypotheses."
@@ -309,6 +332,9 @@ class HarnessDebuggerAgent(BaseAgent):
         claims = store.list("claims")
         contradictions = store.list("contradictions")
         traces = store.list("agent_traces")
+        diagnosis = diagnose_snapshot(store.snapshot(), run_root=store.root)
+        localized = diagnosis.get("localized_components") or []
+        primary_component = str(localized[0].get("component")) if localized else "loop_control"
         if contradictions:
             change = HarnessChange(
                 change="Add a contradiction-checking critic after each literature batch",
@@ -317,6 +343,8 @@ class HarnessDebuggerAgent(BaseAgent):
                 risk="More runtime and repeated critic work during exploratory runs",
                 evaluation="Compare unresolved contradiction count before and after the change",
                 run_id=run.id,
+                component="critic",
+                diagnosis=_diagnosis_summary(diagnosis),
             )
         elif len(claims) < 4:
             change = HarnessChange(
@@ -326,6 +354,8 @@ class HarnessDebuggerAgent(BaseAgent):
                 risk="More noisy sources and higher review burden",
                 evaluation="Compare high-confidence claim count and critic objection rate",
                 run_id=run.id,
+                component="retrieval",
+                diagnosis=_diagnosis_summary(diagnosis),
             )
         else:
             change = HarnessChange(
@@ -335,10 +365,21 @@ class HarnessDebuggerAgent(BaseAgent):
                 risk="Requires extra bookkeeping and benchmark thresholds",
                 evaluation="Track new-source and new-claim yield per cycle",
                 run_id=run.id,
+                component=primary_component,
+                diagnosis=_diagnosis_summary(diagnosis),
             )
+        scores = score_harness_change(to_dict(change), diagnosis)
+        change.risk_score = scores["risk_score"]
+        change.expected_value_score = scores["expected_value_score"]
+        change.priority_score = scores["priority_score"]
+        change.trace_pattern_delta = diagnosis.get("prior_run_comparison") or {}
         store.add_harness_change(change)
+        store.write_harness_diagnosis(diagnosis)
         failures = [trace for trace in traces if trace["status"] != "completed"]
-        return f"Proposed 1 constrained harness change; observed {len(failures)} failed traces."
+        return (
+            f"Proposed 1 constrained harness change for {change.component}; "
+            f"priority={change.priority_score:.3f}; observed {len(failures)} failed traces."
+        )
 
 
 def _support_level(confidence: float) -> str:
@@ -364,6 +405,28 @@ def _looks_contradictory(left: str, right: str) -> bool:
 
 def _estimate_tokens(text: str) -> int:
     return max(1, len(text.split()))
+
+
+def _text_sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _diagnosis_summary(diagnosis: dict[str, object]) -> str:
+    localized = diagnosis.get("localized_components") or []
+    if isinstance(localized, list) and localized:
+        first = localized[0]
+        if isinstance(first, dict):
+            return f"{first.get('component', 'unknown')}: {first.get('reason', '')}"
+    taxonomy = diagnosis.get("failure_taxonomy") or {}
+    if isinstance(taxonomy, dict) and taxonomy:
+        return "Failure taxonomy: " + ", ".join(f"{key}={value}" for key, value in sorted(taxonomy.items()))
+    yield_info = diagnosis.get("artifact_yield") or {}
+    if isinstance(yield_info, dict):
+        return (
+            f"Artifact yield sources={yield_info.get('sources', 0)}, "
+            f"claims={yield_info.get('claims', 0)}, hypotheses={yield_info.get('hypotheses', 0)}."
+        )
+    return "No component-level failure localized."
 
 
 def _dedupe_by_id(rows: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -392,6 +455,105 @@ def _citation(source: dict[str, object]) -> str:
     return f"{source['title']} ({source['date']})"
 
 
+PREDICTION_MARKET_REPORT_TERMS = {
+    "prediction",
+    "market",
+    "markets",
+    "orderbook",
+    "order",
+    "book",
+    "maker",
+    "making",
+    "market-making",
+    "liquidity",
+    "retail",
+    "arbitrage",
+    "arbitrageur",
+    "adverse",
+    "selection",
+    "quote",
+    "quotes",
+    "stale",
+    "inventory",
+    "spread",
+    "lmsr",
+    "amm",
+    "scoring",
+    "strategy",
+    "strategies",
+}
+
+
+def _filter_report_evidence(
+    run: RunRecord,
+    sources: list[dict[str, object]],
+    claims: list[dict[str, object]],
+    hypotheses: list[dict[str, object]],
+    contradictions: list[dict[str, object]],
+    questions: list[dict[str, object]],
+    seed_context: dict[str, object],
+) -> tuple[
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+]:
+    if not _is_prediction_market_report(run, seed_context):
+        return sources, claims, hypotheses, contradictions, questions
+
+    relevant_sources = [source for source in sources if _prediction_market_relevance_score(source) >= 2]
+    relevant_source_ids = {str(source.get("id", "")) for source in relevant_sources}
+    filtered_claims = []
+    for claim in claims:
+        source_ids = [str(source_id) for source_id in claim.get("source_ids", []) if str(source_id) in relevant_source_ids]
+        if source_ids or _prediction_market_relevance_score(claim) >= 2:
+            filtered_claims.append({**claim, "source_ids": source_ids})
+    claim_ids = {str(claim.get("id", "")) for claim in filtered_claims}
+    filtered_hypotheses = [
+        hypothesis
+        for hypothesis in hypotheses
+        if _prediction_market_relevance_score(hypothesis) >= 2
+        or any(str(claim_id) in claim_ids for claim_id in hypothesis.get("supporting_claim_ids", []))
+    ]
+    filtered_contradictions = [
+        contradiction
+        for contradiction in contradictions
+        if str(contradiction.get("claim_a", "")) in claim_ids and str(contradiction.get("claim_b", "")) in claim_ids
+    ]
+    filtered_questions = [question for question in questions if _prediction_market_relevance_score(question) >= 2]
+    if relevant_sources:
+        relevant_sources = sorted(
+            relevant_sources,
+            key=lambda source: (
+                _prediction_market_relevance_score(source),
+                float(source.get("relevance_score") or 0.0),
+                float(source.get("credibility_score") or 0.0),
+            ),
+            reverse=True,
+        )[:16]
+    return relevant_sources, filtered_claims, filtered_hypotheses, filtered_contradictions, filtered_questions
+
+
+def _is_prediction_market_report(run: RunRecord, seed_context: dict[str, object]) -> bool:
+    if run.product_agent == "challenge":
+        return True
+    if seed_context.get("evaluator_name") == "prediction_market":
+        return True
+    normalized = run.user_goal.lower().replace("-", " ")
+    return "prediction market" in normalized or ("prediction" in normalized and "market" in normalized)
+
+
+def _prediction_market_relevance_score(row: dict[str, object]) -> int:
+    text = " ".join(str(value) for key, value in row.items() if key not in {"id", "retrieved_at"}).lower()
+    score = sum(1 for term in PREDICTION_MARKET_REPORT_TERMS if term in text)
+    if "prediction market" in text or "prediction-market" in text:
+        score += 3
+    if "danrobinson/prediction-market-challenge" in text or "orderbook prediction market challenge" in text:
+        score += 4
+    return score
+
+
 def _build_report(
     run: RunRecord,
     sources: list[dict[str, object]],
@@ -417,8 +579,9 @@ def _build_report(
         "## Key Claims",
     ]
     for claim in sorted(claims, key=lambda row: row["confidence"], reverse=True):
-        citations = ", ".join(_citation(source_lookup[source_id]) for source_id in claim["source_ids"])
-        lines.append(f"- {claim['text']} Confidence: {claim['confidence']} ({claim['support_level']}). Sources: {citations}")
+        citations = ", ".join(_citation(source_lookup[source_id]) for source_id in claim["source_ids"] if source_id in source_lookup)
+        citation_text = citations or "No retained source citation"
+        lines.append(f"- {claim['text']} Confidence: {claim['confidence']} ({claim['support_level']}). Sources: {citation_text}")
     lines.extend(["", "## Ranked Hypotheses"])
     for hypothesis in hypotheses:
         lines.append(

@@ -31,6 +31,9 @@ artifact paths.
 
 ## System Diagram
 
+The visual architecture/roadmap diagram is available at
+[`docs/assets/research_harness_architecture_phases_3_7.svg`](assets/research_harness_architecture_phases_3_7.svg).
+
 ```mermaid
 flowchart LR
   user["User goal / CLI flags"] --> cli["CLI\nresearch_harness.cli"]

@@ -2,24 +2,24 @@
 
 ## Phase 3: Persistent World Model
 
-- Add SQLite or Postgres backend behind `ArtifactStore`.
-- Add cross-run source, claim, and hypothesis deduplication.
-- Add provenance edges between claims, hypotheses, contradictions, and reports.
-- Add migration scripts for schema evolution.
+- [x] Add SQLite or Postgres backend behind `ArtifactStore`.
+- [x] Add cross-run source, claim, and hypothesis deduplication.
+- [x] Add provenance edges between claims, hypotheses, contradictions, and reports.
+- [x] Add migration scripts for schema evolution.
 
 ## Phase 4: Observability
 
-- Track prompt versions and harness config snapshots per run.
-- Add cost accounting for real model/tool calls.
-- Add structured failure taxonomies.
-- Add a run viewer or notebook export for traces and artifacts.
+- [x] Track prompt versions and harness config snapshots per run.
+- [x] Add cost accounting for real model/tool calls.
+- [x] Add structured failure taxonomies.
+- [x] Add a run viewer or notebook export for traces and artifacts.
 
 ## Phase 5: Harness Debugger
 
-- Expand failure localization from simple heuristics to component-level
+- [x] Expand failure localization from simple heuristics to component-level
   diagnosis.
-- Compare trace patterns across runs.
-- Score harness-change proposals against risk and expected value.
+- [x] Compare trace patterns across runs.
+- [x] Score harness-change proposals against risk and expected value.
 
 ## Phase 6: Gated Adaptive Harness Evolution
 
