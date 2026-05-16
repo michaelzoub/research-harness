@@ -190,8 +190,8 @@ class SmokeTest(unittest.TestCase):
                     "task_type": "bounded",
                     "topics": ["prediction_market", "market_making"],
                     "topic_queries": [
-                        "prediction market order book market making adverse selection",
-                        "stale quote arbitrage retail order flow inventory skew",
+                        "prediction market challenge evaluation strategy implementation",
+                        "prediction market trading strategy empirical evaluation",
                     ],
                     "rationale": "Interpreted typoed predictionm arket and mm'ing as prediction-market market making.",
                 }
@@ -210,7 +210,7 @@ class SmokeTest(unittest.TestCase):
 
         self.assertEqual(plan.planner, "llm")
         self.assertIn("prediction_market", plan.topics)
-        self.assertIn("prediction market order book market making", queries)
+        self.assertIn("prediction market challenge evaluation", queries)
         self.assertIn("selected_evaluator", fake_llm.user_payload)
 
     def test_phase2_smoke(self) -> None:
@@ -539,8 +539,8 @@ class SmokeTest(unittest.TestCase):
     def test_prediction_market_evaluator_rewards_adaptive_strategy(self) -> None:
         static_ladder = "Static ladder around midpoint with size=12 spread=2 and no inventory controls."
         adaptive_guarded = (
-            "Adaptive fair value estimate from fills and competitor midpoint, CancelAll after stale adverse "
-            "arbitrageur fills or jump volatility, size=5 spread=4 inventory limit=90 with inventory skew."
+            "Adaptive fair value estimate from fills and competitor midpoint, CancelAll after repeated "
+            "loss-making fills or jump volatility, size=5 spread=4 inventory limit=90 with position controls."
         )
 
         self.assertGreater(prediction_market_score(adaptive_guarded), prediction_market_score(static_ladder))
@@ -918,22 +918,27 @@ class SmokeTest(unittest.TestCase):
             optimizer_task = next(task for task in prd["organized_tasks"] if task["title"] == "Run optimizer variants from query seed context")
 
             self.assertEqual(run.product_agent, "challenge")
-            self.assertEqual(run.status, "failed")
             self.assertGreaterEqual(len(query_rounds), 2)
-            self.assertEqual(len(optimize_rounds), 3)
             self.assertEqual(prd["objective"]["kind"], "profit_usd")
             self.assertEqual(prd["objective"]["target"], 10.0)
-            self.assertFalse(prd["objective"]["met"])
-            self.assertEqual(optimizer_task["status"], "failed")
-            self.assertFalse(optimizer_task["passes"])
-            downstream = [
-                task for task in prd["organized_tasks"]
-                if task["title"] in {"Critique ranked query and optimizer results", "Synthesize optimize-query run report"}
-            ]
-            self.assertTrue(downstream)
-            self.assertTrue(all(task["status"] == "pending" for task in downstream))
             self.assertEqual(optimization_result["objective_target"]["target"], 10.0)
-            self.assertFalse(optimization_result["objective_target"]["met"])
+            if optimization_result["objective_target"]["met"]:
+                self.assertEqual(run.status, "completed")
+                self.assertEqual(optimizer_task["status"], "passed")
+                self.assertTrue(optimizer_task["passes"])
+                self.assertTrue(prd["objective"]["met"])
+            else:
+                self.assertEqual(run.status, "failed")
+                self.assertEqual(len(optimize_rounds), 3)
+                self.assertFalse(prd["objective"]["met"])
+                self.assertEqual(optimizer_task["status"], "failed")
+                self.assertFalse(optimizer_task["passes"])
+                downstream = [
+                    task for task in prd["organized_tasks"]
+                    if task["title"] in {"Critique ranked query and optimizer results", "Synthesize optimize-query run report"}
+                ]
+                self.assertTrue(downstream)
+                self.assertTrue(all(task["status"] == "pending" for task in downstream))
 
     def test_goal_slug(self) -> None:
         self.assertEqual(
@@ -1139,15 +1144,14 @@ class ArxivRetrieverTest(unittest.TestCase):
             config=HarnessConfig(retriever="auto"),
         )
 
-        goal = "Get to $10 profit in the prediction market challenge using AMM LMSR entropy literature"
+        goal = "Get to $10 profit in the prediction market challenge using automated market maker cost-function literature"
         plan = orchestrator.create_plan(goal)
         strategy = orchestrator.create_source_strategy(goal, plan)
         queries = " ".join(query for item in strategy for query in item.queries).lower()
 
-        self.assertIn("prediction-market", plan.strategy)
-        self.assertIn("lmsr", queries)
-        self.assertIn("adverse selection", queries)
-        self.assertIn("orderbook", queries.replace(" ", ""))
+        self.assertIn("challenge", plan.strategy)
+        self.assertIn("automated market maker", queries)
+        self.assertIn("prediction market", queries)
         self.assertNotIn("workplace automation", queries)
 
     def test_prediction_market_evaluator_forces_prediction_market_lens(self) -> None:
@@ -1162,9 +1166,8 @@ class ArxivRetrieverTest(unittest.TestCase):
         strategy = orchestrator.create_source_strategy(goal, plan)
         queries = " ".join(query for item in strategy for query in item.queries).lower()
 
-        self.assertIn("prediction-market", plan.strategy)
-        self.assertIn("market scoring rules", queries)
-        self.assertIn("adverse selection", queries)
+        self.assertIn("challenge", plan.strategy)
+        self.assertIn("prediction market", queries)
 
     def test_source_strategy_does_not_force_prediction_market_lens_without_prompt_or_evaluator(self) -> None:
         orchestrator = Orchestrator(
@@ -1180,7 +1183,7 @@ class ArxivRetrieverTest(unittest.TestCase):
 
         self.assertNotIn("prediction-market", plan.strategy)
         self.assertNotIn("lmsr", queries)
-        self.assertNotIn("adverse selection", queries)
+        self.assertNotIn("challenge evaluation strategy", queries)
 
     def test_llm_planner_keywords_drive_paper_search_queries(self) -> None:
         class FakeKeywordLLM:
@@ -1326,7 +1329,7 @@ class ArxivRetrieverTest(unittest.TestCase):
                     author="Researcher",
                     date="2020",
                     source_type="paper",
-                    summary="Market scoring rules motivate liquidity costs, inventory, and adverse-selection controls.",
+                    summary="Market scoring rules motivate liquidity costs, position limits, and risk controls.",
                     relevance_score=0.9,
                     credibility_score=0.8,
                 )
@@ -1335,14 +1338,14 @@ class ArxivRetrieverTest(unittest.TestCase):
                 run_id=run.id,
                 outer_iteration=1,
                 kind="query",
-                payload="prediction market LMSR adverse selection market making",
+                payload="prediction market evaluation strategy risk controls",
                 parent_ids=[],
                 metadata={"retriever": "local"},
             )
             store.add_variant(variant)
             claim = store.add_claim(
                 Claim(
-                    text="Widening quotes reduces adverse-selection losses in market making.",
+                    text="Risk-aware quoting can reduce loss-making fills in prediction-market simulations.",
                     source_ids=[source.id],
                     confidence=0.78,
                     support_level="strong",
@@ -1375,7 +1378,52 @@ class ArxivRetrieverTest(unittest.TestCase):
         top_finding = seed_context["top_query_findings"][0]
         self.assertEqual(top_finding["supporting_claims"][0]["id"], claim.id)
         self.assertEqual(top_finding["supporting_sources"][0]["title"], "Prediction Market Scoring Rules")
-        self.assertIn("Widening quotes", seed_variant.metadata["seed_literature"]["claims"][0]["text"])
+        self.assertIn("Risk-aware quoting", seed_variant.metadata["seed_literature"]["claims"][0]["text"])
+
+    def test_prediction_market_optimizer_forces_distinct_rendered_code_across_rounds(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            outer = EvolutionaryOuterLoop(
+                run_id="run_pm_diversity",
+                goal="prediction market challenge",
+                task_mode="optimize_query",
+                source_strategy=[],
+                search_factory=lambda _name: LocalCorpusSearch(Path("examples/corpus/research_corpus.json")),
+                evaluator_name="prediction_market",
+                population_size=4,
+            )
+            round_one = outer._propose_prediction_market_variants(1, [], store)
+            for variant in round_one:
+                store.add_variant(variant)
+            round_two = outer._propose_prediction_market_variants(2, round_one[:2], store)
+            hashes = [variant.metadata.get("rendered_code_hash") for variant in round_one + round_two]
+
+        self.assertEqual(len(hashes), len(set(hashes)))
+        self.assertTrue(all(hashes))
+        self.assertTrue(any("contextual_parent_mutation" in variant.payload for variant in round_two))
+        self.assertFalse(any("lmsr" in variant.payload.lower() for variant in round_two))
+        self.assertFalse(any("adverse" in variant.payload.lower() for variant in round_two))
+
+    def test_prediction_market_plateau_grounding_can_refresh_literature(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            outer = EvolutionaryOuterLoop(
+                run_id="run_pm_refresh",
+                goal="prediction market market making strategy",
+                task_mode="optimize_query",
+                source_strategy=[],
+                search_factory=lambda _name: LocalCorpusSearch(Path("examples/corpus/research_corpus.json")),
+                evaluator_name="prediction_market",
+            )
+            asyncio.run(outer._record_literature_grounding(store, "initial"))
+            asyncio.run(outer._record_literature_grounding(store, "prediction_market_plateau_round_2"))
+            grounding_claims = [
+                claim for claim in store.list("claims")
+                if claim.get("created_by_agent") == "literature_grounding_policy"
+            ]
+
+        self.assertGreaterEqual(len(grounding_claims), 2)
+        self.assertTrue(any("prediction_market_plateau_round_2" in claim["text"] for claim in grounding_claims))
 
 
 class SkillSpecTest(unittest.TestCase):

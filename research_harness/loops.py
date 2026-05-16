@@ -1094,6 +1094,7 @@ class EvolutionaryOuterLoop:
                 output_summary=f"Selected {len(parents)} code parent(s); signal={termination_signal}.",
             )
             if termination_signal == "score_plateau":
+                await self._record_literature_grounding(store, f"optimizer_plateau_round_{round_index}")
                 self._apply_plateau_recovery(plateau, store, round_index, termination_signal)
             should_stop = self._should_stop_optimizer_loop(termination_signal, round_best, round_index)
             if not should_stop and round_index >= self.max_outer_iterations:
@@ -1207,6 +1208,7 @@ class EvolutionaryOuterLoop:
                 output_summary=f"Selected {len(parents)} strategy parent(s); signal={termination_signal}.",
             )
             if termination_signal == "score_plateau":
+                await self._record_literature_grounding(store, f"prediction_market_plateau_round_{round_index}")
                 self._apply_plateau_recovery(plateau, store, round_index, termination_signal)
             should_stop = self._should_stop_optimizer_loop(termination_signal, round_best, round_index)
             if not should_stop and round_index >= self.max_outer_iterations:
@@ -1331,15 +1333,19 @@ class EvolutionaryOuterLoop:
         return edge >= self.objective.target
 
     async def _record_literature_grounding(self, store: ArtifactStore, reason: str) -> None:
-        if any(claim.get("created_by_agent") == "literature_grounding_policy" for claim in store.list("claims")):
+        if any(
+            claim.get("created_by_agent") == "literature_grounding_policy"
+            and str(claim.get("text", "")).startswith(f"Literature grounding ({reason})")
+            for claim in store.list("claims")
+        ):
             return
         started = time.perf_counter()
         started_at = now_iso()
-        query = (
-            f"{self.goal} existing literature benchmarks failure modes evaluation "
-            "optimization strategy agent regressions"
-        )
-        item = self.source_strategy[0] if self.source_strategy else None
+        query = self._literature_grounding_query(reason, store)
+        strategy_index = 0
+        if "plateau" in reason and self.source_strategy:
+            strategy_index = min(len(self.source_strategy) - 1, self._recovery_retriever_index % len(self.source_strategy))
+        item = self.source_strategy[strategy_index] if self.source_strategy else None
         retriever_name = item.retriever if item else "local"
         limit = min(3, item.limit if item else 3)
         notes: list[str] = []
@@ -1384,6 +1390,16 @@ class EvolutionaryOuterLoop:
             status="completed",
             output_summary=f"Grounded optimization context with {len(sources)} source(s).",
         )
+
+    def _literature_grounding_query(self, reason: str, store: Optional[ArtifactStore] = None) -> str:
+        context_parts = [self.goal, reason.replace("_", " ")]
+        if store:
+            for item in _score_history(store, mode="optimize", limit=3):
+                context_parts.append(str(item.get("summary", "")))
+                context_parts.append(str(item.get("payload", ""))[:240])
+            context_parts.extend(_recent_literature_grounding_notes(store, limit=3))
+        terms = _context_terms(" ".join(context_parts), limit=28)
+        return " ".join(terms) if terms else self.goal
 
     def _apply_plateau_recovery(self, plateau: PlateauDetector, store: ArtifactStore, round_index: int, reason: str) -> None:
         """Apply a concrete recovery action and set one-shot flags for the next proposal round.
@@ -1778,14 +1794,7 @@ class EvolutionaryOuterLoop:
         return variants
 
     def _optimizer_seed_prefix(self) -> str:
-        if self.evaluator_name == "prediction_market":
-            return (
-                "Prediction-market strategy sketch for upstream orderbook_pm_challenge: passive only, "
-                "avoid adverse arbitrageur fills, quote only outside hidden competitor ladder, infer drift "
-                "from fills and competitor best quotes, cancel all each step, small size, wide spread, "
-                "inventory limits, and skip quoting near unstable midpoints."
-            )
-        return "Optimization strategy sketch:"
+        return "Optimization sketch derived only from the user goal, retrieved evidence, parent variants, and score feedback:"
 
     def _propose_prediction_market_variants(
         self,
@@ -1793,14 +1802,17 @@ class EvolutionaryOuterLoop:
         parents: list[Variant],
         store: Optional[ArtifactStore] = None,
     ) -> list[Variant]:
+        temperature = self._recovery_temperature
+        inject_mutation = self._recovery_inject_mutation
+        self._recovery_temperature = 0.7
+        self._recovery_inject_mutation = False
+
         score_history = _score_history(store, mode="optimize") if store else []
+        literature_notes = _recent_literature_grounding_notes(store) if store else []
+        context_text = " ".join([self.goal, *literature_notes])
         templates = [
-            "pm_strategy=wide_top_of_competitor size=1 spread=8 inventory=30 skew=8 quote_mode=outside_competitor cancel_all=1",
-            "pm_strategy=very_wide_small_size size=0.5 spread=12 inventory=20 skew=10 quote_mode=outside_competitor cancel_all=1",
-            "pm_strategy=retail_only_extreme_edges size=1 spread=16 inventory=15 skew=12 quote_mode=extreme cancel_all=1",
-            "pm_strategy=ask_fade_bid_fade size=0.75 spread=10 inventory=25 skew=9 quote_mode=outside_competitor cancel_all=1",
-            "pm_strategy=patient_market_maker size=0.5 spread=20 inventory=10 skew=15 quote_mode=extreme cancel_all=1",
-            "pm_strategy=no_trade_control size=0 spread=99 inventory=0 skew=0 quote_mode=none cancel_all=1",
+            _contextual_prediction_market_payload(context_text, outer_iteration, index)
+            for index in range(max(self.population_size, 4))
         ]
         if score_history:
             best = score_history[0]
@@ -1813,17 +1825,17 @@ class EvolutionaryOuterLoop:
             base_skew = float(params["skew_divisor"])
             templates = [
                 (
-                    f"pm_strategy=score_memory_exploit prior_best_edge={best_edge:.3f} "
+                    f"pm_strategy=contextual_score_memory prior_best_edge={best_edge:.3f} "
                     f"spread={max(2, base_spread + delta)} size={max(0.1, base_size + size_delta):.2f} "
-                    f"inventory={base_inventory:.1f} skew={base_skew:.1f} quote_mode={params['quote_mode']} parent='{best_payload[:120]}'"
+                    f"inventory={base_inventory:.1f} skew={base_skew:.1f} parent='{best_payload[:120]}'"
                 )
                 for delta, size_delta in [(-2, -0.25), (2, -0.5), (4, -0.25), (8, -0.75)]
             ] + [
                 (
-                    f"pm_strategy=score_memory_explore prior_best_edge={best_edge:.3f} "
+                    f"pm_strategy=contextual_score_explore prior_best_edge={best_edge:.3f} "
                     f"spread={max(2, base_spread + delta)} size={max(0.1, base_size * 0.75):.2f} "
                     f"inventory={max(5.0, base_inventory * 0.75):.1f} skew={base_skew + skew_delta:.1f} "
-                    f"quote_mode=extreme parent='{best_payload[:120]}'"
+                    f"parent='{best_payload[:120]}'"
                 )
                 for delta, skew_delta in [(6, 3), (10, 5)]
             ] + templates
@@ -1831,14 +1843,20 @@ class EvolutionaryOuterLoop:
             parent_mutations = []
             for parent in parents:
                 params = _prediction_market_params(parent.payload)
-                for delta in [2, 4, 8]:
+                for delta, size_factor, inventory_factor, skew_delta in [
+                    (2, 0.80, 0.90, 2),
+                    (4, 0.65, 0.75, 4),
+                    (8, 0.50, 0.60, 6),
+                    (12, 0.35, 0.50, 8),
+                ]:
                     parent_mutations.append(
-                        f"pm_strategy=parent_score_mutation mutation_round={outer_iteration} "
-                        f"spread={max(2, int(params['spread']) + delta)} size={float(params['size']):.2f} "
-                        f"inventory={float(params['inventory']):.1f} skew={float(params['skew_divisor']):.1f} "
-                        f"quote_mode={params['quote_mode']} parent='{parent.payload[:120]}'"
+                        f"pm_strategy=contextual_parent_mutation mutation_round={outer_iteration} "
+                        f"spread={max(2, int(params['spread']) + delta)} size={max(0.05, float(params['size']) * size_factor):.2f} "
+                        f"inventory={max(1.0, float(params['inventory']) * inventory_factor):.1f} "
+                        f"skew={float(params['skew_divisor']) + skew_delta:.1f} "
+                        f"parent='{parent.payload[:120]}'"
                     )
-            templates = templates + parent_mutations
+            templates = parent_mutations + templates
         elif parents:
             context = self._optimizer_seed_prefix()
             templates = [
@@ -1848,7 +1866,12 @@ class EvolutionaryOuterLoop:
                 )
                 for index, template in enumerate(templates)
             ]
-        return [
+        if literature_notes:
+            templates = [
+                f"{template} fresh_literature='{literature_notes[index % len(literature_notes)]}'"
+                for index, template in enumerate(templates)
+            ]
+        deterministic_variants = [
             Variant(
                 run_id=self.run_id,
                 outer_iteration=outer_iteration,
@@ -1859,6 +1882,21 @@ class EvolutionaryOuterLoop:
             )
             for payload in templates[: self.population_size]
         ]
+        if inject_mutation:
+            deterministic_variants = [_randomly_mutate_variant(variant, outer_iteration) for variant in deterministic_variants]
+
+        llm_variants = self._llm_prediction_market_code_variants(
+            outer_iteration,
+            parents,
+            temperature=temperature,
+            store=store,
+        )
+        return _dedupe_prediction_market_variants(
+            [*llm_variants, *deterministic_variants],
+            store=store,
+            population_size=self.population_size,
+            outer_iteration=outer_iteration,
+        )
 
     def _render_solution(self, payload: str) -> str:
         if self.evaluator_name != "prediction_market":
@@ -2123,11 +2161,9 @@ class EvolutionaryOuterLoop:
             "        # price_ticks: 1-99 (cents)\n"
             "        ...\n"
             "```\n\n"
-            "SCORING: mean_edge = sum(ask_price - true_prob for retail sell fills) "
-            "+ sum(true_prob - bid_price for retail buy fills) "
-            "- sum(adverse_fill_edge). Higher is better. "
-            "Key insight: quote OUTSIDE the competitor ladder to avoid adverse arbitrageur fills; "
-            "cancel every step before requoting; skew quotes to manage inventory risk.\n\n"
+            "SCORING: mean_edge is computed by the evaluator from fills and market state. Higher is better. "
+            "Infer strategy choices only from the user goal, parent strategies, retrieved evidence, and score history; "
+            "do not assume a fixed named trading doctrine unless the prompt or retrieved evidence supports it.\n\n"
             f"Return JSON only: {{\"variants\": [{{\"payload\": \"<complete Python source>\", \"description\": str}}]}} "
             f"with exactly {self.population_size} variants. Each must be a fully self-contained Python file "
             "with the imports and class definition. No placeholders or TODO comments."
@@ -2143,9 +2179,8 @@ class EvolutionaryOuterLoop:
                     "Generate diverse strategies that differ meaningfully in logic. "
                     "When literature_seed_context is present, each strategy must name the specific retrieved claim "
                     "or source insight that inspired its quoting, cancellation, inventory, or sizing logic. "
-                    "Try different approaches: e.g., one with aggressive inventory skew, "
-                    "one with very wide spreads, one adaptive to competitor mid changes, "
-                    "one that only quotes on one side based on inventory. "
+                    "Try meaningfully different approaches, but derive the differences from the prompt, parents, "
+                    "retrieved evidence, and observed failure modes rather than a prewritten strategy list. "
                     "Each variant MUST compile as valid Python."
                 ),
             },
@@ -2358,6 +2393,17 @@ def _parent_literature_context(parent: Variant) -> dict[str, object]:
     }
 
 
+def _recent_literature_grounding_notes(store: Optional[ArtifactStore], limit: int = 4) -> list[str]:
+    if not store:
+        return []
+    notes = [
+        str(claim.get("text", ""))
+        for claim in store.list("claims")
+        if claim.get("created_by_agent") == "literature_grounding_policy"
+    ]
+    return [_shorten(note, 220) for note in notes[-limit:] if note]
+
+
 def _literature_seed_note(parent: Variant) -> str:
     context = _parent_literature_context(parent)
     claims = context.get("claims", []) if context else []
@@ -2373,6 +2419,120 @@ def _literature_seed_note(parent: Variant) -> str:
     if source_note:
         return f"literature_source='{source_note}'"
     return "literature_inspiration='none retrieved'"
+
+
+def _dedupe_prediction_market_variants(
+    variants: list[Variant],
+    *,
+    store: Optional[ArtifactStore],
+    population_size: int,
+    outer_iteration: int,
+) -> list[Variant]:
+    existing_signatures = set()
+    if store:
+        for row in store.list("variants"):
+            payload = str(row.get("payload", ""))
+            if row.get("kind") == "code" and payload:
+                existing_signatures.add(_prediction_market_code_signature(payload))
+    selected: list[Variant] = []
+    selected_signatures: set[str] = set()
+    for variant in variants:
+        candidate = variant
+        signature = _prediction_market_code_signature(candidate.payload)
+        for attempt in range(1, 6):
+            if signature not in existing_signatures and signature not in selected_signatures:
+                break
+            candidate = _randomly_mutate_variant(candidate, (outer_iteration * 97) + attempt)
+            signature = _prediction_market_code_signature(candidate.payload)
+        if signature in existing_signatures or signature in selected_signatures:
+            continue
+        candidate.metadata["rendered_code_hash"] = signature
+        selected.append(candidate)
+        selected_signatures.add(signature)
+        if len(selected) >= population_size:
+            break
+    while len(selected) < population_size:
+        index = len(selected)
+        context = " ".join(variant.payload for variant in variants[-3:]) if variants else ""
+        payload = _contextual_prediction_market_payload(context, outer_iteration, index + 17)
+        fallback = Variant(
+            run_id=variants[0].run_id if variants else "",
+            outer_iteration=outer_iteration,
+            kind="code",
+            payload=payload,
+            parent_ids=variants[0].parent_ids if variants else [],
+            metadata={"challenge": "prediction_market", "proposal_source": "contextual_recovery"},
+        )
+        signature = _prediction_market_code_signature(fallback.payload)
+        if signature not in existing_signatures and signature not in selected_signatures:
+            fallback.metadata["rendered_code_hash"] = signature
+            selected.append(fallback)
+            selected_signatures.add(signature)
+        else:
+            break
+    return selected
+
+
+def _contextual_prediction_market_payload(context: str, outer_iteration: int, index: int) -> str:
+    seed_material = f"{context}|{outer_iteration}|{index}"
+    digest = hashlib.sha256(seed_material.encode("utf-8")).hexdigest()
+    raw = int(digest[:12], 16)
+    spread = 2 + (raw % 29)
+    size = round(0.1 + ((raw >> 5) % 24) / 10.0, 2)
+    inventory = 1 + ((raw >> 11) % 120)
+    skew = 1 + ((raw >> 17) % 30)
+    terms = " ".join(_context_terms(context, limit=8))
+    return (
+        f"pm_strategy=contextual_candidate round={outer_iteration} index={index} "
+        f"spread={spread} size={size:.2f} inventory={inventory} skew={skew} "
+        f"context_terms='{terms}'"
+    )
+
+
+CONTEXT_STOPWORDS = {
+    "and",
+    "are",
+    "but",
+    "candidate",
+    "challenge",
+    "code",
+    "for",
+    "from",
+    "goal",
+    "into",
+    "none",
+    "optimization",
+    "optimize",
+    "query",
+    "research",
+    "round",
+    "score",
+    "strategy",
+    "the",
+    "this",
+    "variant",
+    "with",
+}
+
+
+def _context_terms(text: str, limit: int = 12) -> list[str]:
+    terms: list[str] = []
+    seen: set[str] = set()
+    for token in re.findall(r"[a-zA-Z][a-zA-Z0-9_]{2,}", text.lower().replace("-", " ")):
+        if token in CONTEXT_STOPWORDS or token in seen:
+            continue
+        seen.add(token)
+        terms.append(token)
+        if len(terms) >= limit:
+            break
+    return terms
+
+
+def _prediction_market_code_signature(payload: str) -> str:
+    code = payload if "class Strategy" in payload and "BaseStrategy" in payload else _prediction_market_solution(payload)
+    normalized = re.sub(r"SOURCE_VARIANT = \"\"\".*?\"\"\"", "", code, flags=re.S)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
 
 
 def _randomly_mutate_variant(variant: Variant, seed: int) -> Variant:
@@ -2565,9 +2725,6 @@ class Strategy(BaseStrategy):
         self.last_buy_fill = state.buy_filled_quantity
         self.last_sell_fill = state.sell_filled_quantity
 
-        # The upstream score is edge at fill time. Quoting too close to the
-        # hidden ladder is punished by the informed arbitrageur, so this strategy
-        # is deliberately patient and cancels every step before replacing quotes.
         midpoint_jump = abs(competitor_mid - self.estimated_mid_ticks)
         self.estimated_mid_ticks = (self.estimated_mid_ticks * 0.9) + (competitor_mid * 0.1) + (net_flow * 0.04)
 
@@ -2636,7 +2793,7 @@ def _prediction_market_params(payload: str) -> dict[str, object]:
     elif "quote_mode=extreme" in text or "extreme" in text:
         quote_mode = "extreme"
     else:
-        quote_mode = "outside_competitor"
+        quote_mode = "contextual"
     return {
         "spread": spread,
         "size": size,
@@ -3022,7 +3179,7 @@ def _params_from_strategy_text(strategy_text: str) -> dict[str, object]:
         "spread": int(values.get("base_spread_ticks", 12)),
         "inventory": float(values.get("inventory_limit", 30.0)),
         "skew_divisor": max(1.0, float(values.get("skew_divisor", 8.0))),
-        "quote_mode": mode_match.group(1) if mode_match else "outside_competitor",
+        "quote_mode": mode_match.group(1) if mode_match else "contextual",
     }
 
 

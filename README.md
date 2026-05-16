@@ -1,7 +1,5 @@
 # research-agent
 
-Repo: https://github.com/michaelzoub/research-agent
-
 `research-agent` is a local command-line tool for running research and optimization agent loops. Give it a question or goal, and it can search for evidence, run parallel research variants, critique claims, produce a paper-style report, and optionally optimize code or strategies against an evaluator.
 
 The simple mental model:

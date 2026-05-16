@@ -569,7 +569,7 @@ def _debug_change_challenge(
     pm_claims = [c for c in claims if any(term in str(c.get("text", "")).lower() for term in pm_terms)]
     if claims and len(pm_claims) < len(claims) * 0.3:
         return HarnessChange(
-            change="Redirect retrieval to prediction-market-specific sources (arxiv microstructure, LMSR literature)",
+            change="Redirect retrieval to prompt-derived prediction-market sources and evaluator failure evidence",
             reason="Fewer than 30% of retrieved claims are relevant to prediction-market strategy; off-topic sources are diluting the optimizer seed context.",
             expected_effect="Higher PM-signal claim density and more targeted optimizer seed context",
             risk="Domain-narrow retrieval may miss useful adjacent signals from options or AMM literature",
@@ -583,11 +583,11 @@ def _debug_change_challenge(
         best_edge = max(edges, default=0.0)
         if best_edge <= 0.0:
             return HarnessChange(
-                change="Enforce wider-spread, smaller-size initial variants to avoid adverse arbitrageur fills",
-                reason=f"Best mean edge across {len(opt_evals)} evaluated strategies is ≤ 0; strategies are trading into the arbitrageur at unfavorable prices.",
+                change="Derive a broader candidate search from failed prediction-market evaluator traces",
+                reason=f"Best mean edge across {len(opt_evals)} evaluated strategies is ≤ 0; generated strategies are underperforming the evaluator.",
                 expected_effect="Positive edge by quoting outside the competitor ladder where only retail flow fills",
-                risk="Very wide spreads reduce fill frequency and may produce near-zero rather than positive edge",
-                evaluation="Compare mean edge distribution and retail-fill fraction before and after the spread constraint",
+                risk="Over-broad exploration can reduce fill frequency or miss the evaluator-specific failure mode",
+                evaluation="Compare mean edge distribution and evaluator failure patterns before and after context-derived exploration",
                 component="optimizer",
                 **base,
             )

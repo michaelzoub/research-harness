@@ -422,12 +422,12 @@ class Orchestrator:
         topics = set(str(topic) for topic in interpretation.get("topics", []) if topic)
         if "prediction_market" in topics and _is_prediction_market_challenge_goal(goal, self.config.evaluator_name):
             search_angles = [
-                "prediction-market microstructure and market-making mechanisms",
-                "AMM LMSR entropy and scoring-rule literature",
-                "adverse selection arbitrage inventory and risk controls",
+                "challenge-specific evidence requested by the prompt",
+                "candidate design constraints from retrieved sources",
+                "evaluation failures and alternative approaches",
             ]
-            hypothesis_angles = ["market-making edge", "adverse-selection mitigation", "entropy-guided exploration"]
-            strategy = "Ground the challenge in prediction-market and market-making literature before optimizing strategy code."
+            hypothesis_angles = ["evidence-backed strategy direction", "risk mitigation", "alternative approach"]
+            strategy = "Ground the challenge in prompt-derived and retrieved evidence before optimizing strategy code."
         elif task_type == "bounded":
             search_angles = [
                 "baseline evidence",
@@ -493,10 +493,7 @@ class Orchestrator:
         retriever = self.config.retriever.lower()
         strategy_goal = goal
         if "prediction_market" in set(plan.topics) and _is_prediction_market_challenge_goal(goal, self.config.evaluator_name):
-            strategy_goal = (
-                f"{goal} prediction market order book market making adverse selection "
-                "stale quotes retail order flow inventory risk"
-            )
+            strategy_goal = goal
         if retriever == "local":
             return [
                 SourceStrategyItem(
@@ -1565,13 +1562,9 @@ def _fallback_prompt_topics(goal: str) -> set[str]:
 def _topic_query_lenses(topics: set[str]) -> list[str]:
     queries: list[str] = []
     if "prediction_market" in topics:
-        queries.append("prediction market limit order book market making adverse selection arbitrage retail order flow")
-        if "amm" in topics:
-            queries.append("LMSR automated market maker prediction markets liquidity cost function")
-        else:
-            queries.append("prediction market trading strategies calibration market scoring rules arbitrage")
-        queries.append("prediction market challenge orderbook market making simulator strategy implementation")
-        queries.append("market making adverse selection stale quotes inventory skew cancel widen quotes")
+        queries.append("prediction market challenge evaluation strategy implementation")
+        queries.append("prediction market trading strategy empirical evaluation")
+        queries.append("prediction market simulator strategy benchmark")
     if "prediction_markets" in topics:
         queries.append("machine learning prediction markets forecasting calibration market efficiency")
         queries.append("prediction market prices probability forecasting machine learning")
@@ -1582,12 +1575,12 @@ def _topic_query_lenses(topics: set[str]) -> list[str]:
         queries.append("machine learning asset pricing empirical finance")
         queries.append("limit order book deep learning market prediction")
     if "amm" in topics:
-        queries.append("LMSR automated market maker prediction markets liquidity cost function")
+        queries.append("automated market maker prediction markets liquidity cost function")
         queries.append("constant product automated market maker arbitrage inventory risk")
     if "entropy" in topics:
         queries.append("entropy regularization exploration optimization strategy stochastic search")
     if "options" in topics:
-        queries.append("options market making volatility hedging adverse selection risk controls")
+        queries.append("options market making volatility hedging risk controls")
     if "agents" in topics:
         queries.append("LLM agents tool use planning execution memory evaluation benchmark")
     if "neuroscience" in topics:
