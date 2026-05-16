@@ -84,6 +84,9 @@ class ArtifactStore:
         self.cost_path = self.root / "cost.json"
         self.sqlite_path = sqlite_path or self.root.parent / "world_model.sqlite"
         self.report_path = self.root / "final_report.md"
+        self.report_tex_path = self.root / "final_report.tex"
+        self.report_pdf_path = self.root / "final_report.pdf"
+        self.report_preview_path = self.root / "final_report_preview.png"
         self.prd_path = self.root / "prd.json"
         self.optimizer_seed_context_path = self.root / "optimizer_seed_context.json"
         self.optimized_candidate_path = self.root / "optimized_candidate.txt"
@@ -335,6 +338,24 @@ class ArtifactStore:
                     )
                 )
         return self.report_path
+
+    def write_report_tex(self, text: str) -> Path:
+        self._snapshot_before_write(self.report_tex_path, "before writing final report TeX")
+        self.report_tex_path.write_text(text, encoding="utf-8")
+        self._record_artifact_write(self.report_tex_path, "report_tex")
+        return self.report_tex_path
+
+    def write_report_pdf(self, payload: bytes) -> Path:
+        self._snapshot_before_write(self.report_pdf_path, "before writing final report PDF")
+        self.report_pdf_path.write_bytes(payload)
+        self._record_artifact_write(self.report_pdf_path, "report_pdf")
+        return self.report_pdf_path
+
+    def write_report_preview(self, payload: bytes) -> Path:
+        self._snapshot_before_write(self.report_preview_path, "before writing final report preview")
+        self.report_preview_path.write_bytes(payload)
+        self._record_artifact_write(self.report_preview_path, "report_preview")
+        return self.report_preview_path
 
     def write_prd(self, payload: dict[str, Any]) -> Path:
         self._snapshot_before_write(self.prd_path, "before writing PRD")

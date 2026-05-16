@@ -9,12 +9,13 @@ import tty
 from pathlib import Path
 from typing import Callable, Optional
 
+from .model_catalog import format_model_catalog, model_choices, resolve_model_selection
 from .orchestrator import HarnessConfig, Orchestrator
 
 
 TASK_MODE_CHOICES = ("auto", "research", "optimize", "optimize_query")
-RETRIEVER_CHOICES = ("auto", "local", "arxiv", "openalex", "github", "web", "docs_blogs", "twitter", "memory")
-LLM_PROVIDER_CHOICES = ("auto", "openai", "local")
+RETRIEVER_CHOICES = ("auto", "local", "arxiv", "openalex", "semantic_scholar", "github", "web", "docs_blogs", "twitter", "memory", "alchemy")
+LLM_PROVIDER_CHOICES = ("auto", "openai", "anthropic", "local", "multi")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -73,12 +74,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--llm-provider",
         choices=LLM_PROVIDER_CHOICES,
         default=os.environ.get("RESEARCH_HARNESS_LLM_PROVIDER", "auto"),
-        help="LLM provider for agent proposal, judging, and synthesis. Auto uses OpenAI when OPENAI_API_KEY is set.",
+        help="LLM provider for agent proposal, judging, and synthesis. Auto infers provider from --llm-model when possible.",
     )
     parser.add_argument(
         "--llm-model",
-        default=os.environ.get("RESEARCH_HARNESS_LLM_MODEL", "gpt-5.2"),
-        help="LLM model name used when the selected provider is live.",
+        default=os.environ.get("RESEARCH_HARNESS_LLM_MODEL", "openai/gpt-5.2"),
+        help="LLM model id/name. Use provider/model ids like openai/gpt-5.2, anthropic/claude-sonnet-4-6, or all-configured.",
+    )
+    parser.add_argument(
+        "--list-llm-models",
+        action="store_true",
+        help="Print the configured model catalog and exit.",
     )
     parser.add_argument(
         "--quiet",
@@ -297,11 +303,13 @@ def configure_interactive_run(
             ("local", "Bundled offline corpus"),
             ("arxiv", "arXiv"),
             ("openalex", "OpenAlex"),
+            ("semantic_scholar", "Semantic Scholar"),
             ("github", "GitHub"),
             ("web", "General web"),
             ("docs_blogs", "Docs and blogs"),
             ("twitter", "Twitter/X"),
             ("memory", "Stored run memory"),
+            ("alchemy", "Alchemy blockchain data (requires ALCHEMY_API_KEY)"),
         ],
         default=args.retriever or "auto",
         input_func=input_func,
@@ -314,6 +322,16 @@ def configure_interactive_run(
         input_func=input_func,
         output_func=output_func,
     )
+    selected_model = prompt_choice(
+        "Which model/lab should run the harness?",
+        model_choices(),
+        default=args.llm_model or "openai/gpt-5.2",
+        input_func=input_func,
+        output_func=output_func,
+        key_reader=key_reader,
+    )
+    args.llm_model = selected_model
+    args.llm_provider, args.llm_model = resolve_model_selection(args.llm_provider, args.llm_model)
     output_func("")
     output_func("Starting run.")
     return args
@@ -340,6 +358,10 @@ def main() -> None:
     load_dotenv(Path(".env.local"), override=True)
     parser = build_parser()
     args = parser.parse_args()
+    if args.list_llm_models:
+        print(format_model_catalog())
+        return
+    args.llm_provider, args.llm_model = resolve_model_selection(args.llm_provider, args.llm_model)
     if args.interactive or not args.goal:
         if not sys.stdin.isatty():
             parser.error(

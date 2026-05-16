@@ -4,9 +4,12 @@ import asyncio
 import contextlib
 import io
 import json
+import os
 import sqlite3
 import tempfile
+import textwrap
 import unittest
+import unittest.mock
 from pathlib import Path
 
 from challenges.prediction_market import prediction_market_score
@@ -14,22 +17,102 @@ from research_harness.benchmark import collect_runs, write_outputs
 from research_harness.cli import build_parser, configure_interactive_run
 from research_harness.evals import (
     EvaluationHarness,
+    EvalTask,
     GraderResult,
     aggregate_results,
     default_eval_suite,
+    default_graders,
     edge_eval_suite,
     graph_trajectory_match,
     trajectory_match,
 )
-from research_harness.loops import EvaluatorRegistry, ResearchLoop, TaskRouter
+from research_harness.agents import SynthesisAgent
+from research_harness.llm import LLMClient, LLMError
+from research_harness.loops import EvaluatorRegistry, EvolutionaryOuterLoop, ResearchLoop, TaskRouter
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
-from research_harness.schemas import Claim, Contradiction, Hypothesis, RunRecord, Source, Variant
-from research_harness.search import LocalCorpusSearch, OpenAlexSearch, _parse_arxiv_feed
+from research_harness.schemas import Claim, Contradiction, Hypothesis, RunRecord, Source, Variant, VariantEvaluation
+from research_harness.search import CorpusDocument, LocalCorpusSearch, OpenAlexSearch, SemanticScholarSearch, _parse_arxiv_feed, _score_documents
 from research_harness.sessions import SessionStore
 from research_harness.store import ArtifactStore
 
 
 class SmokeTest(unittest.TestCase):
+    def test_llm_failures_are_recorded_in_cost_history(self) -> None:
+        import urllib.error
+
+        body = io.BytesIO(b'{"error":{"message":"max_tokens is not supported"}}')
+        error = urllib.error.HTTPError(
+            url="https://api.openai.com/v1/chat/completions",
+            code=400,
+            msg="Bad Request",
+            hdrs=None,
+            fp=body,
+        )
+        client = LLMClient(provider="openai", model="gpt-5.2", api_key="sk-test")
+
+        with unittest.mock.patch("urllib.request.urlopen", side_effect=error):
+            with self.assertRaises(LLMError):
+                client.complete("system", "user", max_output_tokens=10)
+
+        self.assertEqual(client.cost_breakdown()["model_call_count"], 1)
+        self.assertEqual(client.call_history[0]["status"], "failed")
+        self.assertIn("max_tokens is not supported", client.call_history[0]["error"])
+
+    def test_llm_model_catalog_resolves_openai_and_anthropic_labs(self) -> None:
+        from research_harness.model_catalog import configured_model_pool, model_choices, resolve_model_selection
+
+        with unittest.mock.patch.dict(os.environ, {"RESEARCH_HARNESS_LLM_MODELS": ""}, clear=False):
+            choices = dict(model_choices())
+
+            self.assertIn("all-configured", choices)
+            self.assertIn("openai/gpt-5.5", choices)
+            self.assertIn("anthropic/claude-opus-4-6", choices)
+            self.assertIn("anthropic/claude-sonnet-4-6", choices)
+            self.assertIn("openai/gpt-5.2", choices)
+            self.assertIn("anthropic/claude-sonnet-4-5", choices)
+            self.assertEqual(resolve_model_selection("auto", "anthropic/claude-sonnet-4-5"), ("anthropic", "claude-sonnet-4-5"))
+            self.assertEqual(resolve_model_selection("auto", "openai/gpt-5.2"), ("openai", "gpt-5.2"))
+            self.assertEqual(resolve_model_selection("auto", "all-configured"), ("multi", "all-configured"))
+
+        with unittest.mock.patch.dict(os.environ, {"RESEARCH_HARNESS_LLM_MODELS": "openai/custom-a,local/local-deterministic-fallback"}, clear=False):
+            choices = dict(model_choices())
+            pool = configured_model_pool()
+
+            self.assertIn("openai/custom-a", choices)
+            self.assertIn("openai/gpt-5.5", choices)
+            self.assertEqual([option.id for option in pool], ["openai/custom-a", "local/local-deterministic-fallback"])
+
+    def test_llm_client_uses_anthropic_key_for_claude_model(self) -> None:
+        with unittest.mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test", "OPENAI_API_KEY": ""}, clear=False):
+            client = LLMClient(provider="auto", model="anthropic/claude-sonnet-4-5")
+
+        self.assertEqual(client.provider, "anthropic")
+        self.assertEqual(client.model, "claude-sonnet-4-5")
+        self.assertTrue(client.is_live)
+
+    def test_llm_client_all_configured_round_robins_available_models(self) -> None:
+        env = {
+            "RESEARCH_HARNESS_LLM_MODELS": "openai/gpt-test-a,anthropic/claude-test-b,local/local-deterministic-fallback",
+            "OPENAI_API_KEY": "sk-test",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+        }
+        with unittest.mock.patch.dict(os.environ, env, clear=False):
+            client = LLMClient(provider="auto", model="all-configured")
+
+        def fake_openai(_system: str, _user: str, **_kwargs: object):
+            return type("Response", (), {"text": "openai", "model": client.model, "provider": "openai", "prompt_tokens": 1, "completion_tokens": 1, "cost": 0.0})()
+
+        def fake_anthropic(_system: str, _user: str, **_kwargs: object):
+            return type("Response", (), {"text": "anthropic", "model": client.model, "provider": "anthropic", "prompt_tokens": 1, "completion_tokens": 1, "cost": 0.0})()
+
+        with unittest.mock.patch.object(client, "_openai_response", side_effect=fake_openai), unittest.mock.patch.object(client, "_anthropic_response", side_effect=fake_anthropic):
+            responses = [client.complete("s", "u") for _ in range(4)]
+
+        self.assertEqual(client.provider, "multi")
+        self.assertEqual(client.model, "all-configured")
+        self.assertEqual([response.provider for response in responses], ["openai", "anthropic", "local", "openai"])
+        self.assertEqual([call["model"] for call in client.call_history], ["gpt-test-a", "claude-test-b", "local-deterministic-fallback", "gpt-test-a"])
+
     def test_cli_allows_selection_based_setup_without_goal(self) -> None:
         parser = build_parser()
         args = parser.parse_args([])
@@ -46,7 +129,7 @@ class SmokeTest(unittest.TestCase):
                 "5",
             ]
         )
-        keys = iter(["down", "down", "enter", "down", "enter", "enter"])
+        keys = iter(["down", "down", "enter", "down", "enter", "enter", "enter"])
         prompts: list[str] = []
 
         with contextlib.redirect_stdout(io.StringIO()):
@@ -62,7 +145,8 @@ class SmokeTest(unittest.TestCase):
         self.assertEqual(configured.evaluator, "length_score")
         self.assertEqual(configured.retriever, "local")
         self.assertEqual(configured.max_iterations, 5)
-        self.assertEqual(configured.llm_provider, "auto")
+        self.assertEqual(configured.llm_provider, "openai")
+        self.assertEqual(configured.llm_model, "gpt-5.2")
         self.assertFalse(configured.quiet)
         self.assertFalse(any("Choose a number" in prompt for prompt in prompts))
 
@@ -70,7 +154,7 @@ class SmokeTest(unittest.TestCase):
         parser = build_parser()
         args = parser.parse_args(["--interactive", "--retriever", "local"])
         text_answers = iter(["optimizing prediction market making", "12"])
-        keys = iter(["down", "down", "enter", "down", "down", "enter", "enter"])
+        keys = iter(["down", "down", "enter", "down", "down", "enter", "enter", "enter"])
 
         with contextlib.redirect_stdout(io.StringIO()):
             configured = configure_interactive_run(
@@ -337,6 +421,13 @@ class SmokeTest(unittest.TestCase):
             self.assertEqual(len(store.list("loop_continuation_decisions")), len(store.list("evolution_rounds")))
             self.assertTrue(all(row["decision"] in {"continue", "exit"} for row in store.list("loop_continuation_decisions")))
             self.assertTrue(store.report_path.exists())
+            self.assertTrue(store.report_tex_path.exists())
+            self.assertTrue(store.report_pdf_path.exists())
+            self.assertTrue(store.report_preview_path.exists())
+            self.assertGreater(store.report_preview_path.stat().st_size, 1000)
+            self.assertIn(r"\section{Key Takeaways}", store.report_tex_path.read_text(encoding="utf-8"))
+            self.assertIn("## Key Takeaways", store.report_path.read_text(encoding="utf-8"))
+            self.assertTrue(any(source.get("evidence_sections") for source in store.list("sources")))
             self.assertTrue(store.prd_path.exists())
             prd = json.loads(store.prd_path.read_text(encoding="utf-8"))
             self.assertGreaterEqual(len(prd["organized_tasks"]), 5)
@@ -486,6 +577,55 @@ class SmokeTest(unittest.TestCase):
             self.assertGreater(len(store.list("failed_paths")), 0)
             self.assertEqual(store.list("variant_evaluations")[0]["metrics"]["fallback_used"], 1.0)
 
+    def test_retriever_rate_limits_and_empty_results_fall_back_to_local(self) -> None:
+        import urllib.error
+
+        class FakeBackend:
+            def __init__(self, name: str):
+                self.tool_name = name
+
+            def search(self, _query: str, _limit: int):
+                if self.tool_name in {"semantic_scholar", "arxiv"}:
+                    raise urllib.error.HTTPError("https://example.test", 429, "Too Many Requests", None, None)
+                if self.tool_name in {"openalex", "wikipedia"}:
+                    return []
+                return [
+                    (
+                        CorpusDocument(
+                            url="local://rate-limit-fallback",
+                            title="Local fallback evidence",
+                            author="Fixture",
+                            date="2026",
+                            source_type="paper",
+                            summary="Local fallback evidence keeps a rate-limited run from becoming empty.",
+                            claims=["Local fallback evidence supports continuity after live API rate limits."],
+                            tags=["fallback"],
+                            credibility_score=0.6,
+                        ),
+                        0.5,
+                    )
+                ]
+
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory), echo_progress=False)
+            loop = ResearchLoop("run_test", lambda name: FakeBackend(name))
+            variant = Variant(
+                run_id="run_test",
+                outer_iteration=1,
+                kind="query",
+                payload="agent reasoning benchmark literature",
+                parent_ids=[],
+                metadata={},
+            )
+
+            backend, results, notes = asyncio.run(loop._search_with_fallback("semantic_scholar", variant, 8, store))
+
+            self.assertEqual(backend.tool_name, "local")
+            self.assertEqual(len(results), 1)
+            self.assertTrue(any("semantic_scholar failed" in note for note in notes))
+            self.assertTrue(any("openalex fallback used" in note for note in notes))
+            self.assertTrue(any("local fallback used" in note for note in notes))
+
     def test_optimize_query_prediction_market_challenge(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
@@ -570,6 +710,115 @@ class SmokeTest(unittest.TestCase):
             self.assertNotIn("Brain Tumor", report)
             self.assertNotIn("G*Power", report)
 
+    def test_research_report_filters_placeholder_and_challenge_references(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            run = RunRecord(
+                id="run_ai_agents",
+                user_goal="find me research/data which proves that ai agents will be everywhere and white collar work will be done by research agents",
+                task_type="open_ended",
+                task_mode="research",
+                product_agent="research",
+                harness_config_id="test",
+                prompt_versions={},
+                harness_config_snapshot={},
+            )
+            good = store.add_source(
+                Source(
+                    url="https://doi.org/10.1007/s11704-024-40231-1",
+                    title="A survey on large language model based autonomous agents",
+                    author="Frontiers of Computer Science",
+                    date="2024",
+                    source_type="paper",
+                    summary="Large language model based autonomous agents use tools, planning, and reasoning.",
+                    relevance_score=0.92,
+                    credibility_score=0.9,
+                    evidence_sections={"abstract": "LLM based autonomous agents can plan, use tools, and perform multi-step tasks."},
+                )
+            )
+            placeholder = store.add_source(
+                Source(
+                    url="https://example.org/multi-agent-review-quality-2025",
+                    title="Parallel Agent Review Improves Evidence Recall In Literature Tasks",
+                    author="Demo Corpus",
+                    date="2025",
+                    source_type="demo",
+                    summary="Synthetic fixture source that should not appear beside real literature.",
+                    relevance_score=0.5,
+                    credibility_score=0.2,
+                )
+            )
+            challenge = store.add_source(
+                Source(
+                    url="challenges/prediction_market/spec.md",
+                    title="Prediction Market Strategy Design Notes",
+                    author="Challenge",
+                    date="2026",
+                    source_type="local",
+                    summary="Prediction market challenge notes.",
+                    relevance_score=0.4,
+                    credibility_score=0.3,
+                )
+            )
+            store.add_claim(
+                Claim(
+                    text="LLM autonomous agents are defined by planning, tool use, and multi-step task execution.",
+                    source_ids=[good.id],
+                    confidence=0.85,
+                    support_level="strong",
+                    created_by_agent="test",
+                    run_id=run.id,
+                )
+            )
+            store.add_claim(
+                Claim(
+                    text="This synthetic demo article says reviewer agents improve recall.",
+                    source_ids=[placeholder.id],
+                    confidence=0.6,
+                    support_level="medium",
+                    created_by_agent="test",
+                    run_id=run.id,
+                )
+            )
+            store.add_claim(
+                Claim(
+                    text="Prediction market orderbook strategies need inventory controls.",
+                    source_ids=[challenge.id],
+                    confidence=0.6,
+                    support_level="medium",
+                    created_by_agent="test",
+                    run_id=run.id,
+                )
+            )
+
+            agent = SynthesisAgent(
+                name="test_synthesis",
+                role="synthesis_agent",
+                prompt_template="test",
+                llm=LLMClient(provider="local"),
+            )
+            asyncio.run(agent.run(run, store))
+
+            report = store.report_path.read_text(encoding="utf-8")
+            tex = store.report_tex_path.read_text(encoding="utf-8")
+            combined = report + "\n" + tex
+            self.assertIn("Key Takeaways", tex)
+            self.assertIn(good.url, combined)
+            self.assertNotIn("example.org", combined)
+            self.assertNotIn("Prediction Market Strategy Design Notes", combined)
+            self.assertNotIn("challenges/prediction_market", combined)
+
+            task = EvalTask(
+                id="pure_research",
+                name="pure research",
+                prompt=run.user_goal,
+                task_mode="research",
+                success_criteria=[],
+                grader_ids=["report_no_fabricated_sources"],
+            )
+            result = default_graders()["report_no_fabricated_sources"].grade(task, store)
+            self.assertTrue(result.passed, result.assertions)
+
     def test_prediction_market_dont_stop_profit_target_keeps_prd_incomplete_until_met(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
@@ -598,6 +847,7 @@ class SmokeTest(unittest.TestCase):
             optimizer_task = next(task for task in prd["organized_tasks"] if task["title"] == "Run optimizer variants from query seed context")
 
             self.assertEqual(run.product_agent, "challenge")
+            self.assertEqual(run.status, "failed")
             self.assertGreaterEqual(len(query_rounds), 2)
             self.assertEqual(len(optimize_rounds), 3)
             self.assertEqual(prd["objective"]["kind"], "profit_usd")
@@ -605,6 +855,12 @@ class SmokeTest(unittest.TestCase):
             self.assertFalse(prd["objective"]["met"])
             self.assertEqual(optimizer_task["status"], "failed")
             self.assertFalse(optimizer_task["passes"])
+            downstream = [
+                task for task in prd["organized_tasks"]
+                if task["title"] in {"Critique ranked query and optimizer results", "Synthesize optimize-query run report"}
+            ]
+            self.assertTrue(downstream)
+            self.assertTrue(all(task["status"] == "pending" for task in downstream))
             self.assertEqual(optimization_result["objective_target"]["target"], 10.0)
             self.assertFalse(optimization_result["objective_target"]["met"])
 
@@ -657,9 +913,13 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertIn("llm_research_quality_challenger", research_task.grader_ids)
         self.assertIn("llm_hypothesis_novelty_challenger", research_task.grader_ids)
         self.assertIn("llm_open_ended_judgment_challenger", research_task.grader_ids)
+        self.assertIn("literature_section_evidence", research_task.grader_ids)
+        self.assertIn("hypothesis_evidence_matrix", research_task.grader_ids)
         with tempfile.TemporaryDirectory() as directory:
             registry = EvaluationHarness(output_root=Path(directory)).grader_registry
             self.assertEqual(registry["prd_tasks_executed_deterministic"].grader_type, "code")
+            self.assertEqual(registry["literature_section_evidence"].grader_type, "code")
+            self.assertEqual(registry["hypothesis_evidence_matrix"].grader_type, "code")
             self.assertEqual(registry["llm_research_quality_challenger"].grader_type, "model")
 
     def test_edge_eval_suite_defines_failure_prone_cases(self) -> None:
@@ -851,6 +1111,167 @@ class ArxivRetrieverTest(unittest.TestCase):
         self.assertNotIn("lmsr", queries)
         self.assertNotIn("adverse selection", queries)
 
+    def test_llm_planner_keywords_drive_paper_search_queries(self) -> None:
+        class FakeKeywordLLM:
+            is_live = True
+
+            def complete_json(self, _system: str, user: str, **_kwargs: object) -> dict[str, object]:
+                self.user_payload = json.loads(user)
+                return {
+                    "task_type": "open_ended",
+                    "topics": ["statistical_learning"],
+                    "topic_queries": [
+                        '"statistical learning theory" "generalization bounds"',
+                        '"supervised learning" "bias variance tradeoff"',
+                        '"benchmark datasets" "model evaluation"',
+                        '"representation learning" "deep neural networks"',
+                    ],
+                    "rationale": "Converted the slug-like user request into precise literature-search phrases.",
+                }
+
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto"),
+        )
+        fake_llm = FakeKeywordLLM()
+        orchestrator.llm = fake_llm  # type: ignore[assignment]
+
+        goal = "find-me-data-or-papers-help-me-understand-machine-learning-depth"
+        plan = orchestrator.create_plan(goal)
+        strategy = orchestrator.create_source_strategy(goal, plan)
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertIn("statistical_learning", plan.topics)
+        self.assertIn('"statistical learning theory"', queries)
+        self.assertIn('"benchmark datasets"', queries)
+        self.assertIn("selected_evaluator", fake_llm.user_payload)
+        self.assertNotIn("workplace automation", queries)
+        self.assertNotIn("autonomous multi-agent", queries)
+
+    def test_search_scoring_uses_specific_content_terms_not_prompt_filler(self) -> None:
+        documents = [
+            CorpusDocument(
+                url="https://doi.org/10.1007/s10994-011-5255-4",
+                title="Scikit-learn: Machine Learning in Python",
+                author="Pedregosa et al.",
+                date="2011",
+                source_type="paper",
+                summary="A software library for supervised and unsupervised machine learning.",
+                claims=["Scikit-learn supports machine learning model evaluation."],
+                tags=["machine learning", "python"],
+                credibility_score=0.8,
+            ),
+            CorpusDocument(
+                url="https://doi.org/10.1093/nar/gkv007",
+                title="limma powers differential expression analyses for RNA-sequencing and microarray studies",
+                author="Ritchie et al.",
+                date="2015",
+                source_type="paper",
+                summary="An R/Bioconductor package for gene expression experiments and RNA sequencing.",
+                claims=["limma provides differential expression analysis for genomics."],
+                tags=["bioinformatics", "genomics"],
+                credibility_score=0.76,
+            ),
+        ]
+
+        scored = _score_documents("machine learning papers datasets foundations", documents)
+
+        self.assertEqual([document.title for document, _score in scored], ["Scikit-learn: Machine Learning in Python"])
+
+    def test_paper_requests_use_scholarly_api_strategy_not_local_memory(self) -> None:
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="auto"),
+        )
+
+        goal = "find me papers or sources which go in depth on machine learning for stock or prediction markets"
+        plan = orchestrator.create_plan(goal)
+        strategy = orchestrator.create_source_strategy(goal, plan)
+        retrievers = {item.retriever for item in strategy}
+        queries = " ".join(query for item in strategy for query in item.queries).lower()
+
+        self.assertIn("openalex", retrievers)
+        self.assertIn("semantic_scholar", retrievers)
+        self.assertIn("arxiv", retrievers)
+        self.assertNotIn("local", retrievers)
+        self.assertNotIn("memory", retrievers)
+        self.assertNotIn("github", retrievers)
+        self.assertIn("machine learning", queries)
+        self.assertIn("stock", queries)
+        self.assertIsInstance(orchestrator._retriever_for("semantic_scholar"), SemanticScholarSearch)
+
+    def test_challenge_seed_context_carries_retrieved_literature(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            run = RunRecord(
+                id="001_run_challenge",
+                user_goal="prediction market challenge",
+                task_type="bounded",
+                harness_config_id="test",
+                prompt_versions={},
+                harness_config_snapshot={},
+            )
+            store.add_run(run)
+            source = store.add_source(
+                Source(
+                    url="https://example.org/lmsr",
+                    title="Prediction Market Scoring Rules",
+                    author="Researcher",
+                    date="2020",
+                    source_type="paper",
+                    summary="Market scoring rules motivate liquidity costs, inventory, and adverse-selection controls.",
+                    relevance_score=0.9,
+                    credibility_score=0.8,
+                )
+            )
+            variant = Variant(
+                run_id=run.id,
+                outer_iteration=1,
+                kind="query",
+                payload="prediction market LMSR adverse selection market making",
+                parent_ids=[],
+                metadata={"retriever": "local"},
+            )
+            store.add_variant(variant)
+            claim = store.add_claim(
+                Claim(
+                    text="Widening quotes reduces adverse-selection losses in market making.",
+                    source_ids=[source.id],
+                    confidence=0.78,
+                    support_level="strong",
+                    created_by_agent=f"research_loop:{variant.id}",
+                    run_id=run.id,
+                )
+            )
+            evaluation = VariantEvaluation(
+                run_id=run.id,
+                variant_id=variant.id,
+                inner_loop="optimize_query",
+                score=0.8,
+                metrics={},
+                judge_scores=[0.8],
+                summary="Retrieved source-backed market-making evidence.",
+                passed=True,
+            )
+            outer = EvolutionaryOuterLoop(
+                run_id=run.id,
+                goal=run.user_goal,
+                task_mode="optimize_query",
+                source_strategy=[],
+                search_factory=lambda _name: LocalCorpusSearch(Path("examples/corpus/research_corpus.json")),
+                evaluator_name="prediction_market",
+            )
+
+            seed_context = outer._build_optimizer_seed_context(store, type("Result", (), {"ranked_evaluations": [evaluation]})())
+            seed_variant = outer._seed_context_variants(seed_context)[0]
+
+        top_finding = seed_context["top_query_findings"][0]
+        self.assertEqual(top_finding["supporting_claims"][0]["id"], claim.id)
+        self.assertEqual(top_finding["supporting_sources"][0]["title"], "Prediction Market Scoring Rules")
+        self.assertIn("Widening quotes", seed_variant.metadata["seed_literature"]["claims"][0]["text"])
+
 
 class SkillSpecTest(unittest.TestCase):
     def test_repo_skills_follow_agent_skills_frontmatter_spec(self) -> None:
@@ -886,6 +1307,194 @@ def _simple_frontmatter(frontmatter: str) -> dict[str, str]:
         key, value = line.split(":", 1)
         fields[key.strip()] = value.strip().strip('"').strip("'")
     return fields
+
+
+class PredictionMarketSandboxTest(unittest.TestCase):
+    """Tests for the local sandbox evaluation path.
+
+    These run entirely offline — no upstream repo, no uv, no network.
+    They exercise _run_prediction_market_sandbox and its fallback chain
+    (_prediction_market_local_semantic_score) directly.
+    """
+
+    _NOOP = textwrap.dedent("""\
+        from orderbook_pm_challenge.strategy import BaseStrategy
+        from orderbook_pm_challenge.types import CancelAll, PlaceOrder, Side, StepState
+
+        class Strategy(BaseStrategy):
+            def on_step(self, state: StepState):
+                return [CancelAll()]
+    """)
+
+    _PASSIVE_MM = textwrap.dedent("""\
+        from orderbook_pm_challenge.strategy import BaseStrategy
+        from orderbook_pm_challenge.types import CancelAll, PlaceOrder, Side, StepState
+
+        class Strategy(BaseStrategy):
+            def on_step(self, state: StepState):
+                bid = max(1, (state.competitor_best_bid_ticks or 45) - 6)
+                ask = min(99, (state.competitor_best_ask_ticks or 55) + 6)
+                return [
+                    CancelAll(),
+                    PlaceOrder(side=Side.BUY,  price_ticks=bid, quantity=0.5),
+                    PlaceOrder(side=Side.SELL, price_ticks=ask, quantity=0.5),
+                ]
+    """)
+
+    _RUNTIME_ERROR = textwrap.dedent("""\
+        from orderbook_pm_challenge.strategy import BaseStrategy
+        from orderbook_pm_challenge.types import CancelAll, StepState
+
+        class Strategy(BaseStrategy):
+            def on_step(self, state: StepState):
+                raise RuntimeError("intentional failure in on_step")
+    """)
+
+    def _strategy_path(self, directory: str, code: str, name: str = "strategy.py") -> Path:
+        path = Path(directory) / name
+        path.write_text(code, encoding="utf-8")
+        return path
+
+    # ------------------------------------------------------------------ happy path
+
+    def test_sandbox_noop_strategy_returns_zero_edge(self) -> None:
+        from research_harness.loops import _run_prediction_market_sandbox
+        with tempfile.TemporaryDirectory() as d:
+            result = _run_prediction_market_sandbox(self._strategy_path(d, self._NOOP))
+
+        self.assertTrue(result["sandbox_executed"])
+        self.assertFalse(result["official_measured"])
+        self.assertEqual(result["score_source"], "local_sandbox_strategy_execution")
+        self.assertAlmostEqual(float(result["mean_edge"]), 0.0, places=4)
+        self.assertEqual(int(result["simulations"]), 200)
+        self.assertIn("success_count", result)
+        self.assertIn("failure_count", result)
+        self.assertIn("actions_seen", result)
+
+    def test_sandbox_passive_mm_strategy_produces_positive_edge(self) -> None:
+        from research_harness.loops import _run_prediction_market_sandbox
+        with tempfile.TemporaryDirectory() as d:
+            result = _run_prediction_market_sandbox(self._strategy_path(d, self._PASSIVE_MM))
+
+        self.assertTrue(result["sandbox_executed"])
+        self.assertGreater(int(result["actions_seen"]), 0)
+        self.assertGreater(
+            float(result["mean_edge"]),
+            0.0,
+            "A market-making strategy quoting outside the competitor ladder should yield positive mean edge; "
+            "negative edge indicates inventory/cash state is leaking across simulations.",
+        )
+
+    def test_sandbox_result_keys_match_upstream_schema(self) -> None:
+        from research_harness.loops import _run_prediction_market_sandbox
+        with tempfile.TemporaryDirectory() as d:
+            result = _run_prediction_market_sandbox(self._strategy_path(d, self._NOOP))
+
+        required = {"official_measured", "mean_edge", "mean_arb_edge", "mean_retail_edge",
+                    "success_count", "failure_count", "simulations", "score_source"}
+        self.assertTrue(required.issubset(result.keys()), f"Missing keys: {required - result.keys()}")
+
+    # ------------------------------------------------------------------ fallback paths
+
+    def test_sandbox_falls_back_on_syntax_error(self) -> None:
+        from research_harness.loops import _run_prediction_market_sandbox
+        with tempfile.TemporaryDirectory() as d:
+            path = self._strategy_path(d, "class Strategy: def on_step(self ???")
+            result = _run_prediction_market_sandbox(path)
+
+        self.assertFalse(result.get("sandbox_executed", True))
+        self.assertIn("sandbox_error", result)
+        self.assertIn("mean_edge", result)
+
+    def test_sandbox_counts_runtime_errors_as_failures_not_crash(self) -> None:
+        # on_step exceptions are caught per-step, so the process still exits 0.
+        from research_harness.loops import _run_prediction_market_sandbox
+        with tempfile.TemporaryDirectory() as d:
+            result = _run_prediction_market_sandbox(self._strategy_path(d, self._RUNTIME_ERROR))
+
+        self.assertIn("mean_edge", result)
+        self.assertAlmostEqual(float(result["mean_edge"]), 0.0, places=4)
+
+    def test_sandbox_fallback_when_missing_strategy_class(self) -> None:
+        from research_harness.loops import _run_prediction_market_sandbox
+        no_class = "# no Strategy class defined here\nprint('oops')\n"
+        with tempfile.TemporaryDirectory() as d:
+            result = _run_prediction_market_sandbox(self._strategy_path(d, no_class))
+
+        self.assertFalse(result.get("sandbox_executed", True))
+        self.assertIn("mean_edge", result)
+
+    # ------------------------------------------------------------------ official → sandbox integration
+
+    def test_official_path_uses_sandbox_when_upstream_disabled(self) -> None:
+        from research_harness.loops import _run_prediction_market_official
+        with tempfile.TemporaryDirectory() as d:
+            path = self._strategy_path(d, self._NOOP)
+            prev = os.environ.get("PREDICTION_MARKET_USE_UPSTREAM")
+            os.environ["PREDICTION_MARKET_USE_UPSTREAM"] = "0"
+            try:
+                result = _run_prediction_market_official(path)
+            finally:
+                if prev is None:
+                    del os.environ["PREDICTION_MARKET_USE_UPSTREAM"]
+                else:
+                    os.environ["PREDICTION_MARKET_USE_UPSTREAM"] = prev
+
+        self.assertFalse(result.get("official_measured", True))
+        self.assertIn("error", result)
+        self.assertIn("mean_edge", result)
+
+    def test_official_path_result_is_not_measured_when_sandbox_used(self) -> None:
+        from research_harness.loops import _run_prediction_market_official
+        with tempfile.TemporaryDirectory() as d:
+            path = self._strategy_path(d, self._PASSIVE_MM)
+            prev = os.environ.get("PREDICTION_MARKET_USE_UPSTREAM")
+            os.environ["PREDICTION_MARKET_USE_UPSTREAM"] = "0"
+            try:
+                result = _run_prediction_market_official(path)
+            finally:
+                if prev is None:
+                    del os.environ["PREDICTION_MARKET_USE_UPSTREAM"]
+                else:
+                    os.environ["PREDICTION_MARKET_USE_UPSTREAM"] = prev
+
+        # official_measured must be False; only the upstream runner sets it True.
+        self.assertFalse(result["official_measured"])
+        self.assertNotEqual(result.get("score_source"), "upstream_orderbook_pm_challenge")
+
+
+@unittest.skipUnless(os.environ.get("RUN_PM_UPSTREAM") == "1", "Set RUN_PM_UPSTREAM=1 to test the uv run path against the upstream repo.")
+class PredictionMarketUpstreamLiveTest(unittest.TestCase):
+    """Gated live test: exercises the actual uv run … orderbook-pm … subprocess.
+
+    Requires the upstream prediction-market-challenge repo to be checked out at
+    one of the paths _find_pm_upstream_path() probes, or PREDICTION_MARKET_CHALLENGE_PATH set.
+    """
+
+    _NOOP = textwrap.dedent("""\
+        from orderbook_pm_challenge.strategy import BaseStrategy
+        from orderbook_pm_challenge.types import CancelAll, StepState
+
+        class Strategy(BaseStrategy):
+            def on_step(self, state: StepState):
+                return [CancelAll()]
+    """)
+
+    def test_uv_run_returns_official_measured_result(self) -> None:
+        import shutil
+        from research_harness.loops import _find_pm_upstream_path, _run_prediction_market_official
+        self.assertIsNotNone(shutil.which("uv"), "uv must be on PATH to run the upstream evaluator.")
+        self.assertIsNotNone(_find_pm_upstream_path(), "prediction-market-challenge repo not found.")
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "strategy.py"
+            path.write_text(self._NOOP, encoding="utf-8")
+            result = _run_prediction_market_official(path)
+
+        self.assertTrue(result["official_measured"])
+        self.assertEqual(result["score_source"], "upstream_orderbook_pm_challenge")
+        self.assertIn("mean_edge", result)
+        self.assertIsInstance(float(result["mean_edge"]), float)
+        self.assertGreaterEqual(int(result["simulations"]), 1)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
-# research-harness
+# research-agent
 
-A compact research and optimization harness for running agent loops, preserving run artifacts, and experimenting with evaluator-driven optimization tasks.
+A compact research and optimization agent for running agent loops, preserving run artifacts, and experimenting with evaluator-driven optimization tasks.
 
 ```text
 prompt → task ingestion → outer orchestrator → inner evaluator(s) → ranked variants → critique/synthesis → artifacts
@@ -62,7 +62,8 @@ To start from existing flags but finish by selection, use:
 | `--task-mode optimize_query` | Research approaches first, write seed context, then seed the optimizer. |
 | `--evaluator length_score \| prediction_market` | Select scoring function for optimize/optimize-query runs. |
 | `--retriever local \| auto` | `local` uses the bundled corpus; `auto` mixes live sources. |
-| `--llm-provider auto \| openai \| local` | `auto` uses OpenAI if `OPENAI_API_KEY` is set, otherwise falls back. |
+| `--llm-provider auto \| openai \| anthropic \| local` | `auto` infers the provider from `--llm-model` when possible. |
+| `--llm-model openai/gpt-5.2 \| anthropic/claude-sonnet-4-5 \| ...` | Select from the model catalog; run `--list-llm-models` to inspect it. |
 | `--max-iterations N` | Set outer-loop iteration budget. |
 | `--no-sessions` | Skip session JSONL logging for the run. |
 
@@ -104,7 +105,7 @@ Each run creates `outputs/<NNN>_run_<slug>/`:
 | `optimization_result.json` | Best score, candidate path, and official-result status. |
 | `optimal_code.py` | Universal code artifact for the best selected candidate. |
 | `solution.py` | Challenge-specific runnable solution (prediction-market only). |
-| `final_report.md` | Final synthesis report. |
+| `final_report.md` / `final_report.tex` / `final_report.pdf` / `final_report_preview.png` | Final synthesis report in Markdown plus LaTeX/PDF paper-style artifacts and an IDE-friendly image preview. |
 | `run_benchmark.html` | Per-run visual benchmark with Gantt timeline and decision DAG. |
 | `run_notebook.ipynb` | Notebook export with trace summaries, artifact counts, cost, and diagnosis data. |
 | `harness_diagnosis.json` | Component-level failure taxonomy, trace-pattern comparison, and debugger localization. |
@@ -129,9 +130,13 @@ Put secrets in `.env.local`:
 
 ```bash
 OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
 RESEARCH_HARNESS_LLM_PROVIDER=auto
-RESEARCH_HARNESS_LLM_MODEL=gpt-5.2
+RESEARCH_HARNESS_LLM_MODEL=all-configured
+RESEARCH_HARNESS_LLM_MODELS=openai/gpt-5.5,openai/gpt-5.2,anthropic/claude-opus-4-6,anthropic/claude-sonnet-4-6,anthropic/claude-sonnet-4-5,anthropic/claude-haiku-4-5,local/local-deterministic-fallback
 ```
+
+`all-configured` uses every available model in `RESEARCH_HARNESS_LLM_MODELS` round-robin. Providers without a valid key are skipped; the local fallback remains available for offline runs.
 
 ## Development
 

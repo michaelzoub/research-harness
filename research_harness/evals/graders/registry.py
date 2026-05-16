@@ -1,0 +1,95 @@
+from __future__ import annotations
+
+from ..types import Grader
+from .core import (
+    _grade_human_placeholder,
+    _grade_isolation_clean_trial,
+    _grade_mode_selected,
+    _grade_outcome_completed,
+    _grade_prd_tasks_executed,
+    _grade_prd_tasks_executed_deterministic,
+    _grade_report_artifact,
+    _grade_transcript_progress,
+)
+from .loop import (
+    _grade_graph_trajectory_match,
+    _grade_literature_grounding_present,
+    _grade_literature_refresh_on_stuck,
+    _grade_loop_no_score_regression,
+    _grade_multi_iteration_loop,
+    _grade_parallel_trial_isolation_unavailable,
+    _grade_trajectory_graph_artifact,
+    _grade_trajectory_match_modes,
+    _grade_trajectory_modes,
+)
+from .optimize import (
+    _grade_optimization_code_artifact,
+    _grade_optimize_query_phases,
+    _grade_optimize_score,
+    _grade_optimizer_skipped_without_evaluator,
+    _grade_research_search_budget,
+    _grade_seed_context,
+)
+from .prediction_market import (
+    _grade_no_repo_root_strategy_files,
+    _grade_prediction_market_artifact_containment,
+    _grade_prediction_market_candidate_files_only_in_outputs,
+    _grade_prediction_market_official_status,
+    _grade_prediction_market_proxy_score,
+    _grade_prediction_market_solution,
+)
+from .research import (
+    _grade_hypothesis_evidence_matrix,
+    _grade_literature_section_evidence,
+    _grade_llm_hypothesis_novelty_challenger,
+    _grade_llm_open_ended_judgment_challenger,
+    _grade_llm_research_quality_challenger,
+    _grade_prompt_output_relevance,
+    _grade_report_no_fabricated_sources,
+    _grade_report_rubric,
+    _grade_research_groundedness,
+)
+
+
+def default_graders() -> dict[str, Grader]:
+    return {
+        "outcome_completed": Grader("outcome_completed", "code", "outcome verification", 1.0, 1.0, _grade_outcome_completed),
+        "prd_tasks_executed": Grader("prd_tasks_executed", "code", "prd execution verification", 1.0, 1.0, _grade_prd_tasks_executed),
+        "prd_tasks_executed_deterministic": Grader("prd_tasks_executed_deterministic", "code", "deterministic PRD execution verification", 1.0, 1.0, _grade_prd_tasks_executed_deterministic),
+        "mode_selected": Grader("mode_selected", "code", "tool/output verification", 1.0, 1.0, _grade_mode_selected),
+        "artifact_report": Grader("artifact_report", "code", "artifact existence", 0.75, 1.0, _grade_report_artifact),
+        "research_groundedness": Grader("research_groundedness", "code", "groundedness assertions", 1.25, 0.8, _grade_research_groundedness),
+        "literature_section_evidence": Grader("literature_section_evidence", "code", "paper-section evidence verification", 1.0, 0.8, _grade_literature_section_evidence),
+        "hypothesis_evidence_matrix": Grader("hypothesis_evidence_matrix", "code", "hypothesis proof/counterpoint verification", 1.0, 0.8, _grade_hypothesis_evidence_matrix),
+        "report_no_fabricated_sources": Grader("report_no_fabricated_sources", "code", "source URL verification", 1.0, 1.0, _grade_report_no_fabricated_sources),
+        "transcript_progress": Grader("transcript_progress", "code", "transcript analysis", 0.75, 1.0, _grade_transcript_progress),
+        "model_report_rubric": Grader("model_report_rubric", "model", "deterministic rubric scoring", 0.8, 0.7, _grade_report_rubric),
+        "llm_research_quality_challenger": Grader("llm_research_quality_challenger", "model", "LLM challenger research-quality rubric", 0.8, 0.7, _grade_llm_research_quality_challenger),
+        "llm_hypothesis_novelty_challenger": Grader("llm_hypothesis_novelty_challenger", "model", "LLM challenger hypothesis novelty rubric", 0.6, 0.7, _grade_llm_hypothesis_novelty_challenger),
+        "llm_open_ended_judgment_challenger": Grader("llm_open_ended_judgment_challenger", "model", "LLM challenger open-ended judgment", 0.6, 0.7, _grade_llm_open_ended_judgment_challenger),
+        "optimize_score": Grader("optimize_score", "code", "outcome verification", 1.0, 0.01, _grade_optimize_score),
+        "optimization_code_artifact": Grader("optimization_code_artifact", "code", "artifact contract", 1.0, 1.0, _grade_optimization_code_artifact),
+        "seed_context": Grader("seed_context", "code", "artifact existence", 1.0, 1.0, _grade_seed_context),
+        "optimize_query_phases": Grader("optimize_query_phases", "code", "trace/phase verification", 1.0, 1.0, _grade_optimize_query_phases),
+        "prediction_market_solution": Grader("prediction_market_solution", "code", "static solution checks", 1.0, 1.0, _grade_prediction_market_solution),
+        "prediction_market_proxy_score": Grader("prediction_market_proxy_score", "code", "local proxy outcome verification", 1.0, 0.5, _grade_prediction_market_proxy_score),
+        "prediction_market_official_status": Grader("prediction_market_official_status", "code", "official-status verification", 1.0, 1.0, _grade_prediction_market_official_status),
+        "prediction_market_artifact_containment": Grader("prediction_market_artifact_containment", "code", "artifact containment", 1.0, 1.0, _grade_prediction_market_artifact_containment),
+        "prediction_market_candidate_files_only_in_outputs": Grader("prediction_market_candidate_files_only_in_outputs", "code", "artifact containment", 1.0, 1.0, _grade_prediction_market_candidate_files_only_in_outputs),
+        "no_repo_root_strategy_files": Grader("no_repo_root_strategy_files", "code", "artifact containment", 1.0, 1.0, _grade_no_repo_root_strategy_files),
+        "optimizer_skipped_without_evaluator": Grader("optimizer_skipped_without_evaluator", "code", "negative-path outcome verification", 1.0, 1.0, _grade_optimizer_skipped_without_evaluator),
+        "research_search_budget": Grader("research_search_budget", "code", "search budget verification", 1.0, 1.0, _grade_research_search_budget),
+        "trajectory_modes": Grader("trajectory_modes", "code", "trajectory subset/superset match", 1.0, 1.0, _grade_trajectory_modes),
+        "multi_iteration_loop": Grader("multi_iteration_loop", "code", "multi-round trajectory check", 1.0, 1.0, _grade_multi_iteration_loop),
+        "loop_no_score_regression": Grader("loop_no_score_regression", "code", "score regression check", 1.0, 1.0, _grade_loop_no_score_regression),
+        "literature_refresh_on_stuck": Grader("literature_refresh_on_stuck", "code", "stuck-loop literature trigger", 1.0, 1.0, _grade_literature_refresh_on_stuck),
+        "literature_grounding_present": Grader("literature_grounding_present", "code", "initial literature grounding", 1.0, 1.0, _grade_literature_grounding_present),
+        "trajectory_graph_artifact": Grader("trajectory_graph_artifact", "code", "graph trajectory artifact", 1.0, 1.0, _grade_trajectory_graph_artifact),
+        "trajectory_match_modes": Grader("trajectory_match_modes", "code", "trajectory match modes", 1.0, 1.0, _grade_trajectory_match_modes),
+        "graph_trajectory_match": Grader("graph_trajectory_match", "code", "graph trajectory match", 1.0, 1.0, _grade_graph_trajectory_match),
+        "parallel_trial_isolation": Grader("parallel_trial_isolation", "code", "cross-trial isolation check", 1.0, 1.0, _grade_parallel_trial_isolation_unavailable),
+        "human_spot_check_placeholder": Grader("human_spot_check_placeholder", "human", "spot-check sampling", 0.0, 1.0, _grade_human_placeholder),
+        "isolation_clean_trial": Grader("isolation_clean_trial", "code", "environment isolation check", 1.0, 1.0, _grade_isolation_clean_trial),
+        "prompt_output_relevance": Grader("prompt_output_relevance", "code", "prompt-output topical relevance", 1.0, 0.4, _grade_prompt_output_relevance),
+    }
+

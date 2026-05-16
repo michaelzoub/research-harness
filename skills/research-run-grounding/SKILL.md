@@ -42,6 +42,9 @@ Research runs should preserve:
 - Low-confidence or contradictory claims should create open questions.
 - Local/offline retrieval must remain deterministic for tests.
 - Live retrieval should use the same `SearchBackend` interface as local search.
+- Advanced or paid services are optional. Use `skills/research-service-directory`
+  and `services/` only when live, premium, or structured data would materially
+  improve the research result.
 
 ## Eval Expectations
 
@@ -58,4 +61,3 @@ Research evals should check:
 - Retrieval breadth is not enough; claims need traceability.
 - Critic and synthesis should run after evidence artifacts exist.
 - Do not optimize the report text at the expense of source fidelity.
-

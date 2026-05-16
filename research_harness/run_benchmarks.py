@@ -200,7 +200,7 @@ def _human_span_label(raw_name: str, role: str, counts: Counter[str]) -> str:
     counts[role or "unknown"] += 1
     index = counts[role or "unknown"]
     if role == "research_variant_agent":
-        return f"Research variant {index}"
+        return f"Query eval {index}"
     if role == "optimize_evaluator":
         return f"Optimizer eval {index}"
     if role == "llm_thinking":
@@ -211,7 +211,7 @@ def _human_span_label(raw_name: str, role: str, counts: Counter[str]) -> str:
             return f"LLM PM code proposal r{round_match.group(1)}" if round_match else f"LLM PM code proposal {index}"
         if "code" in raw_name:
             return f"LLM code proposal r{round_match.group(1)}" if round_match else f"LLM code proposal {index}"
-        return f"LLM thinking {index}"
+        return f"Main LLM call {index}"
     if role == "loop_controller":
         round_match = re.search(r"round[_-](\d+)", raw_name)
         return f"Continue? r{round_match.group(1)}" if round_match else f"Loop decision {index}"
@@ -261,17 +261,17 @@ def _timeline_chart_lane(role: str, human_label: str) -> Optional[str]:
     if role == "research_variant_agent":
         return human_label
     if role == "llm_thinking":
-        return "LLM"
+        return "Main LLM calls"
     if role == "optimize_evaluator":
         return "Optimizer evaluation"
     if role == "search_literature":
-        return "Literature search"
+        return "Role agent: literature"
     if role == "hypothesis_generation":
-        return "Hypothesis"
+        return "Role agent: hypothesis"
     if role == "critic_reviewer":
-        return "Critic"
+        return "Role agent: critic"
     if role == "synthesis_agent":
-        return "Synthesis"
+        return "Role agent: synthesis"
     if role == "harness_debugger":
         return "Harness debugger"
     if role == "task_router":
@@ -491,7 +491,7 @@ def _gantt_svg(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> str
     caption_y = AXIS_H + display_rows * ROW_H + 14
     p.append(
         f'<text x="12" y="{caption_y}" font-size="9" fill="#64748b">'
-        f'Each bar spans wall-clock time from agent start until model output is ready.</text>'
+        f'Query eval rows are individual variant evaluations; role-agent rows are spawned agents; Main LLM calls are proposal/judge model latency.</text>'
     )
 
     if num_rows > MAX_ROWS:
@@ -549,7 +549,7 @@ def _gantt_png(spans: list[dict[str, Any]], num_rows: int, total_ms: int) -> byt
             labeled_rows.add(row)
             canvas.text(8, axis_h + row * row_h + 8, _shorten(_gantt_row_label(span), 32), color, 1)
     caption_y = axis_h + display_rows * row_h + 12
-    canvas.text(12, caption_y, "Each bar: start to model output ready (wall clock).", "#64748b", 1)
+    canvas.text(12, caption_y, "Query eval rows are variant evaluations; role-agent rows are spawned agents; Main LLM calls are proposal/judge latency.", "#64748b", 1)
     if num_rows > display_rows:
         canvas.text(width // 2 - 100, caption_y + 12, f"... {num_rows - display_rows} more rows", "#94a3b8", 1)
     return canvas.png()
@@ -834,71 +834,93 @@ def decision_dag_svg(summary: dict[str, Any]) -> str:
     counts = summary.get("counts") or {}
     continuations = summary.get("continuation_decisions") or []
     best = float((summary.get("best_evaluation") or {}).get("score") or 0.0)
-    width = 1280
-    cards: list[tuple[int, int, int, int, str, str, str]] = []
-    x1, x2, x3 = 40, 460, 880
+    width = 960
+    left_x, right_x = 42, 510
+    card_w, card_h = 390, 58
+    cards: list[dict[str, Any]] = []
+
+    def add(key: str, x: int, y: int, title: str, body: str, fill: str) -> None:
+        cards.append({"key": key, "x": x, "y": y, "w": card_w, "h": card_h, "title": title, "body": body, "fill": fill})
+
     y = 82
-    cards.extend([
-        (x1, y, 340, 54, "1 User Prompt", str(run.get("user_goal", ""))[:54], "#dbeafe"),
-        (x2, y, 340, 54, "2 Task Router", f"{decision.get('product_agent', run.get('product_agent', 'unknown'))} / {decision.get('selected_mode', run.get('task_mode', 'unknown'))}", "#fce7f3"),
-        (x3, y, 340, 54, "3 LeadResearcher Memory", "PRD, plan, objective, context", "#ccfbf1"),
-    ])
+    add("prompt", left_x, y, "1 User Prompt", str(run.get("user_goal", ""))[:64], "#dbeafe")
+    add("route", right_x, y, "2 Task Router", f"{decision.get('product_agent', run.get('product_agent', 'unknown'))} / {decision.get('selected_mode', run.get('task_mode', 'unknown'))}", "#fce7f3")
     y += 88
-    cards.extend([
-        (x1, y, 340, 54, "4 Propose Subagent Tasks", f"{counts.get('variants', 0)} variants across {counts.get('outer_rounds', 0)} rounds", "#e0f2fe"),
-        (x2, y, 340, 54, "5 Parallel Subagents", "research / optimizer evaluators fan out", "#dbeafe"),
-        (x3, y, 340, 54, "6 Evaluate + Rank", f"{counts.get('evaluations', 0)} evals, best score {best:.3f}", "#fee2e2"),
-    ])
+    add("memory", left_x, y, "3 Lead Research Context", "PRD, plan, objective, seed context", "#ccfbf1")
+    add("propose", right_x, y, "4 Propose Variants", f"{counts.get('variants', 0)} query/code variants across {counts.get('outer_rounds', 0)} rounds", "#e0f2fe")
     y += 88
-    cards.append((x2, y, 340, 54, "7 Continue Decision", f"{counts.get('continuation_decisions', 0)} explicit loop decisions", "#ccfbf1"))
+    add("fanout", left_x, y, "5 Parallel Evaluation Batch", "variant evaluations run as independent async tasks", "#dbeafe")
+    add("rank", right_x, y, "6 Evaluate + Rank", f"{counts.get('evaluations', 0)} evals, best score {best:.3f}", "#fee2e2")
+    y += 88
+    add("continue", left_x, y, "7 Continue Decision", f"{counts.get('continuation_decisions', 0)} explicit loop decisions", "#ccfbf1")
+    previous_key = "continue"
     for idx, cont in enumerate(continuations[:8], start=1):
-        y += 70
+        y += 74
         color = "#dcfce7" if cont.get("decision") == "continue" else "#ffedd5"
-        cards.append((x2, y, 340, 54, f"Decision r{cont.get('iteration', idx)}: {cont.get('decision', '?')}", str(cont.get("reason", ""))[:52], color))
-    y += 84
-    cards.extend([
-        (x1, y, 340, 54, "8 Critic + Synthesis", "review claims, contradictions, report", "#fef3c7"),
-        (x2, y, 340, 54, "9 Citation / Grounding", "claim-source links and source-backed output", "#ede9fe"),
-        (x3, y, 340, 54, "10 Persist Artifacts", "report, traces, PNGs, decisions, costs", "#e2e8f0"),
-    ])
-    height = max(card_y + card_h for _, card_y, _, card_h, _, _, _ in cards) + 42
+        key = f"decision_{idx}"
+        add(key, left_x, y, f"Decision r{cont.get('iteration', idx)}: {cont.get('decision', '?')}", str(cont.get("reason", ""))[:64], color)
+        previous_key = key
+    y += 88
+    add("synthesis", left_x, y, "8 Critic + Synthesis", "review claims, contradictions, report", "#fef3c7")
+    add("grounding", right_x, y, "9 Citation / Grounding", "claim-source links and source-backed output", "#ede9fe")
+    y += 88
+    add("persist", right_x, y, "10 Persist Artifacts", "report, traces, timeline, decisions, costs", "#e2e8f0")
+    by_key = {card["key"]: card for card in cards}
+    height = max(card["y"] + card["h"] for card in cards) + 46
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
         'style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;">',
+        '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/></marker></defs>',
         '<rect width="100%" height="100%" fill="#f8fafc"/>',
         '<text x="28" y="45" font-size="24" font-weight="700" fill="#0f172a">Comprehensive decision DAG</text>',
     ]
-    for x, y, w, h, title, body, fill in cards:
-        parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="{fill}" stroke="#64748b"/>')
-        parts.append(f'<text x="{x + 12}" y="{y + 22}" font-size="13" font-weight="700" fill="#0f172a">{html.escape(title)}</text>')
-        parts.append(f'<text x="{x + 12}" y="{y + 42}" font-size="11" fill="#475569">{html.escape(body)}</text>')
-    for start, end in [(0, 1), (1, 2), (3, 4), (4, 5)]:
-        parts.append(_svg_arrow(cards[start][0] + cards[start][2], cards[start][1] + 27, cards[end][0], cards[end][1] + 27))
-    parts.append(_svg_arrow(x3 + 170, 136, x1 + 170, 170))
-    # Evaluate+Rank → Continue Decision: bottom-center of right column card down to top-center of continue card
-    parts.append(_svg_arrow(x3 + 170, cards[5][1] + 54, x2 + 170, cards[6][1]))
+    for card in cards:
+        x, y, w, h = card["x"], card["y"], card["w"], card["h"]
+        parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="{card["fill"]}" stroke="#64748b"/>')
+        parts.append(f'<text x="{x + 12}" y="{y + 23}" font-size="13" font-weight="700" fill="#0f172a">{html.escape(card["title"])}</text>')
+        parts.append(f'<text x="{x + 12}" y="{y + 44}" font-size="11" fill="#475569">{html.escape(card["body"])}</text>')
+
+    for start, end in [
+        ("prompt", "route"),
+        ("route", "memory"),
+        ("memory", "propose"),
+        ("propose", "fanout"),
+        ("fanout", "rank"),
+        ("rank", "continue"),
+    ]:
+        parts.append(_svg_card_arrow(by_key[start], by_key[end]))
     if continuations:
-        parts.append(_svg_arrow(x2 + 170, cards[6][1] + 54, x2 + 170, cards[7][1]))
-        last_decision = min(len(continuations), 8) + 6
-        parts.append(_svg_arrow(x2 + 170, cards[last_decision][1] + 54, x1 + 170, cards[-3][1]))
+        parts.append(_svg_card_arrow(by_key["continue"], by_key["decision_1"]))
+        for idx in range(1, min(len(continuations), 8)):
+            parts.append(_svg_card_arrow(by_key[f"decision_{idx}"], by_key[f"decision_{idx + 1}"]))
+        parts.append(_svg_card_arrow(by_key[previous_key], by_key["synthesis"]))
     else:
-        parts.append(_svg_arrow(x2 + 170, cards[6][1] + 54, x1 + 170, cards[-3][1]))
-    parts.append(_svg_arrow(cards[-3][0] + cards[-3][2], cards[-3][1] + 27, cards[-2][0], cards[-2][1] + 27))
-    parts.append(_svg_arrow(cards[-2][0] + cards[-2][2], cards[-2][1] + 27, cards[-1][0], cards[-1][1] + 27))
+        parts.append(_svg_card_arrow(by_key["continue"], by_key["synthesis"]))
+    parts.append(_svg_card_arrow(by_key["synthesis"], by_key["grounding"]))
+    parts.append(_svg_card_arrow(by_key["grounding"], by_key["persist"]))
     parts.append("</svg>")
     return "\n".join(parts)
 
 
+def _svg_card_arrow(start: dict[str, Any], end: dict[str, Any]) -> str:
+    sx, sy, sw, sh = int(start["x"]), int(start["y"]), int(start["w"]), int(start["h"])
+    ex, ey, ew, eh = int(end["x"]), int(end["y"]), int(end["w"]), int(end["h"])
+    if ey > sy + sh:
+        return _svg_arrow(sx + sw // 2, sy + sh, ex + ew // 2, ey)
+    if ey + eh < sy:
+        return _svg_arrow(sx + sw // 2, sy, ex + ew // 2, ey + eh)
+    if ex > sx:
+        return _svg_arrow(sx + sw, sy + sh // 2, ex, ey + eh // 2)
+    return _svg_arrow(sx, sy + sh // 2, ex + ew, ey + eh // 2)
+
+
 def _svg_arrow(x1: int, y1: int, x2: int, y2: int) -> str:
-    mid = (x1 + x2) // 2
-    if y1 == y2:
+    if abs(y1 - y2) <= 2 or abs(x1 - x2) <= 2:
         path = f"M{x1},{y1} L{x2},{y2}"
     else:
+        mid = (x1 + x2) // 2
         path = f"M{x1},{y1} L{mid},{y1} L{mid},{y2} L{x2},{y2}"
-    return (
-        f'<path d="{path}" fill="none" stroke="#64748b" stroke-width="1.5"/>'
-        f'<path d="M{x2 - 7},{y2 - 5} L{x2},{y2} L{x2 - 7},{y2 + 5}" fill="none" stroke="#64748b" stroke-width="1.5"/>'
-    )
+    return f'<path d="{path}" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>'
 
 
 def decision_dag_png(summary: dict[str, Any]) -> bytes:
@@ -907,45 +929,48 @@ def decision_dag_png(summary: dict[str, Any]) -> bytes:
     counts = summary.get("counts") or {}
     continuations = summary.get("continuation_decisions") or []
     best = float((summary.get("best_evaluation") or {}).get("score") or 0.0)
-    width = 1280
+    width = 960
     cards: list[tuple[int, int, int, int, str, str, str]] = []
-    x1, x2, x3 = 40, 460, 880
+    x1, x2 = 42, 510
+    w, h = 390, 58
     y = 82
-    cards.append((x1, y, 340, 54, "1 User prompt", str(run.get("user_goal", ""))[:54], "#dbeafe"))
-    cards.append((x2, y, 340, 54, "2 Task router", f"{decision.get('product_agent', run.get('product_agent', 'unknown'))} / {decision.get('selected_mode', run.get('task_mode', 'unknown'))}", "#fce7f3"))
-    cards.append((x3, y, 340, 54, "3 Lead plan memory", "PRD, source strategy, objective, context", "#ccfbf1"))
+    cards.append((x1, y, w, h, "1 User prompt", str(run.get("user_goal", ""))[:64], "#dbeafe"))
+    cards.append((x2, y, w, h, "2 Task router", f"{decision.get('product_agent', run.get('product_agent', 'unknown'))} / {decision.get('selected_mode', run.get('task_mode', 'unknown'))}", "#fce7f3"))
     y += 88
-    cards.append((x1, y, 340, 54, "4 Propose subagent tasks", f"{counts.get('variants', 0)} variants across {counts.get('outer_rounds', 0)} rounds", "#e0f2fe"))
-    cards.append((x2, y, 340, 54, "5 Parallel subagents", "research / optimize evaluators fan out", "#dbeafe"))
-    cards.append((x3, y, 340, 54, "6 Evaluate + rank", f"{counts.get('evaluations', 0)} evals, best score {best:.3f}", "#fee2e2"))
+    cards.append((x1, y, w, h, "3 Lead research context", "PRD, source strategy, objective, context", "#ccfbf1"))
+    cards.append((x2, y, w, h, "4 Propose variants", f"{counts.get('variants', 0)} query/code variants across {counts.get('outer_rounds', 0)} rounds", "#e0f2fe"))
     y += 88
-    cards.append((x2, y, 340, 54, "7 Continue decision", f"{counts.get('continuation_decisions', 0)} explicit loop decisions", "#ccfbf1"))
+    cards.append((x1, y, w, h, "5 Parallel evaluation batch", "variant evaluations run as independent tasks", "#dbeafe"))
+    cards.append((x2, y, w, h, "6 Evaluate + rank", f"{counts.get('evaluations', 0)} evals, best score {best:.3f}", "#fee2e2"))
+    y += 88
+    cards.append((x1, y, w, h, "7 Continue decision", f"{counts.get('continuation_decisions', 0)} explicit loop decisions", "#ccfbf1"))
     for idx, cont in enumerate(continuations[:8], start=1):
-        y += 70
+        y += 74
         color = "#dcfce7" if cont.get("decision") == "continue" else "#ffedd5"
-        cards.append((x2, y, 340, 54, f"Decision r{cont.get('iteration', idx)}: {cont.get('decision', '?')}", str(cont.get("reason", ""))[:52], color))
-    y += 84
-    cards.append((x1, y, 340, 54, "8 Critic + synthesis", "review claims, contradictions, write report", "#fef3c7"))
-    cards.append((x2, y, 340, 54, "9 Citation / grounding", "claim-source links and source-backed output", "#ede9fe"))
-    cards.append((x3, y, 340, 54, "10 Persist artifacts", "report, traces, timeline, decisions, costs", "#e2e8f0"))
+        cards.append((x1, y, w, h, f"Decision r{cont.get('iteration', idx)}: {cont.get('decision', '?')}", str(cont.get("reason", ""))[:64], color))
+    y += 88
+    cards.append((x1, y, w, h, "8 Critic + synthesis", "review claims, contradictions, write report", "#fef3c7"))
+    cards.append((x2, y, w, h, "9 Citation / grounding", "claim-source links and source-backed output", "#ede9fe"))
+    y += 88
+    cards.append((x2, y, w, h, "10 Persist artifacts", "report, traces, timeline, decisions, costs", "#e2e8f0"))
     height = max(card_y + card_h for _, card_y, _, card_h, _, _, _ in cards) + 42
     canvas = _PngCanvas(width, height, "#f8fafc")
     canvas.text(28, 24, "Comprehensive decision DAG", "#0f172a", 2)
     for card in cards:
         _draw_card(canvas, *card)
-    # arrows
-    for (a, b) in [(0, 1), (1, 2), (3, 4), (4, 5)]:
-        _draw_arrow(canvas, cards[a][0] + cards[a][2], cards[a][1] + 27, cards[b][0], cards[b][1] + 27)
-    _draw_arrow(canvas, x3 + 170, 136, x1 + 170, 170)
-    _draw_arrow(canvas, x3 + 170, cards[5][1] + 54, x2 + 170, cards[6][1])
+    for a, b in [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]:
+        _draw_card_arrow(canvas, cards[a], cards[b])
     if continuations:
-        _draw_arrow(canvas, x2 + 170, cards[6][1] + 54, x2 + 170, cards[7][1])
-        last_decision = min(len(continuations), 8) + 6
-        _draw_arrow(canvas, x2 + 170, cards[last_decision][1] + 54, x1 + 170, cards[-3][1])
+        _draw_card_arrow(canvas, cards[6], cards[7])
+        first_decision_index = 7
+        last_decision = first_decision_index + min(len(continuations), 8) - 1
+        for idx in range(first_decision_index, last_decision):
+            _draw_card_arrow(canvas, cards[idx], cards[idx + 1])
+        _draw_card_arrow(canvas, cards[last_decision], cards[-3])
     else:
-        _draw_arrow(canvas, x2 + 170, cards[6][1] + 54, x1 + 170, cards[-3][1])
-    _draw_arrow(canvas, cards[-3][0] + cards[-3][2], cards[-3][1] + 27, cards[-2][0], cards[-2][1] + 27)
-    _draw_arrow(canvas, cards[-2][0] + cards[-2][2], cards[-2][1] + 27, cards[-1][0], cards[-1][1] + 27)
+        _draw_card_arrow(canvas, cards[6], cards[-3])
+    _draw_card_arrow(canvas, cards[-3], cards[-2])
+    _draw_card_arrow(canvas, cards[-2], cards[-1])
     return canvas.png()
 
 
@@ -954,6 +979,23 @@ def _draw_card(canvas: _PngCanvas, x: int, y: int, w: int, h: int, title: str, b
     canvas.outline(x, y, w, h, "#64748b")
     canvas.text(x + 10, y + 9, title, "#0f172a", 2, max_chars=32)
     canvas.text(x + 10, y + 34, body, "#475569", 1, max_chars=70)
+
+
+def _draw_card_arrow(
+    canvas: _PngCanvas,
+    start: tuple[int, int, int, int, str, str, str],
+    end: tuple[int, int, int, int, str, str, str],
+) -> None:
+    sx, sy, sw, sh = start[:4]
+    ex, ey, ew, eh = end[:4]
+    if ey > sy + sh:
+        _draw_arrow(canvas, sx + sw // 2, sy + sh, ex + ew // 2, ey)
+    elif ey + eh < sy:
+        _draw_arrow(canvas, sx + sw // 2, sy, ex + ew // 2, ey + eh)
+    elif ex > sx:
+        _draw_arrow(canvas, sx + sw, sy + sh // 2, ex, ey + eh // 2)
+    else:
+        _draw_arrow(canvas, sx, sy + sh // 2, ex + ew, ey + eh // 2)
 
 
 def _draw_arrow(canvas: _PngCanvas, x1: int, y1: int, x2: int, y2: int) -> None:

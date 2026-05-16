@@ -142,6 +142,7 @@ class Source:
     summary: str
     relevance_score: float
     credibility_score: float
+    evidence_sections: dict[str, str] = field(default_factory=dict)
     id: str = field(default_factory=lambda: new_id("src"))
     retrieved_at: str = field(default_factory=now_iso)
     canonical_id: Optional[str] = None

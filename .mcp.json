@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "alchemy": {
+      "command": "npx",
+      "args": ["-y", "@alchemy/mcp-server"],
+      "env": {
+        "ALCHEMY_API_KEY": "${ALCHEMY_API_KEY}"
+      }
+    }
+  }
+}

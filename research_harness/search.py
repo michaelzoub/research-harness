@@ -11,14 +11,46 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Protocol
 
+from .llm import LLMClient
 from .schemas import Source
 
 
-TOKEN_RE = re.compile(r"[a-zA-Z0-9_+-]+")
+TOKEN_RE = re.compile(r"[a-zA-Z0-9]+")
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
-
-
+SEARCH_STOPWORDS = {
+    "a",
+    "about",
+    "and",
+    "are",
+    "be",
+    "data",
+    "dataset",
+    "datasets",
+    "depth",
+    "evidence",
+    "find",
+    "for",
+    "help",
+    "in",
+    "literature",
+    "me",
+    "of",
+    "on",
+    "or",
+    "paper",
+    "papers",
+    "research",
+    "source",
+    "sources",
+    "study",
+    "survey",
+    "the",
+    "to",
+    "understand",
+    "understanding",
+    "with",
+}
 class SearchBackend(Protocol):
     tool_name: str
 
@@ -38,6 +70,7 @@ class CorpusDocument:
     claims: list[str]
     tags: list[str]
     credibility_score: float
+    evidence_sections: dict[str, str] | None = None
 
 
 class LocalCorpusSearch:
@@ -85,6 +118,7 @@ class LocalCorpusSearch:
             summary=document.summary,
             relevance_score=relevance_score,
             credibility_score=document.credibility_score,
+            evidence_sections=_bounded_evidence_sections(document),
         )
 
 
@@ -93,12 +127,16 @@ class ArxivSearch:
 
     tool_name = "arxiv_api_search"
 
-    def __init__(self, base_url: str = "https://export.arxiv.org/api/query", timeout_seconds: float = 20.0):
+    def __init__(self, base_url: str = "https://export.arxiv.org/api/query", timeout_seconds: float = 20.0, llm: Optional[LLMClient] = None):
         self.base_url = base_url
         self.timeout_seconds = timeout_seconds
+        self._query_llm: Optional[LLMClient] = (
+            LLMClient(model="gpt-4o-mini", api_key=llm.api_key, timeout_seconds=15.0)
+            if llm and llm.is_live else None
+        )
 
     def search(self, query: str, limit: int = 4) -> list[tuple[CorpusDocument, float]]:
-        cleaned_query = _arxiv_query(query)
+        cleaned_query = _arxiv_query(query, self._query_llm)
         if not cleaned_query:
             return []
         params = urllib.parse.urlencode(
@@ -136,6 +174,7 @@ class ArxivSearch:
             summary=document.summary,
             relevance_score=relevance_score,
             credibility_score=document.credibility_score,
+            evidence_sections=_bounded_evidence_sections(document),
         )
 
 
@@ -179,6 +218,54 @@ class OpenAlexSearch:
                     claims=_summary_claims(title, abstract or title),
                     tags=[concept for concept in concepts if concept],
                     credibility_score=0.76,
+                    evidence_sections={"abstract": abstract} if abstract else {},
+                )
+            )
+        return _score_documents(query, documents)[:limit]
+
+    def to_source(self, document: CorpusDocument, relevance_score: float) -> Source:
+        return _source_from_document(document, relevance_score)
+
+
+class SemanticScholarSearch:
+    tool_name = "semantic_scholar_api_search"
+
+    def __init__(self, base_url: str = "https://api.semanticscholar.org/graph/v1/paper/search", timeout_seconds: float = 20.0):
+        self.base_url = base_url
+        self.timeout_seconds = timeout_seconds
+
+    def search(self, query: str, limit: int = 4) -> list[tuple[CorpusDocument, float]]:
+        params = urllib.parse.urlencode(
+            {
+                "query": query,
+                "limit": limit,
+                "fields": "title,abstract,authors,year,url,venue,externalIds",
+            }
+        )
+        headers = {}
+        token = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
+        if token:
+            headers["x-api-key"] = token
+        payload = _http_json(f"{self.base_url}?{params}", self.timeout_seconds, headers=headers)
+        documents = []
+        for item in payload.get("data", []):
+            title = _clean_text(str(item.get("title") or "Untitled Semantic Scholar paper"))
+            abstract = _clean_text(str(item.get("abstract") or ""))
+            authors = [str(author.get("name", "")) for author in item.get("authors", []) if author.get("name")]
+            external = item.get("externalIds") if isinstance(item.get("externalIds"), dict) else {}
+            doi = str(external.get("DOI") or "")
+            documents.append(
+                CorpusDocument(
+                    url=str(item.get("url") or (f"https://doi.org/{doi}" if doi else "")),
+                    title=title,
+                    author=", ".join(authors[:4]) or "Unknown",
+                    date=str(item.get("year") or ""),
+                    source_type="semantic_scholar_paper",
+                    summary=abstract or title,
+                    claims=_summary_claims(title, abstract or title),
+                    tags=[tag for tag in ["semantic_scholar", str(item.get("venue") or "")] if tag],
+                    credibility_score=0.74,
+                    evidence_sections={"abstract": abstract} if abstract else {},
                 )
             )
         return _score_documents(query, documents)[:limit]
@@ -270,6 +357,184 @@ class SocialWebSearch(WebSearch):
         return super().search(f"{query} site:x.com OR site:twitter.com", limit)
 
 
+class AlchemySearch:
+    """Blockchain data source via Alchemy's NFT and Token APIs.
+
+    Requires ALCHEMY_API_KEY env var. Returns empty results silently when the key is absent.
+    Uses the NFT contract metadata search endpoint as a proxy for on-chain research signals.
+    """
+
+    tool_name = "alchemy_blockchain_search"
+    _NFT_SEARCH = "https://{network}.g.alchemy.com/nft/v3/{api_key}/searchContractMetadata"
+    _TOKEN_PRICES = "https://api.g.alchemy.com/prices/v1/{api_key}/tokens/by-symbol"
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        network: str = "eth-mainnet",
+        timeout_seconds: float = 20.0,
+    ):
+        self.api_key = api_key or os.environ.get("ALCHEMY_API_KEY", "")
+        self.network = network
+        self.timeout_seconds = timeout_seconds
+
+    def search(self, query: str, limit: int = 4) -> list[tuple[CorpusDocument, float]]:
+        if not self.api_key:
+            return []
+        documents: list[CorpusDocument] = []
+        documents.extend(self._search_contracts(query))
+        documents.extend(self._search_tokens(query))
+        return _score_documents(query, documents)[:limit]
+
+    def _search_contracts(self, query: str) -> list[CorpusDocument]:
+        url = self._NFT_SEARCH.format(network=self.network, api_key=self.api_key)
+        try:
+            payload = _http_json(
+                f"{url}?query={urllib.parse.quote(query)}&limit=6",
+                self.timeout_seconds,
+            )
+        except Exception:
+            return []
+        documents = []
+        for contract in payload.get("contracts", []):
+            name = _clean_text(str(contract.get("name") or contract.get("symbol") or "Unknown contract"))
+            description = _clean_text(str(contract.get("description") or contract.get("openSeaMetadata", {}).get("description") or ""))
+            address = str(contract.get("address") or "")
+            token_type = str(contract.get("tokenType") or "NFT")
+            url_out = f"https://etherscan.io/address/{address}" if address else ""
+            documents.append(
+                CorpusDocument(
+                    url=url_out,
+                    title=f"{name} ({token_type})",
+                    author="Alchemy / on-chain",
+                    date="",
+                    source_type="alchemy_contract",
+                    summary=description or f"On-chain {token_type} contract: {name}. Address: {address}.",
+                    claims=_summary_claims(name, description or f"On-chain {token_type} contract {name}."),
+                    tags=["blockchain", token_type.lower(), "alchemy", self.network],
+                    credibility_score=0.70,
+                )
+            )
+        return documents
+
+    def _search_tokens(self, query: str) -> list[CorpusDocument]:
+        symbols = [term.upper() for term in query.split()[:3] if len(term) >= 2 and term.isalpha()]
+        if not symbols:
+            return []
+        url = self._TOKEN_PRICES.format(api_key=self.api_key)
+        try:
+            payload = _http_json(
+                f"{url}?{'&'.join(f'symbols[]={s}' for s in symbols)}",
+                self.timeout_seconds,
+            )
+        except Exception:
+            return []
+        documents = []
+        for item in payload.get("data", []):
+            symbol = str(item.get("symbol") or "")
+            prices = item.get("prices", [])
+            price_str = f"${prices[0].get('value', '')}" if prices else ""
+            name = symbol
+            documents.append(
+                CorpusDocument(
+                    url=f"https://www.coingecko.com/en/coins/{symbol.lower()}",
+                    title=f"{name} token price data",
+                    author="Alchemy Prices API",
+                    date="",
+                    source_type="alchemy_token",
+                    summary=f"{symbol} token. Current price: {price_str}. Network: {self.network}.",
+                    claims=[f"{symbol}: on-chain token with live price data."],
+                    tags=["blockchain", "token", "price", "alchemy"],
+                    credibility_score=0.72,
+                )
+            )
+        return documents
+
+    def to_source(self, document: CorpusDocument, relevance_score: float) -> Source:
+        return _source_from_document(document, relevance_score)
+
+
+class WikipediaSearch:
+    """Search Wikipedia and follow external references from articles."""
+
+    tool_name = "wikipedia_search"
+    _API = "https://en.wikipedia.org/w/api.php"
+    _ARTICLE_CREDIBILITY = 0.70
+    _REF_CREDIBILITY = 0.60
+
+    def __init__(self, timeout_seconds: float = 20.0, max_refs_per_article: int = 5):
+        self.timeout_seconds = timeout_seconds
+        self.max_refs_per_article = max_refs_per_article
+
+    def search(self, query: str, limit: int = 4) -> list[tuple[CorpusDocument, float]]:
+        params = urllib.parse.urlencode(
+            {
+                "action": "query",
+                "generator": "search",
+                "gsrsearch": query,
+                "gsrlimit": limit,
+                "prop": "extracts|extlinks",
+                "exintro": 1,
+                "exchars": 600,
+                "ellimit": self.max_refs_per_article,
+                "elprotocol": "https",
+                "format": "json",
+                "utf8": 1,
+            }
+        )
+        try:
+            payload = _http_json(
+                f"{self._API}?{params}",
+                self.timeout_seconds,
+                headers={"User-Agent": "research-harness/0.1.0 (mailto:research-harness@example.invalid)"},
+            )
+        except Exception:
+            return []
+
+        pages = payload.get("query", {}).get("pages", {})
+        documents: list[CorpusDocument] = []
+        for page in pages.values():
+            title = str(page.get("title") or "Untitled")
+            extract = _strip_html(_clean_text(str(page.get("extract") or "")))
+            url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+            documents.append(
+                CorpusDocument(
+                    url=url,
+                    title=title,
+                    author="Wikipedia contributors",
+                    date="",
+                    source_type="wikipedia_article",
+                    summary=extract or title,
+                    claims=_summary_claims(title, extract or title),
+                    tags=["wikipedia", "encyclopedia"],
+                    credibility_score=self._ARTICLE_CREDIBILITY,
+                )
+            )
+            for ext_link in page.get("extlinks", []):
+                ref_url = str(ext_link.get("*") or ext_link.get("url") or "")
+                if not ref_url:
+                    continue
+                netloc = urllib.parse.urlparse(ref_url).netloc
+                documents.append(
+                    CorpusDocument(
+                        url=ref_url,
+                        title=f"{title} — external reference",
+                        author=netloc or "external",
+                        date="",
+                        source_type="wikipedia_reference",
+                        summary=f"External reference from Wikipedia article '{title}': {ref_url}",
+                        claims=[f"Source cited in Wikipedia article on '{title}'."],
+                        tags=["wikipedia_reference", netloc],
+                        credibility_score=self._REF_CREDIBILITY,
+                    )
+                )
+
+        return _score_documents(query, documents)[:limit]
+
+    def to_source(self, document: CorpusDocument, relevance_score: float) -> Source:
+        return _source_from_document(document, relevance_score)
+
+
 class PriorArtifactMemorySearch:
     tool_name = "prior_artifact_memory_search"
 
@@ -284,7 +549,8 @@ class PriorArtifactMemorySearch:
             run_record = _first_json_row(run_dir / "runs.json")
             claims = _read_json(run_dir / "claims.json", [])
             sources = _read_json(run_dir / "sources.json", [])
-            source_titles = [str(source.get("title", "")) for source in sources[:5]]
+            real_sources = [s for s in sources if "example.com" not in str(s.get("url", ""))]
+            source_titles = [str(source.get("title", "")) for source in real_sources[:5]]
             summary = " ".join(str(claim.get("text", "")) for claim in claims[:5]) or "Prior run artifact."
             goal = str(run_record.get("user_goal", run_dir.name))
             documents.append(
@@ -310,6 +576,10 @@ def _tokens(text: str) -> set[str]:
     return {match.group(0).lower() for match in TOKEN_RE.finditer(text)}
 
 
+def _content_tokens(text: str) -> set[str]:
+    return {token for token in _tokens(text) if token not in SEARCH_STOPWORDS and not token.isdigit()}
+
+
 def _source_from_document(document: CorpusDocument, relevance_score: float) -> Source:
     return Source(
         url=document.url,
@@ -320,19 +590,32 @@ def _source_from_document(document: CorpusDocument, relevance_score: float) -> S
         summary=document.summary,
         relevance_score=relevance_score,
         credibility_score=document.credibility_score,
+        evidence_sections=_bounded_evidence_sections(document),
     )
 
 
 def _score_documents(query: str, documents: list[CorpusDocument]) -> list[tuple[CorpusDocument, float]]:
-    query_terms = _tokens(query)
+    query_terms = _content_tokens(query) or _tokens(query)
+    minimum_overlap = _minimum_overlap(query_terms)
     scored = []
     for document in documents:
         haystack = f"{document.title} {document.summary} {' '.join(document.claims)} {' '.join(document.tags)}"
-        overlap = len(query_terms & _tokens(haystack))
-        score = min(1.0, 0.45 + (overlap / max(len(query_terms), 1)) * 0.45)
+        haystack_terms = _content_tokens(haystack) or _tokens(haystack)
+        overlap = len(query_terms & haystack_terms)
+        if overlap < minimum_overlap:
+            continue
+        score = min(1.0, 0.30 + (overlap / max(len(query_terms), 1)) * 0.50)
         scored.append((document, round(score, 3)))
     scored.sort(key=lambda pair: (pair[1], pair[0].credibility_score), reverse=True)
     return scored
+
+
+def _minimum_overlap(query_terms: set[str]) -> int:
+    if len(query_terms) <= 2:
+        return len(query_terms)
+    if len(query_terms) <= 5:
+        return 2
+    return 3
 
 
 def _http_json(url: str, timeout_seconds: float, headers: Optional[dict[str, str]] = None) -> dict:
@@ -416,59 +699,27 @@ def _is_run_dir(name: str) -> bool:
     return name.startswith("run_") or bool(re.match(r"^\d+_run_", name))
 
 
-def _arxiv_query(text: str) -> str:
-    aliases_removed = text.lower().replace("arxive", "arxiv")
-    stopwords = {
-        "please",
-        "research",
-        "find",
-        "mentions",
-        "mention",
-        "studying",
-        "study",
-        "new",
-        "on",
-        "and",
-        "the",
-        "which",
-        "ones",
-        "will",
-        "be",
-        "used",
-        "in",
-        "based",
-        "current",
-        "arxiv",
-        "determine",
-        "years",
-        "year",
-        "workplace",
-        "trends",
-        "should",
-        "we",
-        "deeply",
-        "understand",
-        "understanding",
-        "before",
-        "attempting",
-        "attempt",
-        "replicate",
-        "replicating",
-        "foundational",
-        "literature",
-        "mechanisms",
-        "recent",
-        "empirical",
-        "evidence",
-        "contradictory",
-        "limitations",
-    }
-    terms = [term for term in _tokens(aliases_removed) if term not in stopwords and not term.isdigit()]
+def _arxiv_query(text: str, llm: Optional[LLMClient] = None) -> str:
+    if llm is not None and llm.is_live:
+        try:
+            payload = llm.complete_json(
+                'Convert this research query to 4-6 precise arXiv search terms. Return JSON only: {"terms": [str]}.',
+                text,
+                max_output_tokens=60,
+                temperature=0.1,
+            )
+            terms = [str(t).strip() for t in payload.get("terms", []) if str(t).strip()]
+            if terms:
+                operator = " OR " if len(terms) > 3 else " AND "
+                return operator.join(f"all:{urllib.parse.quote(term)}" for term in terms[:6])
+        except Exception:
+            pass
+    normalized = text.lower().replace("-", " ")
+    terms = list(_content_tokens(normalized))[:6]
     if not terms:
-        return ""
-    selected = terms[:6]
-    operator = " OR " if len(selected) > 3 else " AND "
-    return operator.join(f"all:{urllib.parse.quote(term)}" for term in selected)
+        return f"all:{urllib.parse.quote(text[:200])}" if text else ""
+    operator = " OR " if len(terms) > 3 else " AND "
+    return operator.join(f"all:{urllib.parse.quote(term)}" for term in terms)
 
 
 def _parse_arxiv_feed(payload: bytes) -> list[CorpusDocument]:
@@ -499,6 +750,7 @@ def _parse_arxiv_feed(payload: bytes) -> list[CorpusDocument]:
                 claims=_summary_claims(title, summary),
                 tags=categories,
                 credibility_score=0.72,
+                evidence_sections={"abstract": summary} if summary else {},
             )
         )
     return documents
@@ -510,6 +762,20 @@ def _child_text(entry: ET.Element, tag: str) -> str:
 
 def _clean_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _bounded_evidence_sections(document: CorpusDocument, max_chars: int = 1400) -> dict[str, str]:
+    sections = document.evidence_sections or {}
+    bounded: dict[str, str] = {}
+    for key in ["abstract", "introduction", "conclusion"]:
+        value = _clean_text(str(sections.get(key) or ""))
+        if value:
+            bounded[key] = value[:max_chars]
+    if not bounded and document.source_type.endswith("paper"):
+        summary = _clean_text(document.summary)
+        if summary:
+            bounded["abstract"] = summary[:max_chars]
+    return bounded
 
 
 def _summary_claims(title: str, summary: str) -> list[str]:

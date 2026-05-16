@@ -21,13 +21,15 @@ from .llm import LLMClient
 from .loops import EvaluatorRegistry, EvolutionaryOuterLoop, TaskRouter, _loop_objective_from_goal
 from .run_benchmarks import write_run_benchmarks
 from .schemas import AgentBudget, AgentTrace, CostEvent, LoopIteration, LoopTask, ResearchPlan, RunRecord, SourceStrategyItem, TaskType, now_iso, to_dict
-from .search import ArxivSearch, LocalCorpusSearch, SearchBackend
+from .search import AlchemySearch, ArxivSearch, LocalCorpusSearch, SearchBackend
 from .search import DocsBlogsSearch
 from .search import GitHubSearch
 from .search import OpenAlexSearch
 from .search import PriorArtifactMemorySearch
+from .search import SemanticScholarSearch
 from .search import SocialWebSearch
 from .search import WebSearch
+from .search import WikipediaSearch
 from .sessions import SessionStore, default_session_projects_dir
 from .store import ArtifactStore
 
@@ -116,6 +118,8 @@ class Orchestrator:
         self.llm = LLMClient(provider=self.config.llm_provider, model=self.config.llm_model)
         if self.config.llm_provider == "openai" and not self.llm.is_live:
             raise ValueError("--llm-provider openai requires OPENAI_API_KEY.")
+        if self.config.llm_provider == "anthropic" and not self.llm.is_live:
+            raise ValueError("--llm-provider anthropic requires ANTHROPIC_API_KEY.")
 
     async def run(self, goal: str, mode: Optional[str] = None) -> Tuple[RunRecord, ArtifactStore]:
         selected_mode = mode or self.config.mode
@@ -147,7 +151,7 @@ class Orchestrator:
                 await self._run_loop(run, store, plan, source_strategy)
             else:
                 raise ValueError(f"Unknown mode: {selected_mode}")
-            run.status = "completed"
+            run.status = "failed" if _has_incomplete_required_loop_tasks(store) else "completed"
         except Exception:
             run.status = "failed"
             raise
@@ -277,6 +281,9 @@ class Orchestrator:
             "organized_tasks": tasks,
             "artifacts": {
                 "final_report": str(store.report_path),
+                "final_report_tex": str(store.report_tex_path),
+                "final_report_pdf": str(store.report_pdf_path),
+                "final_report_preview": str(store.report_preview_path),
                 "optimizer_seed_context": str(store.optimizer_seed_context_path),
                 "optimization_result": str(store.optimization_result_path),
                 "optimized_candidate": str(store.optimized_candidate_path),
@@ -413,7 +420,7 @@ class Orchestrator:
         interpretation = self.interpret_goal(goal)
         task_type = interpretation["task_type"] if interpretation["task_type"] in {"bounded", "open_ended"} else self.classify_task(goal)
         topics = set(str(topic) for topic in interpretation.get("topics", []) if topic)
-        if "prediction_market" in topics:
+        if "prediction_market" in topics and _is_prediction_market_challenge_goal(goal, self.config.evaluator_name):
             search_angles = [
                 "prediction-market microstructure and market-making mechanisms",
                 "AMM LMSR entropy and scoring-rule literature",
@@ -456,7 +463,11 @@ class Orchestrator:
                 "You interpret research-harness goals for planning and source selection. "
                 "Infer the user's domain and intent semantically, including typos and abbreviations. "
                 "Return JSON only with: task_type ('bounded' or 'open_ended'), topics (short snake_case strings), "
-                "topic_queries (3-6 concrete search queries), and rationale."
+                "topic_queries (4-8 specific paper-search keyword queries or exact phrases), and rationale.\n\n"
+                "For topic_queries: write the actual search strings a literature retriever should send to "
+                "arXiv/OpenAlex/Semantic Scholar style tools. Prefer precise technical phrases, canonical method "
+                "names, benchmark/dataset names, and survey phrases. Avoid generic words like 'find papers', "
+                "'understand in depth', 'research', or broad product categories unless they are part of a known term."
             )
             user = json.dumps(
                 {
@@ -481,7 +492,7 @@ class Orchestrator:
     def create_source_strategy(self, goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
         retriever = self.config.retriever.lower()
         strategy_goal = goal
-        if "prediction_market" in set(plan.topics):
+        if "prediction_market" in set(plan.topics) and _is_prediction_market_challenge_goal(goal, self.config.evaluator_name):
             strategy_goal = (
                 f"{goal} prediction market order book market making adverse selection "
                 "stale quotes retail order flow inventory risk"
@@ -499,7 +510,7 @@ class Orchestrator:
             ]
         if retriever == "auto":
             return _mixed_source_strategy(strategy_goal, plan)
-        if retriever in {"arxiv", "openalex", "github", "web", "docs_blogs", "twitter", "memory"}:
+        if retriever in {"arxiv", "openalex", "semantic_scholar", "github", "web", "docs_blogs", "twitter", "memory", "wikipedia", "alchemy"}:
             return _single_retriever_strategy(strategy_goal, plan, retriever)
         if retriever not in {"auto", "arxiv"}:
             raise ValueError(f"Unknown retriever: {self.config.retriever}")
@@ -683,6 +694,8 @@ class Orchestrator:
                         optimizer_summary
                         + f" Objective incomplete: {objective_status.get('summary')}. Continue the Ralph loop with a larger --max-iterations budget.",
                     )
+                    store.append_progress("Optimization objective remains incomplete; stopping before downstream review tasks.")
+                    return
                 else:
                     await self._pass_task(run, store, tasks[task_cursor], iteration, "optimize_query_optimizer", optimizer_summary)
             else:
@@ -1136,9 +1149,11 @@ class Orchestrator:
         if retriever == "local":
             return LocalCorpusSearch(self.corpus_path)
         if retriever == "arxiv":
-            return ArxivSearch()
+            return ArxivSearch(llm=self.llm)
         if retriever == "openalex":
             return OpenAlexSearch()
+        if retriever == "semantic_scholar":
+            return SemanticScholarSearch()
         if retriever == "github":
             return GitHubSearch()
         if retriever == "web":
@@ -1149,6 +1164,10 @@ class Orchestrator:
             return SocialWebSearch()
         if retriever == "memory":
             return PriorArtifactMemorySearch(self.output_root)
+        if retriever == "wikipedia":
+            return WikipediaSearch()
+        if retriever == "alchemy":
+            return AlchemySearch()
         if retriever == "auto":
             return OpenAlexSearch()
         raise ValueError(f"Unknown retriever: {retriever}")
@@ -1263,6 +1282,10 @@ def _objective_status(goal: str, evaluator_name: Optional[str], store: ArtifactS
     }
 
 
+def _has_incomplete_required_loop_tasks(store: ArtifactStore) -> bool:
+    return any(not row.get("passes") and row.get("status") != "skipped" for row in store.list("loop_tasks"))
+
+
 def _research_architecture_payload(config: HarnessConfig, task_mode: Optional[str]) -> dict[str, object]:
     return {
         "enabled_for_mode": task_mode == "research",
@@ -1301,22 +1324,63 @@ def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategy
     core = " ".join(concepts[:6]) or goal
     broad = _broad_landscape_query(goal, plan)
     topic_queries = plan.topic_queries
+    topics = set(plan.topics)
     brain_terms = "brain neuroscience cognitive computational neuroscience intelligence"
     agent_terms = "agentic agents autonomous multi-agent planner executor tool use memory"
-    workplace_terms = "workplace automation enterprise productivity software agents"
     trend_terms = "survey benchmark adoption evaluation future trends"
     contrarian_terms = "limitations failures safety reliability critique"
     if topic_queries:
         first_query = topic_queries[0]
-    elif "neuroscience" in set(plan.topics):
+    elif "neuroscience" in topics:
         first_query = f"{core} {brain_terms}"
-    else:
+    elif "agents" in topics:
         first_query = f"{core} {agent_terms}"
+    else:
+        first_query = f"{core} key papers survey"
     method_query = topic_queries[1] if len(topic_queries) > 1 else f"{core} {trend_terms}"
-    implementation_query = topic_queries[2] if len(topic_queries) > 2 else f"{core} {agent_terms}"
+    implementation_query = topic_queries[2] if len(topic_queries) > 2 else f"{core} datasets benchmarks methods"
     limitations_query = topic_queries[3] if len(topic_queries) > 3 else f"{core} {contrarian_terms}"
-    adoption_query = topic_queries[0] if topic_queries else f"{core} {workplace_terms}"
-    social_query = topic_queries[0] if topic_queries else f"{core} workplace AI agents"
+    adoption_query = topic_queries[4] if len(topic_queries) > 4 else f"{core} practical resources datasets"
+    social_query = topic_queries[5] if len(topic_queries) > 5 else first_query
+    scholarly_run = _looks_like_scholarly_request(goal, plan)
+    if scholarly_run:
+        return [
+            SourceStrategyItem(
+                name="scholarly_literature",
+                retriever="openalex",
+                purpose="primary papers and surveys",
+                queries=[first_query, method_query],
+                limit=8,
+            ),
+            SourceStrategyItem(
+                name="semantic_scholar_literature",
+                retriever="semantic_scholar",
+                purpose="paper API retrieval and citation-oriented abstracts",
+                queries=[method_query, implementation_query],
+                limit=8,
+            ),
+            SourceStrategyItem(
+                name="preprints_and_benchmarks",
+                retriever="arxiv",
+                purpose="preprints, benchmarks, and empirical evidence",
+                queries=[implementation_query, limitations_query],
+                limit=8,
+            ),
+            SourceStrategyItem(
+                name="curated_overview",
+                retriever="wikipedia",
+                purpose="overview pages and curated external references",
+                queries=[first_query, broad],
+                limit=5,
+            ),
+            SourceStrategyItem(
+                name="targeted_web_sources",
+                retriever="web",
+                purpose="only targeted academic pages, datasets, or course bibliographies",
+                queries=[f"{first_query} site:edu OR site:ac.uk OR site:arxiv.org", f"{method_query} bibliography"],
+                limit=5,
+            ),
+        ]
     return [
         SourceStrategyItem(
             name="broad_landscape",
@@ -1345,6 +1409,13 @@ def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategy
             purpose="adoption signals and workplace-relevant directions",
             queries=[adoption_query, f"{core} human AI collaboration"],
             limit=8,
+        ),
+        SourceStrategyItem(
+            name="wikipedia_overview",
+            retriever="wikipedia",
+            purpose="encyclopedic overview and curated external references",
+            queries=[core, first_query],
+            limit=6,
         ),
         SourceStrategyItem(
             name="social_trend_signals",
@@ -1394,6 +1465,22 @@ def _goal_terms(goal: str) -> list[str]:
     return [word for word in words if word not in RUN_SLUG_STOPWORDS]
 
 
+def _looks_like_scholarly_request(goal: str, plan: ResearchPlan) -> bool:
+    normalized = goal.lower()
+    if any(term in normalized for term in ["paper", "papers", "literature", "academic", "arxiv", "doi", "sources"]):
+        return True
+    if any("paper" in query.lower() or "survey" in query.lower() for query in plan.topic_queries):
+        return True
+    return False
+
+
+def _is_prediction_market_challenge_goal(goal: str, evaluator_name: Optional[str] = None) -> bool:
+    normalized = goal.lower()
+    if evaluator_name == "prediction_market":
+        return True
+    return any(term in normalized for term in ["challenge", "orderbook", "order book", "market-making", "market making", "mm'ing"])
+
+
 def _normalize_goal_interpretation(payload: dict[str, object], *, fallback_task_type: TaskType, planner: str) -> dict[str, Any]:
     raw_topics = payload.get("topics", [])
     topics = [str(topic).strip().lower().replace("-", "_").replace(" ", "_") for topic in raw_topics if str(topic).strip()] if isinstance(raw_topics, list) else []
@@ -1437,12 +1524,16 @@ def _dedupe_strings(values: list[str]) -> list[str]:
 
 def _broad_landscape_query(goal: str, plan: ResearchPlan) -> str:
     topics = set(plan.topics)
-    if "prediction_market" in topics:
+    if "prediction_market" in topics and _is_prediction_market_challenge_goal(goal):
         return "prediction markets"
     if "neuroscience" in topics and "agents" in topics:
         return "brain artificial intelligence"
     if "agents" in topics:
         return "AI agents"
+    if "neuroscience" in topics:
+        return "brain artificial intelligence"
+    if plan.topic_queries:
+        return plan.topic_queries[0]
     terms = _goal_terms(goal)
     if not terms:
         return goal
@@ -1453,7 +1544,11 @@ def _fallback_prompt_topics(goal: str) -> set[str]:
     normalized = goal.lower()
     topics: set[str] = set()
     if "prediction market" in normalized or "prediction-market" in normalized:
-        topics.add("prediction_market")
+        topics.add("prediction_market" if _is_prediction_market_challenge_goal(goal) else "prediction_markets")
+    if any(term in normalized for term in ["machine learning", "deep learning", "ml "]) and any(
+        term in normalized for term in ["stock", "finance", "financial", "trading", "market", "markets"]
+    ):
+        topics.add("finance_ml")
     if any(term in normalized for term in ["amm", "lmsr", "automated market maker", "constant product"]):
         topics.add("amm")
     if any(term in normalized for term in ["options", "option pricing", "black scholes", "volatility"]):
@@ -1477,6 +1572,15 @@ def _topic_query_lenses(topics: set[str]) -> list[str]:
             queries.append("prediction market trading strategies calibration market scoring rules arbitrage")
         queries.append("prediction market challenge orderbook market making simulator strategy implementation")
         queries.append("market making adverse selection stale quotes inventory skew cancel widen quotes")
+    if "prediction_markets" in topics:
+        queries.append("machine learning prediction markets forecasting calibration market efficiency")
+        queries.append("prediction market prices probability forecasting machine learning")
+        queries.append("financial prediction markets machine learning stock market forecasting")
+    if "finance_ml" in topics:
+        queries.append("machine learning stock market prediction survey")
+        queries.append("deep learning financial time series forecasting stock returns")
+        queries.append("machine learning asset pricing empirical finance")
+        queries.append("limit order book deep learning market prediction")
     if "amm" in topics:
         queries.append("LMSR automated market maker prediction markets liquidity cost function")
         queries.append("constant product automated market maker arbitrage inventory risk")

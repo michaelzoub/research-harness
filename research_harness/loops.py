@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
@@ -469,9 +470,11 @@ class ResearchLoop:
         notes: list[str] = []
         store.append_progress(f"Retriever search: {retriever_name} for {variant.id} (limit={limit})")
         try:
-            results = await asyncio.to_thread(backend.search, variant.payload, limit)
+            results = await _search_backend_with_retry(backend, variant.payload, limit)
             store.append_progress(f"Retriever done: {retriever_name} for {variant.id} returned {len(results)} result(s)")
-            return backend, results, notes
+            if results or retriever_name == "local":
+                return backend, results, notes
+            notes.append(f"{retriever_name} returned no results")
         except Exception as exc:
             message = f"{type(exc).__name__}: {exc}"
             store.add_failed_path(
@@ -486,26 +489,32 @@ class ResearchLoop:
             notes.append(f"{retriever_name} failed ({type(exc).__name__})")
             if retriever_name == "local":
                 return backend, [], notes
-            fallback_backend = self.search_factory("local")
-            store.append_progress(f"Retriever search: local fallback for {variant.id} (limit={limit})")
+        fallback_names = _retriever_fallbacks(retriever_name)
+        last_backend = backend
+        for fallback_name in fallback_names:
+            fallback_backend = self.search_factory(fallback_name)
+            last_backend = fallback_backend
+            store.append_progress(f"Retriever search: {fallback_name} fallback for {variant.id} (limit={limit})")
             try:
-                results = await asyncio.to_thread(fallback_backend.search, variant.payload, limit)
+                results = await _search_backend_with_retry(fallback_backend, variant.payload, limit)
             except Exception as fallback_exc:
                 fallback_message = f"{type(fallback_exc).__name__}: {fallback_exc}"
                 store.add_failed_path(
                     FailedPath(
-                        description=f"Local fallback retriever failed for variant {variant.id}",
+                        description=f"Fallback retriever '{fallback_name}' failed for variant {variant.id}",
                         reason=fallback_message,
                         created_by_agent=f"research_loop:{variant.id}",
                         run_id=self.run_id,
                     )
                 )
-                store.append_progress(f"Retriever fallback: local failed for {variant.id}: {fallback_message}")
-                notes.append(f"local fallback failed ({type(fallback_exc).__name__})")
-                return fallback_backend, [], notes
-            notes.append("local fallback used")
-            store.append_progress(f"Retriever done: local fallback for {variant.id} returned {len(results)} result(s)")
-            return fallback_backend, results, notes
+                store.append_progress(f"Retriever fallback: {fallback_name} failed for {variant.id}: {fallback_message}")
+                notes.append(f"{fallback_name} fallback failed ({type(fallback_exc).__name__})")
+                continue
+            notes.append(f"{fallback_name} fallback used")
+            store.append_progress(f"Retriever done: {fallback_name} fallback for {variant.id} returned {len(results)} result(s)")
+            if results or fallback_name == "local":
+                return fallback_backend, results, notes
+        return last_backend, [], notes
 
     def _llm_judge_score(
         self, variant: Variant, metrics: dict[str, float], source_count: int, claim_count: int
@@ -1555,9 +1564,30 @@ class EvolutionaryOuterLoop:
     def _build_optimizer_seed_context(self, store: ArtifactStore, result: Optional[InnerLoopResult]) -> dict[str, object]:
         evaluations = result.ranked_evaluations if result else []
         variant_lookup = {row["id"]: row for row in store.list("variants")}
+        claim_rows = store.list("claims")
+        source_lookup = {row["id"]: row for row in store.list("sources")}
         top_items = []
         for evaluation in evaluations[:5]:
             variant = variant_lookup.get(evaluation.variant_id, {})
+            variant_claims = [
+                claim for claim in claim_rows if str(claim.get("created_by_agent", "")).endswith(f":{evaluation.variant_id}")
+            ][:8]
+            source_ids = {
+                str(source_id)
+                for claim in variant_claims
+                for source_id in claim.get("source_ids", [])
+                if str(source_id) in source_lookup
+            }
+            supporting_sources = [
+                {
+                    "id": source_id,
+                    "title": source_lookup[source_id].get("title", ""),
+                    "url": source_lookup[source_id].get("url", ""),
+                    "summary": source_lookup[source_id].get("summary", ""),
+                    "source_type": source_lookup[source_id].get("source_type", ""),
+                }
+                for source_id in sorted(source_ids)
+            ][:6]
             top_items.append(
                 {
                     "variant_id": evaluation.variant_id,
@@ -1565,16 +1595,36 @@ class EvolutionaryOuterLoop:
                     "score": evaluation.score,
                     "metrics": evaluation.metrics,
                     "summary": evaluation.summary,
+                    "supporting_claims": [
+                        {
+                            "id": claim.get("id", ""),
+                            "text": claim.get("text", ""),
+                            "confidence": claim.get("confidence", 0.0),
+                            "source_ids": claim.get("source_ids", []),
+                        }
+                        for claim in variant_claims
+                    ],
+                    "supporting_sources": supporting_sources,
                 }
             )
-        summary = "; ".join(str(item["query"]) for item in top_items[:3])
+        summary_parts = []
+        for item in top_items[:3]:
+            claims = item.get("supporting_claims", [])
+            claim_text = ""
+            if isinstance(claims, list) and claims and isinstance(claims[0], dict):
+                claim_text = f" -> {str(claims[0].get('text', ''))[:180]}"
+            summary_parts.append(f"{item['query']}{claim_text}")
+        summary = "; ".join(summary_parts)
         return {
             "run_id": self.run_id,
             "goal": self.goal,
             "mode": "optimize_query",
             "summary": summary,
             "top_query_findings": top_items,
-            "optimizer_instruction": "Use the top query findings as strategy context when proposing optimization variants.",
+            "optimizer_instruction": (
+                "Use the retrieved supporting claims and source summaries as strategy context when proposing "
+                "optimization variants. Do not rely on query wording alone."
+            ),
             "has_evaluator": self.evaluator is not None,
             "evaluator_name": self.evaluator_name or None,
         }
@@ -1591,7 +1641,14 @@ class EvolutionaryOuterLoop:
                     kind="query",
                     payload=str(item.get("query", "")),
                     parent_ids=[],
-                    metadata={"seed_score": item.get("score", 0.0), "seed_summary": item.get("summary", "")},
+                    metadata={
+                        "seed_score": item.get("score", 0.0),
+                        "seed_summary": item.get("summary", ""),
+                        "seed_literature": {
+                            "claims": item.get("supporting_claims", []),
+                            "sources": item.get("supporting_sources", []),
+                        },
+                    },
                 )
             )
         return parents
@@ -1784,7 +1841,13 @@ class EvolutionaryOuterLoop:
             templates = templates + parent_mutations
         elif parents:
             context = self._optimizer_seed_prefix()
-            templates = [f"{context} {template} query_seed={parents[index % len(parents)].payload}" for index, template in enumerate(templates)]
+            templates = [
+                (
+                    f"{context} {_literature_seed_note(parents[index % len(parents)])} "
+                    f"{template} query_seed={parents[index % len(parents)].payload}"
+                )
+                for index, template in enumerate(templates)
+            ]
         return [
             Variant(
                 run_id=self.run_id,
@@ -1865,7 +1928,7 @@ class EvolutionaryOuterLoop:
         )
         try:
             payload = self.llm.complete_json(system, user, max_output_tokens=800, temperature=temperature)
-        except Exception:
+        except Exception as exc:
             if store:
                 tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
                 _record_timing_trace(
@@ -1880,6 +1943,7 @@ class EvolutionaryOuterLoop:
                     status="failed",
                     output_summary="LLM query proposal failed; fallback variants will be used.",
                     token_usage=tokens_after - tokens_before,
+                    errors=[f"{type(exc).__name__}: {exc}"],
                 )
             return []
         rows = payload.get("variants", [])
@@ -1971,7 +2035,7 @@ class EvolutionaryOuterLoop:
         )
         try:
             payload = self.llm.complete_json(system, user, max_output_tokens=800, temperature=temperature)
-        except Exception:
+        except Exception as exc:
             if store:
                 tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
                 _record_timing_trace(
@@ -1986,6 +2050,7 @@ class EvolutionaryOuterLoop:
                     status="failed",
                     output_summary="LLM code proposal failed; fallback variants will be used.",
                     token_usage=tokens_after - tokens_before,
+                    errors=[f"{type(exc).__name__}: {exc}"],
                 )
             return []
         rows = payload.get("variants", [])
@@ -2040,6 +2105,8 @@ class EvolutionaryOuterLoop:
         written to disk and run directly against the upstream orderbook-pm grader.
         """
         parent_snippets = [p.payload[:600] for p in parents if "class Strategy" in p.payload]
+        literature_seed_context = [_parent_literature_context(parent) for parent in parents]
+        literature_seed_context = [item for item in literature_seed_context if item]
         system = (
             "You are an expert market-making strategy developer for prediction markets. "
             "Generate complete, executable Python Strategy classes for the upstream orderbook_pm_challenge evaluator.\n\n"
@@ -2070,9 +2137,12 @@ class EvolutionaryOuterLoop:
                 "goal": self.goal,
                 "outer_iteration": outer_iteration,
                 "parent_strategies": parent_snippets,
+                "literature_seed_context": literature_seed_context,
                 "population_size": self.population_size,
                 "instruction": (
                     "Generate diverse strategies that differ meaningfully in logic. "
+                    "When literature_seed_context is present, each strategy must name the specific retrieved claim "
+                    "or source insight that inspired its quoting, cancellation, inventory, or sizing logic. "
                     "Try different approaches: e.g., one with aggressive inventory skew, "
                     "one with very wide spreads, one adaptive to competitor mid changes, "
                     "one that only quotes on one side based on inventory. "
@@ -2087,7 +2157,7 @@ class EvolutionaryOuterLoop:
         tokens_before = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
         try:
             payload = self.llm.complete_json(system, user, max_output_tokens=3000, temperature=temperature)
-        except Exception:
+        except Exception as exc:
             if store:
                 tokens_after = self.llm.total_prompt_tokens + self.llm.total_completion_tokens
                 _record_timing_trace(
@@ -2102,6 +2172,7 @@ class EvolutionaryOuterLoop:
                     status="failed",
                     output_summary="LLM prediction-market code proposal failed; fallback variants will be used.",
                     token_usage=tokens_after - tokens_before,
+                    errors=[f"{type(exc).__name__}: {exc}"],
                 )
             return []
         rows = payload.get("variants", [])
@@ -2253,6 +2324,57 @@ def _score_history(store: Optional[ArtifactStore], *, mode: str, limit: int = 8)
     return history
 
 
+def _parent_literature_context(parent: Variant) -> dict[str, object]:
+    seed = parent.metadata.get("seed_literature")
+    if not isinstance(seed, dict):
+        return {}
+    claims = seed.get("claims") if isinstance(seed.get("claims"), list) else []
+    sources = seed.get("sources") if isinstance(seed.get("sources"), list) else []
+    trimmed_claims = [
+        {
+            "text": str(claim.get("text", ""))[:500],
+            "confidence": claim.get("confidence", 0.0),
+            "source_ids": claim.get("source_ids", []),
+        }
+        for claim in claims
+        if isinstance(claim, dict)
+    ][:5]
+    trimmed_sources = [
+        {
+            "title": str(source.get("title", ""))[:240],
+            "url": str(source.get("url", "")),
+            "summary": str(source.get("summary", ""))[:500],
+            "source_type": str(source.get("source_type", "")),
+        }
+        for source in sources
+        if isinstance(source, dict)
+    ][:4]
+    if not trimmed_claims and not trimmed_sources:
+        return {}
+    return {
+        "query": parent.payload,
+        "claims": trimmed_claims,
+        "sources": trimmed_sources,
+    }
+
+
+def _literature_seed_note(parent: Variant) -> str:
+    context = _parent_literature_context(parent)
+    claims = context.get("claims", []) if context else []
+    sources = context.get("sources", []) if context else []
+    claim_note = ""
+    source_note = ""
+    if isinstance(claims, list) and claims and isinstance(claims[0], dict):
+        claim_note = str(claims[0].get("text", ""))[:180]
+    if isinstance(sources, list) and sources and isinstance(sources[0], dict):
+        source_note = str(sources[0].get("title", ""))[:120]
+    if claim_note:
+        return f"literature_inspiration='{claim_note}'"
+    if source_note:
+        return f"literature_source='{source_note}'"
+    return "literature_inspiration='none retrieved'"
+
+
 def _randomly_mutate_variant(variant: Variant, seed: int) -> Variant:
     """Return a copy of variant with every numeric token perturbed by ±10-40%.
 
@@ -2289,6 +2411,38 @@ def _support_level(confidence: float) -> str:
     if confidence >= 0.55:
         return "moderate"
     return "weak"
+
+
+def _retriever_fallbacks(retriever_name: str) -> list[str]:
+    scholarly = {"arxiv", "openalex", "semantic_scholar"}
+    if retriever_name in scholarly:
+        return [name for name in ["semantic_scholar", "openalex", "arxiv", "wikipedia", "local"] if name != retriever_name]
+    if retriever_name in {"docs_blogs", "web", "wikipedia"}:
+        return ["openalex", "semantic_scholar", "arxiv", "local"]
+    return ["local"]
+
+
+async def _search_backend_with_retry(backend: SearchBackend, query: str, limit: int) -> list[tuple[object, float]]:
+    attempts = 2 if _is_live_retriever(backend.tool_name) else 1
+    for attempt in range(attempts):
+        try:
+            return await asyncio.to_thread(backend.search, query, limit)
+        except Exception as exc:
+            if attempt + 1 >= attempts or not _is_rate_limit_error(exc):
+                raise
+            await asyncio.sleep(0.75 * (attempt + 1))
+    return []
+
+
+def _is_live_retriever(tool_name: str) -> bool:
+    return any(term in tool_name for term in ["api", "web", "wikipedia", "github"])
+
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError) and exc.code == 429:
+        return True
+    text = f"{type(exc).__name__}: {exc}".lower()
+    return "429" in text or "too many requests" in text or "rate limit" in text
 
 
 def _stable_judge_score(payload: str, metrics: dict[str, float]) -> float:
@@ -2542,7 +2696,7 @@ def _run_prediction_market_official(strategy_path: Path) -> dict[str, object]:
             text=True,
             capture_output=True,
             env=env,
-            timeout=float(os.environ.get("PREDICTION_MARKET_TIMEOUT_SECONDS", "120")),
+            timeout=float(os.environ.get("PREDICTION_MARKET_TIMEOUT_SECONDS", "300")),
         )
     except Exception as exc:
         result = _run_prediction_market_sandbox(strategy_path)
@@ -2677,7 +2831,6 @@ def main(path: str) -> None:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     strategy_cls = getattr(module, "Strategy")
-    strategy = strategy_cls()
     rng = random.Random(20260509)
     simulations = int(os.environ.get("PREDICTION_MARKET_SIMULATIONS", "200"))
     edge = 0.0
@@ -2685,10 +2838,11 @@ def main(path: str) -> None:
     arb_edge = 0.0
     failures = 0
     actions_seen = 0
-    yes_inventory = 0.0
-    no_inventory = 0.0
-    free_cash = 1000.0
     for sim in range(simulations):
+        strategy = strategy_cls()
+        yes_inventory = 0.0
+        no_inventory = 0.0
+        free_cash = 1000.0
         true_prob = max(0.02, min(0.98, 0.5 + rng.uniform(-0.2, 0.2)))
         buy_filled = 0.0
         sell_filled = 0.0
