@@ -807,7 +807,12 @@ def _filter_general_report_evidence(
 
     topic_terms = _report_topic_terms(run.user_goal)
     if topic_terms and len(retained_sources) > 6:
-        topic_sources = [source for source in retained_sources if _topic_relevance_score(source, topic_terms) > 0]
+        topic_sources = [
+            source
+            for source in retained_sources
+            if _topic_relevance_score(source, topic_terms) >= 2
+            and _topic_anchor_score(source, topic_terms) >= 1
+        ]
         if len(topic_sources) >= 3:
             retained_sources = topic_sources
 
@@ -905,26 +910,40 @@ REPORT_STOPWORDS = {
     "because",
     "been",
     "being",
+    "build",
+    "building",
     "can",
     "chatbots",
+    "companies",
+    "company",
+    "cross",
+    "current",
     "data",
     "dead",
     "does",
     "done",
+    "drives",
+    "evidence",
     "everywhere",
     "find",
     "for",
     "from",
+    "gaps",
     "give",
     "has",
     "have",
+    "historical",
     "how",
+    "identify",
     "into",
     "kinda",
     "literature",
     "lot",
     "more",
     "much",
+    "pattern",
+    "platform",
+    "platforms",
     "pure",
     "research",
     "show",
@@ -935,6 +954,8 @@ REPORT_STOPWORDS = {
     "these",
     "they",
     "this",
+    "thesis",
+    "third",
     "which",
     "white",
     "will",
@@ -946,6 +967,18 @@ REPORT_STOPWORDS = {
 def _report_topic_terms(goal: str) -> set[str]:
     normalized = goal.lower().replace("-", " ")
     tokens = {token for token in re.findall(r"[a-z][a-z0-9]{2,}", normalized) if token not in REPORT_STOPWORDS}
+    if "enterprise" in normalized:
+        tokens.update({"enterprise", "saas", "adoption", "internalization", "outsourcing", "proprietary"})
+    if "harness" in normalized:
+        tokens.update({"harness", "harnesses", "orchestration", "scaffold", "evaluation", "evals"})
+    if "multi-agent" in normalized or "inter-agent" in normalized:
+        tokens.update({"multiagent", "multi", "inter", "coordination", "communication", "collaboration"})
+    if "self-modification" in normalized or "self-improvement" in normalized or "self-correct" in normalized:
+        tokens.update({"self", "modification", "improvement", "reflection", "reflexion", "repair", "adaptation"})
+    if "trading" in normalized:
+        tokens.update({"trading", "market", "strategy", "strategies", "portfolio", "financial"})
+    if "evolutionary" in normalized:
+        tokens.update({"evolutionary", "evolution", "genetic", "population", "mutation", "selection", "computation"})
     if "white collar" in normalized:
         tokens.update({"occupation", "occupations", "employment", "labor", "productivity", "workplace"})
     if "ai" in normalized or "llm" in normalized or "large language" in normalized:
@@ -959,6 +992,50 @@ def _topic_relevance_score(row: dict[str, object], topic_terms: set[str]) -> int
     text = " ".join(_stringify_report_value(value) for value in row.values()).lower().replace("-", " ")
     tokens = set(re.findall(r"[a-z][a-z0-9]{2,}", text))
     return len(tokens & topic_terms)
+
+
+REPORT_ANCHOR_TERMS = {
+    "adoption",
+    "agentic",
+    "agents",
+    "autonomous",
+    "collaboration",
+    "computation",
+    "coordination",
+    "enterprise",
+    "evals",
+    "evaluation",
+    "evolution",
+    "evolutionary",
+    "genetic",
+    "harness",
+    "harnesses",
+    "improvement",
+    "internalization",
+    "llm",
+    "llms",
+    "market",
+    "modification",
+    "multiagent",
+    "outsourcing",
+    "proprietary",
+    "reflexion",
+    "reflection",
+    "repair",
+    "saas",
+    "self",
+    "strategy",
+    "trading",
+}
+
+
+def _topic_anchor_score(row: dict[str, object], topic_terms: set[str]) -> int:
+    anchor_terms = topic_terms & REPORT_ANCHOR_TERMS
+    if not anchor_terms:
+        return 1
+    text = " ".join(_stringify_report_value(value) for value in row.values()).lower().replace("-", " ")
+    tokens = set(re.findall(r"[a-z][a-z0-9]{2,}", text))
+    return len(tokens & anchor_terms)
 
 
 def _stringify_report_value(value: object) -> str:

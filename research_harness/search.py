@@ -50,6 +50,17 @@ SEARCH_STOPWORDS = {
     "understand",
     "understanding",
     "with",
+    "current",
+    "drives",
+    "emerging",
+    "historical",
+    "pattern",
+    "platform",
+    "platforms",
+    "technology",
+    "technologies",
+    "trend",
+    "trends",
 }
 class SearchBackend(Protocol):
     tool_name: str
@@ -596,6 +607,7 @@ def _source_from_document(document: CorpusDocument, relevance_score: float) -> S
 
 def _score_documents(query: str, documents: list[CorpusDocument]) -> list[tuple[CorpusDocument, float]]:
     query_terms = _content_tokens(query) or _tokens(query)
+    anchor_terms = _query_anchor_terms(query)
     minimum_overlap = _minimum_overlap(query_terms)
     scored = []
     for document in documents:
@@ -604,10 +616,54 @@ def _score_documents(query: str, documents: list[CorpusDocument]) -> list[tuple[
         overlap = len(query_terms & haystack_terms)
         if overlap < minimum_overlap:
             continue
-        score = min(1.0, 0.30 + (overlap / max(len(query_terms), 1)) * 0.50)
+        anchor_overlap = len(anchor_terms & haystack_terms) if anchor_terms else 0
+        if anchor_terms and anchor_overlap == 0 and overlap < max(minimum_overlap + 2, 4):
+            continue
+        score = min(1.0, 0.25 + (overlap / max(len(query_terms), 1)) * 0.45 + min(anchor_overlap, 4) * 0.08)
         scored.append((document, round(score, 3)))
     scored.sort(key=lambda pair: (pair[1], pair[0].credibility_score), reverse=True)
     return scored
+
+
+def _query_anchor_terms(query: str) -> set[str]:
+    terms = _content_tokens(query)
+    anchors = {
+        "agent",
+        "agentic",
+        "agents",
+        "autonomous",
+        "enterprise",
+        "saas",
+        "internalization",
+        "outsourcing",
+        "proprietary",
+        "harness",
+        "harnesses",
+        "third",
+        "party",
+        "multi",
+        "inter",
+        "self",
+        "modification",
+        "updates",
+        "trading",
+        "strategy",
+        "eval",
+        "evals",
+        "evaluation",
+        "evaluations",
+        "evolutionary",
+        "computation",
+        "llm",
+        "llms",
+        "improvement",
+        "self-correct",
+        "self-correction",
+    }
+    selected = terms & anchors
+    if "large" in terms and "language" in terms:
+        selected.update({"language", "model"})
+    return selected
 
 
 def _minimum_overlap(query_terms: set[str]) -> int:

@@ -819,6 +819,77 @@ class SmokeTest(unittest.TestCase):
             result = default_graders()["report_no_fabricated_sources"].grade(task, store)
             self.assertTrue(result.passed, result.assertions)
 
+    def test_research_report_filters_broad_technology_false_positives(self) -> None:
+        prompt = (
+            "What is the current evidence that enterprise AI agent adoption follows the historical SaaS "
+            "internalization-then-outsourcing pattern? Find literature on proprietary agent harnesses, "
+            "multi-agent self-modification, autonomous trading agents, evolutionary computation, and LLM self-improvement."
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            run = RunRecord(
+                id="run_enterprise_agents",
+                user_goal=prompt,
+                task_type="open_ended",
+                task_mode="research",
+                product_agent="research",
+                harness_config_id="test",
+                prompt_versions={},
+                harness_config_snapshot={},
+            )
+            good_sources = [
+                ("https://doi.org/10.1007/s11704-024-40231-1", "A survey on large language model based autonomous agents", "LLM autonomous agents use planning, tool use, and multi-agent coordination."),
+                ("https://arxiv.org/abs/2310.11511", "Self-Refine: Iterative Refinement with Self-Feedback", "LLMs can improve outputs through self-feedback and iterative refinement."),
+                ("https://doi.org/10.1109/TEVC.2002.804320", "Evolutionary computation in dynamic optimization", "Evolutionary algorithms adapt strategies through selection and mutation."),
+            ]
+            bad_sources = [
+                ("https://doi.org/10.1109/access.2019.2932609", "Internet-of-Things (IoT)-Based Smart Agriculture", "Wireless sensors and IoT platforms support irrigation, crop surveillance, and harvesting."),
+                ("https://doi.org/10.1109/access.2019.2953499", "A Survey on Digital Twin", "Digital twin platforms model industrial assets and applications."),
+                ("https://doi.org/10.1186/s40537-020-00369-8", "CatBoost for big data", "Gradient boosting supports big data classification across domains."),
+                ("https://doi.org/10.1109/ojcoms.2021.3071496", "Survey on 6G Frontiers", "6G communications enable future wireless applications and services."),
+            ]
+            for url, title, summary in good_sources + bad_sources:
+                source = store.add_source(
+                    Source(
+                        url=url,
+                        title=title,
+                        author="Researcher",
+                        date="2024",
+                        source_type="paper",
+                        summary=summary,
+                        relevance_score=0.8,
+                        credibility_score=0.8,
+                        evidence_sections={"abstract": summary},
+                    )
+                )
+                store.add_claim(
+                    Claim(
+                        text=summary,
+                        source_ids=[source.id],
+                        confidence=0.8,
+                        support_level="strong",
+                        created_by_agent="test",
+                        run_id=run.id,
+                    )
+                )
+
+            asyncio.run(
+                SynthesisAgent(
+                    name="test_synthesis",
+                    role="synthesis_agent",
+                    prompt_template="test",
+                    llm=LLMClient(provider="local"),
+                ).run(run, store)
+            )
+
+            tex = store.report_tex_path.read_text(encoding="utf-8")
+            self.assertIn("large language model based autonomous agents", tex)
+            self.assertIn("Self-Refine", tex)
+            self.assertNotIn("Smart Agriculture", tex)
+            self.assertNotIn("Digital Twin", tex)
+            self.assertNotIn("CatBoost", tex)
+            self.assertNotIn("6G Frontiers", tex)
+
     def test_prediction_market_dont_stop_profit_target_keeps_prd_incomplete_until_met(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             orchestrator = Orchestrator(
@@ -1178,6 +1249,40 @@ class ArxivRetrieverTest(unittest.TestCase):
         scored = _score_documents("machine learning papers datasets foundations", documents)
 
         self.assertEqual([document.title for document, _score in scored], ["Scikit-learn: Machine Learning in Python"])
+
+    def test_search_scoring_rejects_broad_iot_false_positive_for_agent_prompt(self) -> None:
+        documents = [
+            CorpusDocument(
+                url="https://doi.org/10.1007/s11704-024-40231-1",
+                title="A survey on large language model based autonomous agents",
+                author="Xi et al.",
+                date="2024",
+                source_type="paper",
+                summary="LLM autonomous agents plan, use tools, communicate in multi-agent systems, and adapt through feedback.",
+                claims=["Autonomous agents can use tools and coordinate with other agents."],
+                tags=["llm", "autonomous agents", "multi-agent systems"],
+                credibility_score=0.82,
+            ),
+            CorpusDocument(
+                url="https://doi.org/10.1109/access.2019.2932609",
+                title="Internet-of-Things (IoT)-Based Smart Agriculture",
+                author="Researcher",
+                date="2019",
+                source_type="paper",
+                summary="Wireless sensors and IoT platforms support irrigation, crop surveillance, and harvesting.",
+                claims=["IoT devices and communication techniques are used in agriculture applications."],
+                tags=["iot", "agriculture", "sensors"],
+                credibility_score=0.8,
+            ),
+        ]
+
+        prompt = (
+            "enterprise AI agent adoption proprietary agent harnesses multi-agent self-modification "
+            "inter-agent communication autonomous trading agents internal evals evolutionary computation LLM self-improvement"
+        )
+        scored = _score_documents(prompt, documents)
+
+        self.assertEqual([document.title for document, _score in scored], ["A survey on large language model based autonomous agents"])
 
     def test_paper_requests_use_scholarly_api_strategy_not_local_memory(self) -> None:
         orchestrator = Orchestrator(
