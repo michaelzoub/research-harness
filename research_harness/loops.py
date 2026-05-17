@@ -436,8 +436,16 @@ class ResearchLoop:
                 status="completed",
                 output_summary=evaluation.summary,
                 token_usage=tokens_after - tokens_before,
-                tools_used=[retriever_name],
-                tool_calls=[{"tool": retriever_name, "query": variant.payload, "results": len(sources)}],
+                tools_used=[backend.tool_name],
+                tool_calls=[
+                    {
+                        "tool": backend.tool_name,
+                        "requested_tool": retriever_name,
+                        "query": variant.payload,
+                        "results": len(sources),
+                        "fallback_used": bool(retrieval_notes),
+                    }
+                ],
             )
             return evaluation
         except Exception as exc:

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from ...store import ArtifactStore
-from ..trajectory import graph_trajectory_match, normalized_trajectory_events, trajectory_match
+from ..trajectory import graph_trajectory_match, normalized_trajectory_events, trajectory_graph, trajectory_match
 from ..types import EvalTask, EvalTrial, GraderResult
 from .common import _result
 
@@ -264,4 +267,3 @@ def _grade_parallel_trial_isolation_from_trials(task: EvalTask, trials: list[Eva
         f"Checked {len(trials)} trial(s) for distinct roots, output roots, tmpdirs, and run ids.",
         [{"check": name, "passed": passed} for name, passed in checks],
     )
-

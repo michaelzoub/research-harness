@@ -28,49 +28,52 @@ def _grade_research_source_diversity(task: EvalTask, store: ArtifactStore) -> Gr
     traces = store.list("agent_traces")
     sources = store.list("sources")
     min_families = int(task.metadata.get("min_distinct_source_families", 4))
-    tool_names = _called_tool_names(traces)
-    families = sorted({_tool_source_family(tool_name) for tool_name in tool_names})
-    passed = len(families) >= min_families
-    score = min(1.0, len(families) / max(min_families, 1))
+    successful_tool_names = _successful_tool_names(traces)
+    tool_families = sorted({_tool_source_family(tool_name) for tool_name in successful_tool_names})
+    source_families = sorted({_source_family(source) for source in sources})
+    passed = len(tool_families) >= min_families and len(source_families) >= min_families
+    score = min(1.0, min(len(tool_families), len(source_families)) / max(min_families, 1))
     return _result(
         "research_source_diversity",
         "code",
-        "tool/API source-family superset check",
+        "successful tool/API and retained-source family check",
         score,
         passed,
         1.0,
-        f"Research called {len(families)} distinct source family/families from {len(tool_names)} tool call(s); retained {len(sources)} source artifact(s).",
+        (
+            f"Research successfully called {len(tool_families)} distinct source family/families "
+            f"and retained {len(source_families)} source artifact family/families."
+        ),
         [
             {
-                "check": "min_distinct_tool_sources",
-                "actual": len(families),
+                "check": "min_distinct_successful_tool_sources",
+                "actual": len(tool_families),
                 "expected_at_least": min_families,
-                "families": families,
-                "tools": sorted(tool_names),
-                "passed": passed,
+                "families": tool_families,
+                "tools": sorted(successful_tool_names),
+                "passed": len(tool_families) >= min_families,
             },
             {
-                "check": "source_artifacts_present",
-                "actual": len(sources),
+                "check": "min_distinct_retained_source_families",
+                "actual": len(source_families),
                 "expected_at_least": min_families,
-                "passed": len(sources) >= min_families,
+                "families": source_families,
+                "passed": len(source_families) >= min_families,
             },
         ],
     )
 
 
-def _called_tool_names(traces: list[dict[str, object]]) -> set[str]:
+def _successful_tool_names(traces: list[dict[str, object]]) -> set[str]:
     tool_names: set[str] = set()
     for trace in traces:
-        for tool in trace.get("tools_used", []) if isinstance(trace.get("tools_used"), list) else []:
-            clean = str(tool).strip()
-            if clean:
-                tool_names.add(clean)
         calls = trace.get("tool_calls", [])
         if not isinstance(calls, list):
             continue
         for call in calls:
             if not isinstance(call, dict):
+                continue
+            if int(call.get("results", 0) or 0) <= 0:
                 continue
             clean = str(call.get("tool", "")).strip()
             if clean:
@@ -80,6 +83,34 @@ def _called_tool_names(traces: list[dict[str, object]]) -> set[str]:
 
 def _tool_source_family(tool_name: str) -> str:
     return TOOL_SOURCE_FAMILIES.get(tool_name, tool_name.removesuffix("_search").removesuffix("_api"))
+
+
+def _source_family(source: dict[str, object]) -> str:
+    source_type = str(source.get("source_type", "")).lower()
+    url = str(source.get("url", "")).lower()
+    if "arxiv" in source_type or "arxiv.org" in url:
+        return "arxiv"
+    if "openalex" in source_type or "openalex.org" in url:
+        return "openalex"
+    if "semantic_scholar" in source_type or "semanticscholar.org" in url:
+        return "semantic_scholar"
+    if "github" in source_type or "github.com" in url:
+        return "github"
+    if source_type in {"docs_blog", "docs_blogs"}:
+        return "docs_blogs"
+    if source_type.startswith("wikipedia") or "wikipedia.org" in url:
+        return "wikipedia"
+    if source_type == "web_result":
+        return "web"
+    if source_type == "social_web":
+        return "social"
+    if source_type.startswith("alchemy"):
+        return "alchemy"
+    if source_type == "prior_artifact_memory":
+        return "memory"
+    if source_type in {"local_corpus", "paper", "benchmark_report", "systems_note", "challenge_spec"}:
+        return "local"
+    return source_type or "unknown"
 
 
 def _grade_report_no_fabricated_sources(task: EvalTask, store: ArtifactStore) -> GraderResult:
@@ -92,12 +123,10 @@ def _grade_report_no_fabricated_sources(task: EvalTask, store: ArtifactStore) ->
     fabricated = []
     is_prediction_market_task = _is_prediction_market_eval_task(task)
     for url in report_urls:
-        if _is_placeholder_report_url(url):
-            fabricated.append({"url": url, "reason": "placeholder/example domain"})
+        if url not in known_urls:
+            fabricated.append({"url": url, "reason": "not in sources.json"})
         elif not is_prediction_market_task and _is_prediction_market_report_url(url):
             fabricated.append({"url": url, "reason": "prediction-market challenge source in non-challenge report"})
-        elif url not in known_urls:
-            fabricated.append({"url": url, "reason": "not in sources.json"})
     if not is_prediction_market_task and _references_prediction_market_challenge(report + "\n" + tex):
         fabricated.append({"url": "report text", "reason": "prediction-market challenge reference in non-challenge report"})
     passed = not fabricated

@@ -445,10 +445,10 @@ def run_preflight_evals(args: argparse.Namespace) -> None:
     except ValueError as exc:
         raise SystemExit(f"Preflight eval selection failed: {exc}") from exc
     output_root = Path(os.environ.get("AUTORE_PREFLIGHT_OUTPUT_DIR", "eval_outputs/preflight"))
-    print(f"Preflight evals: running {suite.id} ({len(suite.tasks)} eval(s))")
+    print(f"Preflight evals: running {suite.id} ({len(suite.tasks)} eval(s))", flush=True)
     summary = asyncio.run(EvaluationHarness(corpus_path=args.corpus, output_root=output_root).run_suite(suite))
     if summary.passed_trials == summary.trial_count:
-        print(f"Preflight evals: passed {summary.passed_trials}/{summary.trial_count}")
+        print(f"Preflight evals: passed {summary.passed_trials}/{summary.trial_count}", flush=True)
         return
     failed = [trial for trial in summary.trials if not trial.get("passed")]
     lines = [

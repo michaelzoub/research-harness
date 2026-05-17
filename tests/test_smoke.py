@@ -122,6 +122,15 @@ class SmokeTest(unittest.TestCase):
 
         self.assertIsNone(args.goal)
         self.assertFalse(args.interactive)
+        self.assertFalse(args.preflight)
+
+    def test_cli_preflight_is_explicit_option(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["--preflight", "--preflight-eval", "research_uses_at_least_four_source_families", "Research agents"])
+
+        self.assertTrue(args.preflight)
+        self.assertEqual(args.preflight_suite, "preflight")
+        self.assertEqual(args.preflight_eval_ids, ["research_uses_at_least_four_source_families"])
 
     def test_interactive_cli_setup_collects_run_choices(self) -> None:
         parser = build_parser()
@@ -1199,6 +1208,8 @@ class EvaluationHarnessTest(unittest.TestCase):
                     model="local",
                     tools_used=["openalex_api_search", "semantic_scholar_api_search"],
                     tool_calls=[
+                        {"tool": "openalex_api_search", "query": "transformer efficiency", "results": 2},
+                        {"tool": "semantic_scholar_api_search", "query": "transformer efficiency", "results": 2},
                         {"tool": "arxiv_api_search", "query": "transformer efficiency", "results": 2},
                         {"tool": "web_search", "query": "transformer efficiency benchmarks", "results": 2},
                     ],
@@ -1228,6 +1239,60 @@ class EvaluationHarnessTest(unittest.TestCase):
             self.assertTrue(result.passed)
             self.assertEqual(result.assertions[0]["actual"], 4)
             self.assertEqual(result.assertions[0]["families"], ["arxiv", "openalex", "semantic_scholar", "web"])
+
+    def test_research_source_diversity_does_not_count_requested_failed_tools(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            task = EvalTask(
+                id="source_diversity",
+                name="Source diversity",
+                prompt="Research transformer efficiency",
+                task_mode="research",
+                success_criteria=[],
+                metadata={"min_distinct_source_families": 4},
+            )
+            store.add_trace(
+                AgentTrace(
+                    run_id="run_test",
+                    agent_name="research_eval",
+                    role="research_variant_agent",
+                    prompt="",
+                    model="local",
+                    tools_used=["local_corpus_search"],
+                    tool_calls=[
+                        {
+                            "tool": "local_corpus_search",
+                            "requested_tool": "github_repo_search",
+                            "query": "transformer efficiency",
+                            "results": 1,
+                            "fallback_used": True,
+                        }
+                    ],
+                    token_usage=0,
+                    runtime_ms=1,
+                    status="completed",
+                    errors=[],
+                    output_summary="github failed; local fallback used",
+                )
+            )
+            store.add_source(
+                Source(
+                    url="https://example.test/local",
+                    title="Local fallback source",
+                    author="author",
+                    date="2026",
+                    source_type="paper",
+                    summary="summary",
+                    relevance_score=0.9,
+                    credibility_score=0.9,
+                )
+            )
+
+            result = default_graders()["research_source_diversity"].grade(task, store)
+
+            self.assertFalse(result.passed)
+            self.assertEqual(result.assertions[0]["families"], ["local"])
+            self.assertEqual(result.assertions[1]["families"], ["local"])
 
     def test_native_trajectory_match_modes(self) -> None:
         actual = [
