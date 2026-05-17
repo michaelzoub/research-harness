@@ -3,6 +3,9 @@ from __future__ import annotations
 from .types import EvalSuite, EvalTask
 
 
+SUITE_CHOICES = ("core", "edge", "preflight", "all")
+
+
 def default_eval_suite() -> EvalSuite:
     return EvalSuite(
         id="core",
@@ -459,12 +462,141 @@ def edge_eval_suite() -> EvalSuite:
 def all_eval_suite() -> EvalSuite:
     core = default_eval_suite()
     edge = edge_eval_suite()
+    preflight = preflight_eval_suite()
     return EvalSuite(
         id="all",
         name="All Harness Evaluation Suites",
-        description=f"{core.description} {edge.description}",
-        tasks=core.tasks + edge.tasks,
+        description=f"{core.description} {edge.description} {preflight.description}",
+        tasks=core.tasks + edge.tasks + preflight.tasks,
         trials_per_task=core.trials_per_task,
     )
 
 
+def preflight_eval_suite() -> EvalSuite:
+    return EvalSuite(
+        id="preflight",
+        name="Preflight Regression Evaluation Suite",
+        description=(
+            "Fast sentinel evals for behavior that should not regress before autore runs: "
+            "tool/source diversity, deterministic routing, trajectory shape, and artifact contracts."
+        ),
+        tasks=[
+            EvalTask(
+                id="research_uses_at_least_four_source_families",
+                name="Research calls at least four source/tool families",
+                prompt="Research recent advances in transformer architecture efficiency for large language models",
+                task_mode="research",
+                retriever="auto",
+                max_iterations=2,
+                success_criteria=[
+                    "Run completes",
+                    "Research calls at least four distinct source/tool families",
+                    "Sources and claims are persisted",
+                    "Report cites retained sources without fabricated URLs",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "research_source_diversity",
+                    "research_groundedness",
+                    "report_no_fabricated_sources",
+                    "prompt_output_relevance",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+                metadata={"min_distinct_source_families": 4},
+            ),
+            EvalTask(
+                id="optimize_direct_preflight",
+                name="Direct optimization still uses deterministic evaluator",
+                prompt="Optimize a tiny scoring function",
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=2,
+                success_criteria=[
+                    "Run routes to optimize",
+                    "Optimizer scores variants with the deterministic evaluator",
+                    "An optimization artifact is emitted",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "optimize_score",
+                    "optimization_code_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+            ),
+            EvalTask(
+                id="trajectory_match_modes_preflight",
+                name="Trajectory evaluators still enforce match modes",
+                prompt="Optimize a tiny scoring function across multiple rounds so the harness records a trajectory",
+                task_mode="optimize",
+                evaluator_name="length_score",
+                max_iterations=3,
+                success_criteria=[
+                    "Normalized trajectory events are extracted from artifacts",
+                    "Strict, unordered, subset, and superset checks run against the trajectory",
+                    "Graph trajectory edges match the expected harness flow",
+                ],
+                grader_ids=[
+                    "outcome_completed",
+                    "mode_selected",
+                    "trajectory_match_modes",
+                    "graph_trajectory_match",
+                    "trajectory_graph_artifact",
+                    "isolation_clean_trial",
+                ],
+                aggregation="binary",
+                metadata={
+                    "reference_trajectory": [
+                        {"type": "router", "name": "optimize"},
+                        {"type": "outer_loop", "name": "optimize"},
+                        {"type": "inner_loop", "name": "optimize"},
+                        {"type": "selection", "name": "variant"},
+                        {"type": "outcome", "name": "completed"},
+                    ],
+                    "required_graph_edges": [
+                        ["prompt", "router"],
+                        ["router", "outer"],
+                        ["outer", "inner"],
+                        ["inner", "select"],
+                        ["select", "agents"],
+                        ["agents", "outcome"],
+                    ],
+                },
+            ),
+        ],
+    )
+
+
+def eval_suite_by_id(suite_id: str) -> EvalSuite:
+    if suite_id == "core":
+        return default_eval_suite()
+    if suite_id == "edge":
+        return edge_eval_suite()
+    if suite_id == "preflight":
+        return preflight_eval_suite()
+    if suite_id == "all":
+        return all_eval_suite()
+    raise ValueError(f"Unknown eval suite: {suite_id}")
+
+
+def select_eval_tasks(suite: EvalSuite, eval_ids: list[str]) -> EvalSuite:
+    if not eval_ids:
+        return suite
+    requested = []
+    for raw in eval_ids:
+        requested.extend(part.strip() for part in raw.split(",") if part.strip())
+    selected = [task for task in suite.tasks if task.id in requested]
+    found = {task.id for task in selected}
+    missing = [eval_id for eval_id in requested if eval_id not in found]
+    if missing:
+        available = ", ".join(task.id for task in suite.tasks)
+        raise ValueError(f"Unknown eval id(s): {', '.join(missing)}. Available in {suite.id}: {available}")
+    return EvalSuite(
+        id=suite.id if not requested else f"{suite.id}_selected",
+        name=suite.name if not requested else f"{suite.name} (selected)",
+        description=suite.description,
+        tasks=selected,
+        trials_per_task=suite.trials_per_task,
+    )

@@ -9,6 +9,79 @@ from ..types import EvalTask, GraderResult
 from .common import _result
 
 
+TOOL_SOURCE_FAMILIES = {
+    "alchemy_blockchain_search": "alchemy",
+    "arxiv_api_search": "arxiv",
+    "docs_blogs_search": "docs_blogs",
+    "github_repo_search": "github",
+    "local_corpus_search": "local",
+    "openalex_api_search": "openalex",
+    "prior_artifact_memory_search": "memory",
+    "semantic_scholar_api_search": "semantic_scholar",
+    "social_web_search": "social",
+    "web_search": "web",
+    "wikipedia_search": "wikipedia",
+}
+
+
+def _grade_research_source_diversity(task: EvalTask, store: ArtifactStore) -> GraderResult:
+    traces = store.list("agent_traces")
+    sources = store.list("sources")
+    min_families = int(task.metadata.get("min_distinct_source_families", 4))
+    tool_names = _called_tool_names(traces)
+    families = sorted({_tool_source_family(tool_name) for tool_name in tool_names})
+    passed = len(families) >= min_families
+    score = min(1.0, len(families) / max(min_families, 1))
+    return _result(
+        "research_source_diversity",
+        "code",
+        "tool/API source-family superset check",
+        score,
+        passed,
+        1.0,
+        f"Research called {len(families)} distinct source family/families from {len(tool_names)} tool call(s); retained {len(sources)} source artifact(s).",
+        [
+            {
+                "check": "min_distinct_tool_sources",
+                "actual": len(families),
+                "expected_at_least": min_families,
+                "families": families,
+                "tools": sorted(tool_names),
+                "passed": passed,
+            },
+            {
+                "check": "source_artifacts_present",
+                "actual": len(sources),
+                "expected_at_least": min_families,
+                "passed": len(sources) >= min_families,
+            },
+        ],
+    )
+
+
+def _called_tool_names(traces: list[dict[str, object]]) -> set[str]:
+    tool_names: set[str] = set()
+    for trace in traces:
+        for tool in trace.get("tools_used", []) if isinstance(trace.get("tools_used"), list) else []:
+            clean = str(tool).strip()
+            if clean:
+                tool_names.add(clean)
+        calls = trace.get("tool_calls", [])
+        if not isinstance(calls, list):
+            continue
+        for call in calls:
+            if not isinstance(call, dict):
+                continue
+            clean = str(call.get("tool", "")).strip()
+            if clean:
+                tool_names.add(clean)
+    return tool_names
+
+
+def _tool_source_family(tool_name: str) -> str:
+    return TOOL_SOURCE_FAMILIES.get(tool_name, tool_name.removesuffix("_search").removesuffix("_api"))
+
+
 def _grade_report_no_fabricated_sources(task: EvalTask, store: ArtifactStore) -> GraderResult:
     report = store.report_path.read_text(encoding="utf-8") if store.report_path.exists() else ""
     tex_path = getattr(store, "report_tex_path", store.root / "final_report.tex")
@@ -398,4 +471,3 @@ def _grade_prompt_output_relevance(task: EvalTask, store: ArtifactStore) -> Grad
             {"check": "source_relevance", "relevant": len(relevant_sources), "total": len(sources), "ratio": round(source_ratio, 3), "passed": source_ratio >= 0.2},
         ],
     )
-

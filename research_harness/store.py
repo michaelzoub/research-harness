@@ -88,6 +88,7 @@ class ArtifactStore:
         self.report_pdf_path = self.root / "final_report.pdf"
         self.report_preview_path = self.root / "final_report_preview.png"
         self.prd_path = self.root / "prd.json"
+        self.prior_run_memory_path = self.root / "prior_run_memory.json"
         self.optimizer_seed_context_path = self.root / "optimizer_seed_context.json"
         self.optimized_candidate_path = self.root / "optimized_candidate.txt"
         self.optimal_code_path = self.root / "optimal_code.py"
@@ -362,6 +363,12 @@ class ArtifactStore:
         self.prd_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         self._record_artifact_write(self.prd_path, "prd")
         return self.prd_path
+
+    def write_prior_run_memory(self, payload: dict[str, Any]) -> Path:
+        self._snapshot_before_write(self.prior_run_memory_path, "before writing prior run memory")
+        self.prior_run_memory_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._record_artifact_write(self.prior_run_memory_path, "prior_run_memory")
+        return self.prior_run_memory_path
 
     def write_optimizer_seed_context(self, payload: dict[str, Any]) -> Path:
         self._snapshot_before_write(self.optimizer_seed_context_path, "before writing optimizer seed context")

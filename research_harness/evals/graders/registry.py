@@ -48,6 +48,7 @@ from .research import (
     _grade_report_no_fabricated_sources,
     _grade_report_rubric,
     _grade_research_groundedness,
+    _grade_research_source_diversity,
 )
 
 
@@ -59,6 +60,7 @@ def default_graders() -> dict[str, Grader]:
         "mode_selected": Grader("mode_selected", "code", "tool/output verification", 1.0, 1.0, _grade_mode_selected),
         "artifact_report": Grader("artifact_report", "code", "artifact existence", 0.75, 1.0, _grade_report_artifact),
         "research_groundedness": Grader("research_groundedness", "code", "groundedness assertions", 1.25, 0.8, _grade_research_groundedness),
+        "research_source_diversity": Grader("research_source_diversity", "code", "tool/API source-family superset check", 1.25, 1.0, _grade_research_source_diversity),
         "literature_section_evidence": Grader("literature_section_evidence", "code", "paper-section evidence verification", 1.0, 0.8, _grade_literature_section_evidence),
         "hypothesis_evidence_matrix": Grader("hypothesis_evidence_matrix", "code", "hypothesis proof/counterpoint verification", 1.0, 0.8, _grade_hypothesis_evidence_matrix),
         "report_no_fabricated_sources": Grader("report_no_fabricated_sources", "code", "source URL verification", 1.0, 1.0, _grade_report_no_fabricated_sources),
@@ -92,4 +94,3 @@ def default_graders() -> dict[str, Grader]:
         "isolation_clean_trial": Grader("isolation_clean_trial", "code", "environment isolation check", 1.0, 1.0, _grade_isolation_clean_trial),
         "prompt_output_relevance": Grader("prompt_output_relevance", "code", "prompt-output topical relevance", 1.0, 0.4, _grade_prompt_output_relevance),
     }
-

@@ -300,7 +300,7 @@ class CriticAgent(BaseAgent):
         if not hypotheses:
             store.add_open_question(
                 OpenQuestion(
-                    question="Which mechanisms or optimization paths should be explored next?",
+                    question="Which evidence-backed directions should be explored next?",
                     priority=1,
                     reason="No hypotheses were generated from the current evidence set.",
                     created_by_agent=self.name,
@@ -1577,33 +1577,41 @@ def _key_takeaways(
     contradictions: list[dict[str, object]],
 ) -> list[str]:
     if not claims:
-        return ["My read: the evidence base is too thin to take a strong position yet."]
+        return ["The retained evidence is too thin to support a strong synthesis yet."]
     avg_confidence = sum(float(claim.get("confidence", 0.0)) for claim in claims) / max(len(claims), 1)
     strong_claims = [claim for claim in claims if float(claim.get("confidence", 0.0)) >= 0.65]
     topic = str(run.user_goal).rstrip(".")
+    strongest = strong_claims[0] if strong_claims else max(claims, key=lambda claim: float(claim.get("confidence", 0.0)))
+    strongest_text = str(strongest.get("text", "")).strip()
+    source_ids = [str(source_id) for source_id in strongest.get("source_ids", [])]
+    source_lookup = {str(source.get("id", "")): source for source in sources}
+    cited_sources = [source_lookup[source_id] for source_id in source_ids if source_id in source_lookup]
+    source_note = ""
+    if cited_sources:
+        source_note = f" Best cited source: {_plain_citation(cited_sources[0])}."
     takeaways = [
         (
-            f"My read: the thesis behind '{topic}' is plausible but not proven by this run; "
-            f"the current evidence is directional, with average claim confidence {avg_confidence:.2f}."
+            f"For '{topic}', this run retained {len(claims)} grounded claim(s) from {len(sources)} source(s); "
+            f"average claim confidence is {avg_confidence:.2f}."
         ),
         (
-            f"The strongest support is that {len(strong_claims)} higher-confidence claim(s) describe agentic systems "
-            "as moving beyond static chat toward planning, retrieval, tool use, and workflow execution."
+            f"The strongest retained signal is: {strongest_text[:260]}.{source_note}"
         ),
     ]
     if hypotheses:
-        takeaways.append(f"The most actionable hypothesis is: {str(hypotheses[0].get('text', ''))[:260]}.")
+        takeaways.append(f"The leading evidence-backed direction is: {str(hypotheses[0].get('text', ''))[:260]}.")
     if contradictions:
         takeaways.append(
-            "I would not treat this as settled: the run found unresolved counter-signals, so deployment and labor-impact claims need source-level resolution."
+            f"Uncertainty remains: {len(contradictions)} contradiction or caveat record(s) need source-level resolution before treating the conclusion as settled."
         )
     else:
         takeaways.append(
-            "The main caveat is external validity: abstracts and surveys show capability and adoption pressure, but do not by themselves prove ubiquity."
+            "No major contradiction was retained, but absence of contradiction in this run is not proof that the claim is settled."
         )
     if sources:
+        source_types = sorted({str(source.get("source_type", "source")) for source in sources if source.get("source_type")})
         takeaways.append(
-            f"Before the literature detail, my bottom line is: expect agentic workflows to spread first where tasks are document-heavy, repeatable, and tool-mediated; broad white-collar replacement remains a stronger claim than the evidence here can verify."
+            f"Before the literature detail, the practical bottom line is to anchor next steps in the retained {', '.join(source_types[:4]) or 'source'} evidence rather than importing an outside storyline."
         )
     return takeaways[:5]
 

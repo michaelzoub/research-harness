@@ -36,7 +36,7 @@ def prediction_market_score(payload: str) -> float:
     raw_edges = [_simulate_regime(profile, seed) for seed in range(200)]
     mean_edge = sum(raw_edges) / len(raw_edges)
     risk_penalty = _risk_penalty(profile, raw_edges)
-    normalized = 0.5 + (math.tanh((mean_edge - risk_penalty) / 90.0) * 0.45)
+    normalized = 0.5 + (math.tanh((mean_edge - risk_penalty) / 12000.0) * 0.45)
     return round(max(0.0, min(1.0, normalized)), 3)
 
 

@@ -5,22 +5,38 @@ import asyncio
 from pathlib import Path
 
 from .harness import EvaluationHarness
-from .suites import all_eval_suite, default_eval_suite, edge_eval_suite
+from .suites import SUITE_CHOICES, eval_suite_by_id, select_eval_tasks
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run prewritten research-harness eval suites.")
-    parser.add_argument("--suite", choices=["core", "edge", "all"], default="core")
+    parser.add_argument("--suite", choices=SUITE_CHOICES, default="core")
+    parser.add_argument(
+        "--eval",
+        action="append",
+        default=[],
+        dest="eval_ids",
+        help="Run only the selected eval id. May be repeated or comma-separated.",
+    )
+    parser.add_argument("--list", action="store_true", help="List eval ids for the selected suite and exit.")
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--output", type=Path, default=Path("eval_outputs"))
     parser.add_argument("--corpus", type=Path, default=Path("examples/corpus/research_corpus.json"))
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
     args = parser.parse_args()
-    if args.suite == "edge":
-        suite = edge_eval_suite()
-    elif args.suite == "all":
-        suite = all_eval_suite()
-    else:
-        suite = default_eval_suite()
+    try:
+        suite = select_eval_tasks(eval_suite_by_id(args.suite), args.eval_ids)
+    except ValueError as exc:
+        parser.error(str(exc))
+    if args.list:
+        print(f"Eval suite: {suite.name}")
+        for task in suite.tasks:
+            print(f"{task.id}\t{task.name}")
+        return
     suite.trials_per_task = args.trials
     summary = asyncio.run(EvaluationHarness(corpus_path=args.corpus, output_root=args.output).run_suite(suite))
     print(f"Eval suite: {summary.suite_name}")

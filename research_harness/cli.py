@@ -9,6 +9,7 @@ import tty
 from pathlib import Path
 from typing import Callable, Optional
 
+from .evals.suites import SUITE_CHOICES
 from .model_catalog import format_model_catalog, model_choices, resolve_model_selection
 from .orchestrator import HarnessConfig, Orchestrator
 
@@ -112,7 +113,30 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable ~/.autore/projects session JSONL logging for this run.",
     )
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        default=_env_truthy("AUTORE_PREFLIGHT_EVALS"),
+        help="Run the selected preflight eval gate before starting autore.",
+    )
+    parser.add_argument(
+        "--preflight-suite",
+        choices=SUITE_CHOICES,
+        default=os.environ.get("AUTORE_PREFLIGHT_SUITE", "preflight"),
+        help="Eval suite to run when --preflight is selected.",
+    )
+    parser.add_argument(
+        "--preflight-eval",
+        action="append",
+        default=[],
+        dest="preflight_eval_ids",
+        help="With --preflight, run only the selected eval id. May be repeated or comma-separated.",
+    )
     return parser
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def prompt_choice(
@@ -369,6 +393,8 @@ def main() -> None:
                 "run `autore` in a terminal for the selection setup"
             )
         args = configure_interactive_run(args)
+    if args.preflight:
+        run_preflight_evals(args)
     config = HarnessConfig(
         mode=args.mode or "evolutionary",
         retriever=args.retriever,
@@ -408,6 +434,35 @@ def main() -> None:
     print(f"World model DB: {store.sqlite_path}")
     print(f"Decision DAG: {store.decision_dag_path}")
     print(f"Agent timeline: {store.agent_timeline_path}")
+
+
+def run_preflight_evals(args: argparse.Namespace) -> None:
+    from .evals.harness import EvaluationHarness
+    from .evals.suites import eval_suite_by_id, select_eval_tasks
+
+    try:
+        suite = select_eval_tasks(eval_suite_by_id(args.preflight_suite), args.preflight_eval_ids)
+    except ValueError as exc:
+        raise SystemExit(f"Preflight eval selection failed: {exc}") from exc
+    output_root = Path(os.environ.get("AUTORE_PREFLIGHT_OUTPUT_DIR", "eval_outputs/preflight"))
+    print(f"Preflight evals: running {suite.id} ({len(suite.tasks)} eval(s))")
+    summary = asyncio.run(EvaluationHarness(corpus_path=args.corpus, output_root=output_root).run_suite(suite))
+    if summary.passed_trials == summary.trial_count:
+        print(f"Preflight evals: passed {summary.passed_trials}/{summary.trial_count}")
+        return
+    failed = [trial for trial in summary.trials if not trial.get("passed")]
+    lines = [
+        "Preflight evals failed. Refusing to start autore run.",
+        f"Passed {summary.passed_trials}/{summary.trial_count}; summary: {output_root / (suite.id + '_summary.json')}",
+    ]
+    for trial in failed[:5]:
+        failed_graders = [
+            grader.get("grader_id")
+            for grader in trial.get("grader_results", [])
+            if not grader.get("passed")
+        ]
+        lines.append(f"- {trial.get('task_id')}: failed graders={failed_graders}")
+    raise SystemExit("\n".join(lines))
 
 
 if __name__ == "__main__":

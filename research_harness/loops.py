@@ -668,7 +668,6 @@ class OptimizationQueryLoop:
 
 
 class PlateauDetector:
-    # Ordered recovery actions applied in round-robin when plateau fires.
     _RECOVERY_ACTIONS = ("rotate_retriever", "boost_temperature", "random_mutation")
 
     def __init__(self, mode: TaskMode):
@@ -689,13 +688,10 @@ class PlateauDetector:
             return "coverage_plateau" if self.mode == "research" else "score_plateau"
         return "continue"
 
-    def next_recovery(self) -> str:
-        """Return the next recovery action to apply and advance the cycle.
-
-        Rotates through: rotate_retriever → boost_temperature → random_mutation.
-        Each action is distinct so consecutive plateaus try different escapes.
-        """
-        action = self._RECOVERY_ACTIONS[self._recovery_cycle % len(self._RECOVERY_ACTIONS)]
+    def next_recovery(self, seed_text: str) -> str:
+        """Return a context-derived recovery action and advance the audit counter."""
+        digest = hashlib.sha256(f"{seed_text}|{self.mode}|{self.plateau_count}|{self._recovery_cycle}".encode("utf-8")).hexdigest()
+        action = self._RECOVERY_ACTIONS[int(digest[:8], 16) % len(self._RECOVERY_ACTIONS)]
         self._recovery_cycle += 1
         return action
 
@@ -724,6 +720,7 @@ class EvolutionaryOuterLoop:
         llm: Optional[LLMClient] = None,
         max_outer_iterations: int = 4,
         population_size: int = 4,
+        prior_run_memory: Optional[dict[str, object]] = None,
     ):
         self.run_id = run_id
         self.goal = goal
@@ -735,6 +732,7 @@ class EvolutionaryOuterLoop:
         self.llm = llm or LLMClient()
         self.max_outer_iterations = max_outer_iterations
         self.population_size = population_size
+        self.prior_run_memory = prior_run_memory or {}
         self.objective = _loop_objective_from_goal(goal, evaluator_name)
         # One-shot recovery flags set by _apply_plateau_recovery() and
         # consumed at the start of the next _propose_*_variants() call.
@@ -1402,14 +1400,7 @@ class EvolutionaryOuterLoop:
         return " ".join(terms) if terms else self.goal
 
     def _apply_plateau_recovery(self, plateau: PlateauDetector, store: ArtifactStore, round_index: int, reason: str) -> None:
-        """Apply a concrete recovery action and set one-shot flags for the next proposal round.
-
-        Actions cycle per PlateauDetector instance:
-        - rotate_retriever: force the next query-variant round to use a different retriever.
-        - boost_temperature: raise LLM temperature to 1.2 for the next proposal round,
-          generating more diverse (less greedy) variants.
-        - random_mutation: inject random numeric perturbations into fallback code/query payloads.
-        """
+        """Apply a context-derived recovery action and set one-shot flags for the next proposal round."""
         # Deduplicate: don't re-apply the same reason twice.
         already_applied = any(
             str(s.get("url", "")).startswith(f"memory://plateau-recovery/{self.run_id}/")
@@ -1424,20 +1415,22 @@ class EvolutionaryOuterLoop:
         self._recovery_temperature = 0.7
         self._recovery_inject_mutation = False
 
-        action = plateau.next_recovery()
+        history_mode = "optimize" if self.task_mode in {"optimize", "optimize_query"} else "research"
+        score_context = json.dumps(_score_history(store, mode=history_mode, limit=4), sort_keys=True)
+        action = plateau.next_recovery(f"{self.goal}|{reason}|{score_context}")
 
         if action == "rotate_retriever":
             retrievers = [item.retriever for item in self.source_strategy] or ["local"]
             retriever = retrievers[self._recovery_retriever_index % len(retrievers)]
             self._recovery_retriever_index += 1
             self._recovery_forced_retriever = retriever
-            action_note = f"rotate_retriever → {retriever}"
+            action_note = f"context-derived retriever rotation -> {retriever}"
         elif action == "boost_temperature":
             self._recovery_temperature = 1.2
-            action_note = "boost_temperature → 1.2 (more diverse LLM proposals)"
+            action_note = "context-derived temperature increase -> 1.2"
         else:
             self._recovery_inject_mutation = True
-            action_note = "random_mutation → numeric perturbation of parent payloads"
+            action_note = "context-derived numeric perturbation of parent payloads"
 
         store.append_progress(f"Plateau recovery round {round_index} ({reason}): {action_note}")
 
@@ -1449,14 +1442,14 @@ class EvolutionaryOuterLoop:
                 author="research-harness",
                 date=now_iso().split("T")[0],
                 source_type="memory",
-                summary=f"Loop plateaued ({reason}). Applied recovery action: {action_note}.",
+                summary=f"Loop plateaued ({reason}). Applied recovery action: {action_note}. Provenance: user goal, score history, and plateau reason.",
                 relevance_score=0.82,
                 credibility_score=0.72,
             )
         )
         store.add_claim(
             Claim(
-                text=f"Round {round_index} plateaued ({reason}); applied '{action}': {action_note}.",
+                text=f"Round {round_index} plateaued ({reason}); context-derived recovery '{action}': {action_note}.",
                 source_ids=[source.id],
                 confidence=0.78,
                 support_level="instrumented",
@@ -1716,7 +1709,19 @@ class EvolutionaryOuterLoop:
                 )
             return variants
 
-        suffixes = ["survey benchmark", "limitations contradictory evidence", "recent empirical results", "implementation signals"]
+        suffixes = _contextual_query_suffixes(self.goal, parents, self.population_size)
+        unresolved = [
+            str(item)
+            for item in self.prior_run_memory.get("unresolved_directions", [])
+            if str(item).strip()
+        ]
+        if unresolved:
+            memory_suffixes = [_context_terms(item, limit=4) for item in unresolved]
+            suffixes = [
+                " ".join(terms)
+                for terms in memory_suffixes
+                if terms
+            ] + suffixes
         variants = []
         for index, suffix in enumerate(suffixes[: self.population_size]):
             parent = parents[index % len(parents)]
@@ -1733,6 +1738,7 @@ class EvolutionaryOuterLoop:
                         "retriever": retriever,
                         "search_phase": "narrow",
                         "narrowing_suffix": suffix,
+                        "suffix_provenance": "context-derived from goal and parent variants",
                         **({"recovery": "rotate_retriever"} if forced_retriever else {}),
                     },
                 )
@@ -1934,6 +1940,16 @@ class EvolutionaryOuterLoop:
             for item in self.source_strategy[: self.population_size]
         ]
         already_tried = list({p.payload for p in parents})
+        avoid_directions = [
+            str(item)
+            for item in self.prior_run_memory.get("avoid_directions", [])
+            if str(item).strip()
+        ][:8]
+        unresolved_directions = [
+            str(item)
+            for item in self.prior_run_memory.get("unresolved_directions", [])
+            if str(item).strip()
+        ][:8]
         recovery_note = (
             f"\nPLATEAU RECOVERY ACTIVE: forced_retriever={forced_retriever!r} — "
             "every variant MUST use this retriever to escape the current search angle."
@@ -1947,6 +1963,8 @@ class EvolutionaryOuterLoop:
             "- No two variants may be semantically equivalent or differ only in wording.\n"
             "- Assign a different `retriever` to each variant when possible (use the available_strategy list).\n"
             "- Do NOT repeat or closely rephrase any query in the already_tried list.\n"
+            "- Do NOT repeat prior_report_avoid_directions unless the user explicitly asked for replication.\n"
+            "- Prefer prior_report_unresolved_directions when they are directly related to the current goal.\n"
             "- Iteration 1: start broad and wide. Later iterations: narrow based on parent findings.\n"
             + recovery_note + "\n\n"
             "Return JSON only: {\"variants\": [{\"query\": str, \"retriever\": str, \"purpose\": str}]}"
@@ -1957,6 +1975,8 @@ class EvolutionaryOuterLoop:
                 "outer_iteration": outer_iteration,
                 "parents": parent_payloads,
                 "already_tried": already_tried,
+                "prior_report_avoid_directions": avoid_directions,
+                "prior_report_unresolved_directions": unresolved_directions,
                 "available_strategy": strategy,
                 "population_size": self.population_size,
                 **({"forced_retriever": forced_retriever} if forced_retriever else {}),
@@ -2489,6 +2509,24 @@ def _contextual_prediction_market_payload(context: str, outer_iteration: int, in
     )
 
 
+def _contextual_query_suffixes(goal: str, parents: list[Variant], limit: int) -> list[str]:
+    context = " ".join([goal, *[parent.payload for parent in parents]])
+    terms = _context_terms(context, limit=max(8, limit * 3))
+    suffixes: list[str] = []
+    for index in range(limit):
+        start = index * 2
+        chunk = terms[start : start + 3]
+        if chunk:
+            suffixes.append(" ".join(chunk))
+    if len(suffixes) < limit:
+        digest = hashlib.sha256(context.encode("utf-8")).hexdigest()
+        for index in range(len(suffixes), limit):
+            start = (int(digest[index * 2 : index * 2 + 2] or "0", 16) % max(len(terms), 1)) if terms else 0
+            chunk = terms[start : start + 2] if terms else []
+            suffixes.append(" ".join(chunk) if chunk else f"context-{digest[index * 4:index * 4 + 8]}")
+    return suffixes[:limit]
+
+
 CONTEXT_STOPWORDS = {
     "and",
     "are",
@@ -2536,12 +2574,9 @@ def _prediction_market_code_signature(payload: str) -> str:
 
 
 def _randomly_mutate_variant(variant: Variant, seed: int) -> Variant:
-    """Return a copy of variant with every numeric token perturbed by ±10-40%.
-
-    Used as the random_mutation plateau recovery action to escape local optima
-    when the population has converged and the LLM is not available.
-    """
-    rng = random.Random(seed ^ (hash(variant.payload) & 0xFFFF))
+    """Return a copy of variant with context-derived numeric perturbations."""
+    digest = hashlib.sha256(f"{variant.payload}|{seed}".encode("utf-8")).hexdigest()
+    rng = random.Random(int(digest[:16], 16))
 
     def _perturb(match: re.Match) -> str:
         original = float(match.group(1))
@@ -2561,7 +2596,7 @@ def _randomly_mutate_variant(variant: Variant, seed: int) -> Variant:
         kind=variant.kind,
         payload=mutated_payload,
         parent_ids=variant.parent_ids,
-        metadata={**variant.metadata, "recovery": "random_mutation"},
+        metadata={**variant.metadata, "recovery": "context_derived_numeric_mutation", "mutation_seed": digest[:16]},
     )
 
 

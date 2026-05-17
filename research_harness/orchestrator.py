@@ -123,8 +123,9 @@ class Orchestrator:
 
     async def run(self, goal: str, mode: Optional[str] = None) -> Tuple[RunRecord, ArtifactStore]:
         selected_mode = mode or self.config.mode
-        plan = self.create_plan(goal)
-        source_strategy = self.create_source_strategy(goal, plan)
+        prior_run_memory = self.load_prior_run_memory(goal)
+        plan = self.create_plan(goal, prior_run_memory=prior_run_memory)
+        source_strategy = self.create_source_strategy(goal, plan, prior_run_memory=prior_run_memory)
         primary_retriever = self._retriever_for(source_strategy[0].retriever)
         run = RunRecord(
             id=self._next_run_id(goal),
@@ -137,9 +138,14 @@ class Orchestrator:
         session_store = self._start_session_store(goal, run)
         store = ArtifactStore(self.output_root / run.id, echo_progress=self.config.echo_progress, session_store=session_store)
         store.add_run(run)
+        store.write_prior_run_memory(prior_run_memory)
         store.append_progress(f"Starting run {run.id}")
         store.append_progress(f"Execution mode: {selected_mode}")
         store.append_progress(f"Goal: {goal}")
+        store.append_progress(
+            f"Prior output memory: checked {prior_run_memory.get('checked_run_count', 0)} run(s); "
+            f"{len(prior_run_memory.get('avoid_directions', []))} prior direction(s) to avoid."
+        )
         self._write_prd(store, run, plan, source_strategy, selected_mode, stage="planned")
         store.append_progress(f"PRD: {store.prd_path}")
         try:
@@ -241,6 +247,9 @@ class Orchestrator:
                 )
             )
 
+    def load_prior_run_memory(self, goal: str, limit: int = 6) -> dict[str, Any]:
+        return _load_prior_run_memory(self.output_root, goal, limit=limit)
+
     def _write_prd(
         self,
         store: ArtifactStore,
@@ -284,6 +293,7 @@ class Orchestrator:
                 "final_report_tex": str(store.report_tex_path),
                 "final_report_pdf": str(store.report_pdf_path),
                 "final_report_preview": str(store.report_preview_path),
+                "prior_run_memory": str(store.prior_run_memory_path),
                 "optimizer_seed_context": str(store.optimizer_seed_context_path),
                 "optimization_result": str(store.optimization_result_path),
                 "optimized_candidate": str(store.optimized_candidate_path),
@@ -416,7 +426,7 @@ class Orchestrator:
             return "bounded"
         return "open_ended"
 
-    def create_plan(self, goal: str) -> ResearchPlan:
+    def create_plan(self, goal: str, prior_run_memory: Optional[dict[str, Any]] = None) -> ResearchPlan:
         interpretation = self.interpret_goal(goal)
         task_type = interpretation["task_type"] if interpretation["task_type"] in {"bounded", "open_ended"} else self.classify_task(goal)
         topics = set(str(topic) for topic in interpretation.get("topics", []) if topic)
@@ -429,22 +439,15 @@ class Orchestrator:
             hypothesis_angles = ["evidence-backed strategy direction", "risk mitigation", "alternative approach"]
             strategy = "Ground the challenge in prompt-derived and retrieved evidence before optimizing strategy code."
         elif task_type == "bounded":
-            search_angles = [
-                "baseline evidence",
-                "failure modes constraints",
-                "evaluation metrics",
-            ]
-            hypothesis_angles = ["optimization path", "risk mitigation"]
+            search_angles = _derive_search_angles(goal, interpretation, task_type, limit=3)
+            hypothesis_angles = _derive_hypothesis_angles(goal, interpretation, task_type, limit=2)
             strategy = "Assign bounded roles and collect evidence against explicit success criteria."
         else:
-            search_angles = [
-                "breadth-first landscape scan",
-                "primary-source mechanisms",
-                "recent empirical evidence",
-                "contradictory evidence limitations",
-            ]
-            hypothesis_angles = ["mechanism", "research direction"]
+            search_angles = _derive_search_angles(goal, interpretation, task_type, limit=4)
+            hypothesis_angles = _derive_hypothesis_angles(goal, interpretation, task_type, limit=2)
             strategy = "Use a lead research agent to start wide across independent subagent searches, then narrow with critic-driven convergence."
+        search_angles = _apply_prior_memory_to_angles(search_angles, prior_run_memory, limit=len(search_angles))
+        hypothesis_angles = _apply_prior_memory_to_angles(hypothesis_angles, prior_run_memory, limit=len(hypothesis_angles))
         return ResearchPlan(
             task_type=task_type,
             goal=goal,
@@ -489,11 +492,17 @@ class Orchestrator:
                 pass
         return _fallback_goal_interpretation(goal, self.config.evaluator_name, self.classify_task(goal))
 
-    def create_source_strategy(self, goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
+    def create_source_strategy(
+        self,
+        goal: str,
+        plan: ResearchPlan,
+        prior_run_memory: Optional[dict[str, Any]] = None,
+    ) -> list[SourceStrategyItem]:
         retriever = self.config.retriever.lower()
         strategy_goal = goal
+        strategy_goal = _goal_with_prior_memory_context(strategy_goal, prior_run_memory)
         if "prediction_market" in set(plan.topics) and _is_prediction_market_challenge_goal(goal, self.config.evaluator_name):
-            strategy_goal = goal
+            strategy_goal = _goal_with_prior_memory_context(goal, prior_run_memory)
         if retriever == "local":
             return [
                 SourceStrategyItem(
@@ -642,6 +651,7 @@ class Orchestrator:
             max_outer_iterations=self.config.max_loop_iterations,
             population_size=population_size,
             llm=self.llm,
+            prior_run_memory=_read_json_if_exists(store.prior_run_memory_path),
         )
         await outer_loop.run(store)
         await self._pass_task(
@@ -1230,6 +1240,10 @@ def _run_number_from_name(name: str) -> Optional[int]:
     return int(match.group(1))
 
 
+def _is_run_dir(name: str) -> bool:
+    return name.startswith("run_") or bool(re.match(r"^\d+_run_", name))
+
+
 def _objective_payload(goal: str, evaluator_name: Optional[str], store: ArtifactStore) -> dict[str, object]:
     status = _objective_status(goal, evaluator_name, store)
     return {
@@ -1283,6 +1297,225 @@ def _has_incomplete_required_loop_tasks(store: ArtifactStore) -> bool:
     return any(not row.get("passes") and row.get("status") != "skipped" for row in store.list("loop_tasks"))
 
 
+def _load_prior_run_memory(output_root: Path, goal: str, limit: int = 6) -> dict[str, Any]:
+    goal_terms = _meaningful_memory_terms(goal)
+    goal_topics = _fallback_prompt_topics(goal)
+    checked: list[dict[str, object]] = []
+    skipped: list[dict[str, object]] = []
+    if output_root.exists():
+        candidates = sorted(
+            (path for path in output_root.iterdir() if path.is_dir() and _is_run_dir(path.name)),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+    else:
+        candidates = []
+    for run_dir in candidates:
+        if len(checked) >= limit:
+            break
+        report_path = run_dir / "final_report.md"
+        if not report_path.exists():
+            continue
+        run_record = _first_json_row(run_dir / "runs.json")
+        report_text = report_path.read_text(encoding="utf-8", errors="replace")
+        prior_goal = str(run_record.get("user_goal", run_dir.name))
+        directions = _prior_report_directions(report_text)
+        open_questions = _prior_report_open_questions(report_text)
+        report_terms = _meaningful_memory_terms(" ".join([prior_goal, *directions, *open_questions]))
+        report_topics = _fallback_prompt_topics(" ".join([prior_goal, *directions, *open_questions]))
+        overlap = sorted(goal_terms & report_terms)
+        topic_overlap = sorted(goal_topics & report_topics)
+        relevance = _prior_memory_relevance(goal_terms, report_terms, goal_topics, report_topics)
+        if relevance < 0.34:
+            skipped.append(
+                {
+                    "run_id": run_dir.name,
+                    "goal": prior_goal,
+                    "report_path": str(report_path),
+                    "reason": "not_related_to_current_goal",
+                    "overlap_terms": overlap[:8],
+                    "overlap_topics": topic_overlap[:8],
+                    "relevance": round(relevance, 3),
+                }
+            )
+            continue
+        checked.append(
+            {
+                "run_id": run_dir.name,
+                "goal": prior_goal,
+                "report_path": str(report_path),
+                "completed_at": run_record.get("completed_at"),
+                "overlap_terms": overlap[:12],
+                "overlap_topics": topic_overlap[:8],
+                "relevance": round(relevance, 3),
+                "directions": directions[:8],
+                "open_questions": open_questions[:8],
+                "report_sha256": hashlib.sha256(report_text.encode("utf-8")).hexdigest()[:16],
+            }
+        )
+    avoid = _dedupe_strings(
+        [
+            direction
+            for item in checked
+            for direction in item.get("directions", [])
+            if isinstance(direction, str) and direction.strip()
+        ]
+    )[:16]
+    unresolved = _dedupe_strings(
+        [
+            question
+            for item in checked
+            for question in item.get("open_questions", [])
+            if isinstance(question, str) and question.strip()
+        ]
+    )[:12]
+    return {
+        "schema_version": "prior_run_memory_v1",
+        "goal": goal,
+        "checked_run_count": len(checked),
+        "checked_reports": checked,
+        "skipped_reports": skipped[:12],
+        "avoid_directions": avoid,
+        "unresolved_directions": unresolved,
+        "policy": (
+            "Every run checks prior final_report.md artifacts before planning. "
+            "Only reports related to the current goal are allowed into memory. "
+            "Use unresolved directions first when relevant, and avoid repeating prior directions unless the prompt asks for replication."
+        ),
+    }
+
+
+MEMORY_STOPWORDS = RUN_SLUG_STOPWORDS | {
+    "adoption",
+    "agent",
+    "agents",
+    "analysis",
+    "answer",
+    "approach",
+    "artifact",
+    "artifacts",
+    "claim",
+    "claims",
+    "current",
+    "direction",
+    "directions",
+    "effect",
+    "evidence",
+    "final",
+    "goal",
+    "hypothesis",
+    "intelligence",
+    "question",
+    "questions",
+    "report",
+    "run",
+    "source",
+    "sources",
+    "system",
+    "systems",
+}
+
+
+def _meaningful_memory_terms(text: str) -> set[str]:
+    terms = set(_goal_terms(text))
+    return {term for term in terms if term not in MEMORY_STOPWORDS and len(term) >= 4}
+
+
+def _prior_memory_relevance(
+    goal_terms: set[str],
+    report_terms: set[str],
+    goal_topics: set[str],
+    report_topics: set[str],
+) -> float:
+    topic_overlap = goal_topics & report_topics
+    term_overlap = goal_terms & report_terms
+    if topic_overlap:
+        return 1.0
+    if not goal_terms or not report_terms:
+        return 0.0
+    overlap_ratio = len(term_overlap) / max(1, min(len(goal_terms), len(report_terms)))
+    if len(term_overlap) >= 2:
+        return max(0.5, overlap_ratio)
+    if len(term_overlap) == 1 and len(goal_terms) <= 3:
+        return 0.34
+    return overlap_ratio
+
+
+def _prior_report_directions(report_text: str) -> list[str]:
+    directions: list[str] = []
+    for heading in ["Key Takeaways", "Hypothesis Evidence Matrix", "Executive Synthesis"]:
+        directions.extend(_markdown_section_bullets(report_text, heading, limit=6))
+    return [_short_memory_text(item) for item in _dedupe_strings(directions) if item.strip()]
+
+
+def _prior_report_open_questions(report_text: str) -> list[str]:
+    return [_short_memory_text(item) for item in _markdown_section_bullets(report_text, "Open Questions", limit=8)]
+
+
+def _markdown_section_bullets(markdown: str, heading: str, limit: int) -> list[str]:
+    pattern = re.compile(rf"^##+\s+{re.escape(heading)}\s*$", re.I | re.M)
+    match = pattern.search(markdown)
+    if not match:
+        return []
+    rest = markdown[match.end() :]
+    next_heading = re.search(r"^##+\s+", rest, flags=re.M)
+    section = rest[: next_heading.start()] if next_heading else rest
+    bullets = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(("-", "*", "•")):
+            bullets.append(re.sub(r"^[-*•]\s*", "", stripped).strip())
+        elif stripped and heading.lower() == "executive synthesis":
+            bullets.append(stripped)
+        if len(bullets) >= limit:
+            break
+    return bullets
+
+
+def _short_memory_text(text: str, max_chars: int = 220) -> str:
+    compact = re.sub(r"\s+", " ", text).strip()
+    return compact[:max_chars].rstrip()
+
+
+def _apply_prior_memory_to_angles(
+    angles: list[str],
+    prior_run_memory: Optional[dict[str, Any]],
+    *,
+    limit: int,
+) -> list[str]:
+    if not prior_run_memory or not prior_run_memory.get("checked_reports"):
+        return angles
+    unresolved = [str(item) for item in prior_run_memory.get("unresolved_directions", []) if str(item).strip()]
+    avoid = [str(item) for item in prior_run_memory.get("avoid_directions", []) if str(item).strip()]
+    memory_angles = [f"unresolved prior question: {_short_query_label(item, max_words=9)}" for item in unresolved[:limit]]
+    retained = [
+        angle
+        for angle in angles
+        if not any(_direction_overlap(angle, prior) >= 0.65 for prior in avoid[:8])
+    ]
+    return _dedupe_strings([*memory_angles, *retained, *angles])[:limit]
+
+
+def _direction_overlap(left: str, right: str) -> float:
+    left_terms = set(_goal_terms(left))
+    right_terms = set(_goal_terms(right))
+    if not left_terms or not right_terms:
+        return 0.0
+    return len(left_terms & right_terms) / max(1, min(len(left_terms), len(right_terms)))
+
+
+def _goal_with_prior_memory_context(goal: str, prior_run_memory: Optional[dict[str, Any]]) -> str:
+    if not prior_run_memory or not prior_run_memory.get("checked_reports"):
+        return goal
+    unresolved = [str(item) for item in prior_run_memory.get("unresolved_directions", []) if str(item).strip()]
+    avoid = [str(item) for item in prior_run_memory.get("avoid_directions", []) if str(item).strip()]
+    if unresolved:
+        return f"{goal} unresolved prior question {_short_query_label(unresolved[0], max_words=10)}"
+    if avoid:
+        return f"{goal} novel direction beyond {_short_query_label(avoid[0], max_words=10)}"
+    return goal
+
+
 def _research_architecture_payload(config: HarnessConfig, task_mode: Optional[str]) -> dict[str, object]:
     return {
         "enabled_for_mode": task_mode == "research",
@@ -1316,28 +1549,67 @@ def _research_judge_rubric() -> list[dict[str, object]]:
     ]
 
 
+def _derive_search_angles(goal: str, interpretation: dict[str, Any], task_type: TaskType, limit: int) -> list[str]:
+    topic_queries = [str(query) for query in interpretation.get("topic_queries", []) if str(query).strip()]
+    terms = _goal_terms(goal)
+    anchors = _phrase_chunks_from_goal(goal, terms, limit=limit)
+    angles: list[str] = []
+    for query in topic_queries:
+        angles.append(f"prompt-derived query: {_short_query_label(query)}")
+    for anchor in anchors:
+        angles.append(f"evidence about {anchor}")
+    if task_type == "bounded":
+        angles.append(f"constraints in {anchors[0] if anchors else 'the requested objective'}")
+    else:
+        angles.append(f"counter-evidence about {anchors[0] if anchors else 'the requested claim'}")
+    return _dedupe_strings(angles)[:limit] or ["prompt-derived evidence"]
+
+
+def _derive_hypothesis_angles(goal: str, interpretation: dict[str, Any], task_type: TaskType, limit: int) -> list[str]:
+    terms = _goal_terms(goal)
+    anchors = _phrase_chunks_from_goal(goal, terms, limit=max(limit, 2))
+    topic_queries = [str(query) for query in interpretation.get("topic_queries", []) if str(query).strip()]
+    angles = [f"claim about {anchor}" for anchor in anchors]
+    angles.extend(f"direction from {_short_query_label(query)}" for query in topic_queries[:limit])
+    if task_type == "bounded":
+        angles.append(f"way to satisfy {anchors[0] if anchors else 'the objective'}")
+    else:
+        angles.append(f"open question from {anchors[0] if anchors else 'the prompt'}")
+    return _dedupe_strings(angles)[:limit] or ["prompt-derived direction"]
+
+
+def _phrase_chunks_from_goal(goal: str, terms: list[str], limit: int) -> list[str]:
+    quoted = [match.strip() for match in re.findall(r"[\"']([^\"']{4,80})[\"']", goal) if match.strip()]
+    chunks = quoted[:limit]
+    window = 3
+    while len(chunks) < limit and terms:
+        start = len(chunks) * window
+        chunk_terms = terms[start : start + window]
+        if not chunk_terms:
+            break
+        chunks.append(" ".join(chunk_terms))
+    return chunks[:limit]
+
+
+def _short_query_label(query: str, max_words: int = 7) -> str:
+    words = re.findall(r"[a-zA-Z0-9][a-zA-Z0-9_-]*", query)
+    return " ".join(words[:max_words]) or query[:80]
+
+
 def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategyItem]:
     concepts = _goal_terms(goal)
     core = " ".join(concepts[:6]) or goal
     broad = _broad_landscape_query(goal, plan)
     topic_queries = plan.topic_queries
     topics = set(plan.topics)
-    brain_terms = "brain neuroscience cognitive computational neuroscience intelligence"
-    agent_terms = "agentic agents autonomous multi-agent planner executor tool use memory"
-    trend_terms = "survey benchmark adoption evaluation future trends"
-    contrarian_terms = "limitations failures safety reliability critique"
     if topic_queries:
         first_query = topic_queries[0]
-    elif "neuroscience" in topics:
-        first_query = f"{core} {brain_terms}"
-    elif "agents" in topics:
-        first_query = f"{core} {agent_terms}"
     else:
-        first_query = f"{core} key papers survey"
-    method_query = topic_queries[1] if len(topic_queries) > 1 else f"{core} {trend_terms}"
-    implementation_query = topic_queries[2] if len(topic_queries) > 2 else f"{core} datasets benchmarks methods"
-    limitations_query = topic_queries[3] if len(topic_queries) > 3 else f"{core} {contrarian_terms}"
-    adoption_query = topic_queries[4] if len(topic_queries) > 4 else f"{core} practical resources datasets"
+        first_query = f"{core} sources evidence"
+    method_query = topic_queries[1] if len(topic_queries) > 1 else f"{core} evidence methods"
+    implementation_query = topic_queries[2] if len(topic_queries) > 2 else f"{core} resources data"
+    limitations_query = topic_queries[3] if len(topic_queries) > 3 else f"{core} limitations counter evidence"
+    adoption_query = topic_queries[4] if len(topic_queries) > 4 else f"{core} applications resources"
     social_query = topic_queries[5] if len(topic_queries) > 5 else first_query
     scholarly_run = _looks_like_scholarly_request(goal, plan)
     if scholarly_run:
@@ -1382,29 +1654,29 @@ def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategy
         SourceStrategyItem(
             name="broad_landscape",
             retriever="openalex",
-            purpose="breadth-first landscape scan",
+            purpose="prompt-derived source overview",
             queries=[broad, first_query],
             limit=8,
         ),
         SourceStrategyItem(
-            name="preprints_and_benchmarks",
+            name="preprints_and_evidence",
             retriever="arxiv",
-            purpose="methods, benchmarks, and empirical evidence",
-            queries=[method_query, f"{core} benchmark evaluation"],
+            purpose="prompt-related preprints and evidence",
+            queries=[method_query, f"{core} evidence evaluation"],
             limit=8,
         ),
         SourceStrategyItem(
-            name="implementation_signals",
+            name="resource_signals",
             retriever="github",
-            purpose="implementation signals and open-source adoption",
-            queries=[implementation_query, f"{core} framework tools"],
+            purpose="prompt-related resources and artifacts",
+            queries=[implementation_query, f"{core} resources artifacts"],
             limit=8,
         ),
         SourceStrategyItem(
-            name="docs_blogs_workplace",
+            name="docs_blogs_sources",
             retriever="docs_blogs",
-            purpose="adoption signals and workplace-relevant directions",
-            queries=[adoption_query, f"{core} human AI collaboration"],
+            purpose="prompt-related practitioner sources",
+            queries=[adoption_query, f"{core} practical resources"],
             limit=8,
         ),
         SourceStrategyItem(
@@ -1418,14 +1690,14 @@ def _mixed_source_strategy(goal: str, plan: ResearchPlan) -> list[SourceStrategy
             name="social_trend_signals",
             retriever="twitter",
             purpose="public social trend signals",
-            queries=[social_query, f"{core} agentic AI"],
+            queries=[social_query, f"{core} public discussion"],
             limit=6,
         ),
         SourceStrategyItem(
-            name="contrarian_limitations",
+            name="counterevidence_limitations",
             retriever="web",
-            purpose="contradictory evidence, limitations, and risks",
-            queries=[limitations_query, f"{core} failure mode"],
+            purpose="counter-evidence and limitations",
+            queries=[limitations_query, f"{core} limitations"],
             limit=8,
         ),
         SourceStrategyItem(
@@ -1450,7 +1722,7 @@ def _single_retriever_strategy(goal: str, plan: ResearchPlan, retriever: str) ->
             name=f"{retriever}_general",
             retriever=retriever,
             purpose=angle,
-            queries=[f"{core} {angle}", f"{core} survey benchmark limitations"],
+            queries=[f"{core} {angle}", f"{core} evidence limitations"],
             limit=8,
         )
         for angle in plan.search_angles
@@ -1502,7 +1774,7 @@ def _fallback_goal_interpretation(goal: str, evaluator_name: Optional[str], fall
     return {
         "task_type": fallback_task_type,
         "topics": sorted(topics),
-        "topic_queries": _topic_query_lenses(topics),
+        "topic_queries": _topic_query_lenses(goal, topics),
         "rationale": "Offline deterministic fallback used because live LLM interpretation was unavailable.",
         "planner": "deterministic-fallback",
     }
@@ -1523,14 +1795,6 @@ def _broad_landscape_query(goal: str, plan: ResearchPlan) -> str:
     topics = set(plan.topics)
     if "prediction_market" in topics and _is_prediction_market_challenge_goal(goal):
         return "prediction markets"
-    if "neuroscience" in topics and "agents" in topics:
-        return "brain artificial intelligence"
-    if "agents" in topics:
-        return "AI agents"
-    if "neuroscience" in topics:
-        return "brain artificial intelligence"
-    if plan.topic_queries:
-        return plan.topic_queries[0]
     terms = _goal_terms(goal)
     if not terms:
         return goal
@@ -1559,32 +1823,31 @@ def _fallback_prompt_topics(goal: str) -> set[str]:
     return topics
 
 
-def _topic_query_lenses(topics: set[str]) -> list[str]:
+def _topic_query_lenses(goal: str, topics: set[str]) -> list[str]:
     queries: list[str] = []
+    core_terms = _goal_terms(goal)
+    core = _prompt_phrase_core(goal, core_terms)
     if "prediction_market" in topics:
         queries.append("prediction market challenge evaluation strategy implementation")
         queries.append("prediction market trading strategy empirical evaluation")
         queries.append("prediction market simulator strategy benchmark")
     if "prediction_markets" in topics:
-        queries.append("machine learning prediction markets forecasting calibration market efficiency")
-        queries.append("prediction market prices probability forecasting machine learning")
-        queries.append("financial prediction markets machine learning stock market forecasting")
+        queries.append(f"{core} forecasting calibration evidence")
+        queries.append(f"{core} market prices probability evidence")
     if "finance_ml" in topics:
-        queries.append("machine learning stock market prediction survey")
-        queries.append("deep learning financial time series forecasting stock returns")
-        queries.append("machine learning asset pricing empirical finance")
-        queries.append("limit order book deep learning market prediction")
+        queries.append(f"{core} empirical evidence")
+        queries.append(f"{core} forecasting evaluation")
     if "amm" in topics:
-        queries.append("automated market maker prediction markets liquidity cost function")
-        queries.append("constant product automated market maker arbitrage inventory risk")
+        queries.append(f"{core} liquidity cost function evidence")
+        queries.append(f"{core} arbitrage inventory risk")
     if "entropy" in topics:
-        queries.append("entropy regularization exploration optimization strategy stochastic search")
+        queries.append(f"{core} entropy exploration evidence")
     if "options" in topics:
-        queries.append("options market making volatility hedging risk controls")
+        queries.append(f"{core} volatility hedging risk evidence")
     if "agents" in topics:
-        queries.append("LLM agents tool use planning execution memory evaluation benchmark")
+        queries.append(f"{core} agent evidence evaluation")
     if "neuroscience" in topics:
-        queries.append("brain neuroscience cognitive computational neuroscience intelligence")
+        queries.append(f"{core} neuroscience cognitive evidence")
     deduped: list[str] = []
     for query in queries:
         if query not in deduped:
@@ -1592,10 +1855,41 @@ def _topic_query_lenses(topics: set[str]) -> list[str]:
     return deduped
 
 
+def _prompt_phrase_core(goal: str, core_terms: list[str]) -> str:
+    normalized = goal.lower()
+    phrases = []
+    for phrase in [
+        "machine learning",
+        "automated market maker",
+        "prediction market",
+        "stock",
+        "artificial intelligence",
+        "large language model",
+    ]:
+        if phrase in normalized:
+            phrases.append(phrase)
+    words = phrases + core_terms[:8]
+    deduped: list[str] = []
+    for word in words:
+        if word not in deduped:
+            deduped.append(word)
+    return " ".join(deduped) or goal
+
+
 def _read_json_if_exists(path: Path) -> dict[str, object]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _first_json_row(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {}
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return rows[0] if isinstance(rows, list) and rows and isinstance(rows[0], dict) else {}
 
 
 def _prd_task_from_loop_task(task: dict[str, object], index: int) -> dict[str, object]:

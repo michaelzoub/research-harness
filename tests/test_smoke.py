@@ -23,14 +23,17 @@ from research_harness.evals import (
     default_eval_suite,
     default_graders,
     edge_eval_suite,
+    preflight_eval_suite,
+    select_eval_tasks,
     graph_trajectory_match,
     trajectory_match,
 )
+from research_harness.evals.cli import build_parser as build_eval_parser
 from research_harness.agents import SynthesisAgent
 from research_harness.llm import LLMClient, LLMError
 from research_harness.loops import EvaluatorRegistry, EvolutionaryOuterLoop, ResearchLoop, TaskRouter
 from research_harness.orchestrator import HarnessConfig, Orchestrator, goal_slug
-from research_harness.schemas import Claim, Contradiction, Hypothesis, RunRecord, Source, Variant, VariantEvaluation
+from research_harness.schemas import AgentTrace, Claim, Contradiction, Hypothesis, RunRecord, Source, Variant, VariantEvaluation
 from research_harness.search import CorpusDocument, LocalCorpusSearch, OpenAlexSearch, SemanticScholarSearch, _parse_arxiv_feed, _score_documents
 from research_harness.sessions import SessionStore
 from research_harness.store import ArtifactStore
@@ -212,6 +215,80 @@ class SmokeTest(unittest.TestCase):
         self.assertIn("prediction_market", plan.topics)
         self.assertIn("prediction market challenge evaluation", queries)
         self.assertIn("selected_evaluator", fake_llm.user_payload)
+
+    def test_offline_research_plan_avoids_fixed_agentic_lenses(self) -> None:
+        orchestrator = Orchestrator(
+            corpus_path=Path("examples/corpus/research_corpus.json"),
+            output_root=Path("outputs"),
+            config=HarnessConfig(retriever="local"),
+        )
+
+        plan = orchestrator.create_plan(
+            'When we say "introduce entropy in AI agent systems", do we mean introduce varied information?'
+        )
+        strategy = orchestrator.create_source_strategy(plan.goal, plan)
+        combined = " ".join(
+            [*plan.search_angles, *plan.hypothesis_angles, *[query for item in strategy for query in item.queries]]
+        ).lower()
+
+        self.assertIn("entropy", combined)
+        for leaked in [
+            "breadth-first landscape scan",
+            "primary-source mechanisms",
+            "recent empirical evidence",
+            "contradictory evidence limitations",
+            "agentic ai",
+        ]:
+            self.assertNotIn(leaked, combined)
+
+    def test_prior_run_memory_uses_only_related_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            neuro = ArtifactStore(root / "001_run_neuroscience")
+            neuro_run = RunRecord(
+                id="001_run_neuroscience",
+                user_goal="Research neuroscience and artificial intelligence",
+                task_type="open_ended",
+                harness_config_id="test-config",
+                prompt_versions={},
+                harness_config_snapshot={},
+            )
+            neuro.add_run(neuro_run)
+            neuro.write_report(
+                "# Research Report: neuroscience\n\n"
+                "## Key Takeaways\n"
+                "- Brain-inspired representations connect cognitive neuroscience and artificial intelligence.\n"
+            )
+            pm = ArtifactStore(root / "002_run_prediction_market")
+            pm_run = RunRecord(
+                id="002_run_prediction_market",
+                user_goal="Research prediction market maker inventory controls",
+                task_type="open_ended",
+                harness_config_id="test-config",
+                prompt_versions={},
+                harness_config_snapshot={},
+            )
+            pm.add_run(pm_run)
+            pm.write_report(
+                "# Research Report: prediction markets\n\n"
+                "## Key Takeaways\n"
+                "- Prediction market makers need inventory-aware quoting and spread controls.\n"
+                "## Open Questions\n"
+                "- Which inventory controls improve market-maker edge without killing fill rate?\n"
+            )
+            orchestrator = Orchestrator(
+                corpus_path=Path("examples/corpus/research_corpus.json"),
+                output_root=root,
+                config=HarnessConfig(retriever="auto"),
+            )
+
+            memory = orchestrator.load_prior_run_memory("Research prediction market quoting strategies")
+
+            self.assertEqual(memory["checked_run_count"], 1)
+            self.assertIn("prediction_market", memory["checked_reports"][0]["run_id"])
+            self.assertTrue(any("neuroscience" in row["run_id"] for row in memory["skipped_reports"]))
+            self.assertTrue(memory["avoid_directions"])
+            self.assertTrue(memory["unresolved_directions"])
 
     def test_phase2_smoke(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -819,6 +896,67 @@ class SmokeTest(unittest.TestCase):
             result = default_graders()["report_no_fabricated_sources"].grade(task, store)
             self.assertTrue(result.passed, result.assertions)
 
+    def test_research_key_takeaways_do_not_import_unrelated_agentic_storyline(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run_entropy")
+            run = RunRecord(
+                id="run_entropy",
+                user_goal='When we say "introduce entropy in AI agent systems", do we mean introduce varied information?',
+                task_type="open_ended",
+                harness_config_id="test-config",
+                prompt_versions={},
+                harness_config_snapshot={},
+                task_mode="research",
+                product_agent="research",
+            )
+            store.add_run(run)
+            source = store.add_source(
+                Source(
+                    url="https://example.edu/entropy",
+                    title="Entropy And Exploration In Agent Systems",
+                    author="Ada",
+                    date="2026",
+                    source_type="paper",
+                    summary="Entropy can describe exploration pressure or diversity in sampled information.",
+                    relevance_score=0.9,
+                    credibility_score=0.8,
+                )
+            )
+            claim = store.add_claim(
+                Claim(
+                    text="Entropy can operationalize diversity in candidate information when tied to a task objective.",
+                    source_ids=[source.id],
+                    confidence=0.76,
+                    support_level="strong",
+                    created_by_agent="test",
+                    run_id=run.id,
+                )
+            )
+            store.add_hypothesis(
+                Hypothesis(
+                    text="claim about entropy: varied information may improve exploration when it remains goal-relevant.",
+                    supporting_claim_ids=[claim.id],
+                    contradicting_claim_ids=[],
+                    confidence=0.66,
+                    novelty_score=0.5,
+                    testability_score=0.7,
+                    next_experiment="Compare retrieval diversity against answer quality.",
+                )
+            )
+
+            agent = SynthesisAgent(
+                name="test_synthesis",
+                role="synthesis_agent",
+                prompt_template="test",
+                llm=LLMClient(provider="local"),
+            )
+            asyncio.run(agent.run(run, store))
+
+            report = store.report_path.read_text(encoding="utf-8").lower()
+            self.assertIn("entropy", report)
+            for leaked in ["static chat", "workflow execution", "document-heavy", "white-collar", "labor-impact"]:
+                self.assertNotIn(leaked, report)
+
     def test_research_report_filters_broad_technology_false_positives(self) -> None:
         prompt = (
             "What is the current evidence that enterprise AI agent adoption follows the historical SaaS "
@@ -1023,6 +1161,73 @@ class EvaluationHarnessTest(unittest.TestCase):
         self.assertTrue(any("literature_grounding_present" in task.grader_ids for task in suite.tasks))
         self.assertTrue(any("trajectory_match_modes" in task.grader_ids for task in suite.tasks))
         self.assertTrue(any("graph_trajectory_match" in task.grader_ids for task in suite.tasks))
+
+    def test_preflight_eval_suite_defines_source_diversity_gate(self) -> None:
+        suite = preflight_eval_suite()
+        task_ids = {task.id for task in suite.tasks}
+
+        self.assertIn("research_uses_at_least_four_source_families", task_ids)
+        research_task = next(task for task in suite.tasks if task.id == "research_uses_at_least_four_source_families")
+        self.assertEqual(research_task.retriever, "auto")
+        self.assertIn("research_source_diversity", research_task.grader_ids)
+        self.assertEqual(research_task.metadata["min_distinct_source_families"], 4)
+
+    def test_eval_cli_can_select_specific_eval_ids(self) -> None:
+        parser = build_eval_parser()
+        args = parser.parse_args(["--suite", "preflight", "--eval", "research_uses_at_least_four_source_families"])
+        suite = select_eval_tasks(preflight_eval_suite(), args.eval_ids)
+
+        self.assertEqual([task.id for task in suite.tasks], ["research_uses_at_least_four_source_families"])
+
+    def test_research_source_diversity_grader_requires_four_families(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(Path(directory) / "run")
+            task = EvalTask(
+                id="source_diversity",
+                name="Source diversity",
+                prompt="Research transformer efficiency",
+                task_mode="research",
+                success_criteria=[],
+                metadata={"min_distinct_source_families": 4},
+            )
+            store.add_trace(
+                AgentTrace(
+                    run_id="run_test",
+                    agent_name="literature_agent",
+                    role="search_literature",
+                    prompt="",
+                    model="local",
+                    tools_used=["openalex_api_search", "semantic_scholar_api_search"],
+                    tool_calls=[
+                        {"tool": "arxiv_api_search", "query": "transformer efficiency", "results": 2},
+                        {"tool": "web_search", "query": "transformer efficiency benchmarks", "results": 2},
+                    ],
+                    token_usage=0,
+                    runtime_ms=1,
+                    status="completed",
+                    errors=[],
+                    output_summary="searched",
+                )
+            )
+            for index, source_type in enumerate(["openalex_work", "semantic_scholar_paper", "arxiv_paper", "web_result"], start=1):
+                store.add_source(
+                    Source(
+                        url=f"https://example.test/{index}",
+                        title=f"Source {index}",
+                        author="author",
+                        date="2026",
+                        source_type=source_type,
+                        summary="summary",
+                        relevance_score=0.9,
+                        credibility_score=0.9,
+                    )
+                )
+
+            result = default_graders()["research_source_diversity"].grade(task, store)
+
+            self.assertTrue(result.passed)
+            self.assertEqual(result.assertions[0]["actual"], 4)
+            self.assertEqual(result.assertions[0]["families"], ["arxiv", "openalex", "semantic_scholar", "web"])
 
     def test_native_trajectory_match_modes(self) -> None:
         actual = [
